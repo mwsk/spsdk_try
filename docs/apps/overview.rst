@@ -22,6 +22,7 @@ The nxpkeygen application allows user to:
 - generate RSA/ECC key pairs (private and public) with various key's attributes
 - generate debug credential files based on YAML configuration file
 
+For complete list of operations run: ``nxpkeygen --help``.
 
 nxpdebugmbox
 ------------
@@ -45,6 +46,7 @@ It allows user to:
 - generate binary data.
 - generate HTML page with brief descrition of CMPA/CFPA sonfiguration fields
 
+For complete list run: ``pfr --help``.
 
 sdphost
 -------
@@ -57,6 +59,7 @@ It allows user to:
 - jump to entry point of image with IVT at specified address
 - write file at address
 
+For complete list run: ``sdphost --help``.
 
 blhost
 ------
@@ -74,5 +77,6 @@ It allows user to:
 - write/read memory
 - reset the device
 - generate the Key Blob for a given DEK
-- for complete list run: ``blhost --help``
+
+For complete list run: ``blhost --help``.
 
