@@ -26,12 +26,12 @@ The nxpkeygen application allows user to:
 nxpdebugmbox
 ------------
 
-The nxpkeygen application allows user to:
+The nxpdebugmbox application allows user to:
 
 - perform the Debug Authentication
 - start/stop Debug Mailbox
-- for complete list of operations run: ``nxpdebugmbox --help``
 
+For complete list of operations run: ``nxpdebugmbox --help``.
 
 pfr
 ---
