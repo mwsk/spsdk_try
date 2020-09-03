@@ -44,7 +44,7 @@ It allows user to:
 - generate user configuration
 - parse binary a extract configuration
 - generate binary data.
-- generate HTML page with brief descrition of CMPA/CFPA sonfiguration fields
+- generate HTML page with brief descrition of CMPA/CFPA configuration fields
 
 For complete list run: ``pfr --help``.
 
