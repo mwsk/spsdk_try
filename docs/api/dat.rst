@@ -12,26 +12,46 @@ Module for generating debug credentials
    :undoc-members:
    :show-inheritance:
 
+
+Module for debug mailbox
+--------------------------
+
 .. automodule:: spsdk.dat.debug_mailbox
    :members:
    :undoc-members:
    :show-inheritance:
+
+
+Module for debug mailbox's commands
+------------------------------------
 
 .. automodule:: spsdk.dat.dm_commands
    :members:
    :undoc-members:
    :show-inheritance:
    
+   
+Module for Debug Authentication Challenge (DAC) Packet
+--------------------------------------------------------
+
 .. automodule:: spsdk.dat.dac_packet
    :members:
    :undoc-members:
    :show-inheritance:
 
+
+Module for Debug Authentication Response (DAR) Packet
+--------------------------------------------------------
+
 .. automodule:: spsdk.dat.dar_packet
    :members:
    :undoc-members:
    :show-inheritance:
-   
+
+
+Utils module
+--------------
+
 .. automodule:: spsdk.dat.utils
    :members:
    :undoc-members:
