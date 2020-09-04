@@ -18,7 +18,6 @@ Features:
 
 Supported devices: 
 ==================
-- i.MX RT1170
 - LPC55S69 (Niobe4)
 - LPC55S16 (Niobe4 Mini)
 - i.MX RT105x, RT106x
