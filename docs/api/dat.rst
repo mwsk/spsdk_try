@@ -12,6 +12,16 @@ Module for generating debug credentials
    :undoc-members:
    :show-inheritance:
 
+.. automodule:: spsdk.dat.debug_mailbox
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: spsdk.dat.dm_commands
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   
 .. automodule:: spsdk.dat.dac_packet
    :members:
    :undoc-members:
@@ -21,7 +31,7 @@ Module for generating debug credentials
    :members:
    :undoc-members:
    :show-inheritance:
-
+   
 .. automodule:: spsdk.dat.utils
    :members:
    :undoc-members:
