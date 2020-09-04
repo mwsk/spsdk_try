@@ -6,7 +6,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 """Common utils for DAT module."""
-import contextlib
 import math
 import os
 from typing import Union, Iterator
@@ -73,23 +72,3 @@ def ecc_key_to_bytes(key: crypto.EllipticCurvePublicKey, length: int = 66) -> by
     public_numbers = key.public_numbers()
     return ecc_public_numbers_to_bytes(public_numbers=public_numbers,
                                        length=length)
-
-
-@contextlib.contextmanager
-def use_working_directory(path: str) -> Iterator[None]:
-    # pylint: disable=missing-yield-doc
-    """Execute the block in given directory.
-
-    Cd into specific directory.
-    Execute the block.
-    Change the directory back into the original one.
-
-    :param path: the path, where the current directory will be changed to
-    """
-    current_dir = os.getcwd()
-    try:
-        os.chdir(path)
-        yield
-    finally:
-        os.chdir(current_dir)
-        assert os.getcwd() == current_dir

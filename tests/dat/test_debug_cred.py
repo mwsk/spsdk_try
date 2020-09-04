@@ -13,8 +13,7 @@ from spsdk.crypto import hashes, ec, InvalidSignature
 from spsdk.crypto.loaders import load_private_key
 from spsdk.dat import utils
 from spsdk.dat.debug_credential import DebugCredentialRSA, DebugCredentialECC
-from spsdk.utils.misc import load_binary
-from spsdk.dat.utils import use_working_directory
+from spsdk.utils.misc import load_binary, use_working_directory
 
 
 def test_debugcredential_rsa_compare_with_reference(data_dir):

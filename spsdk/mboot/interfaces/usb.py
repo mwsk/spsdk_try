@@ -36,6 +36,7 @@ USB_DEVICES = {
     'MKL27': (0x15A2, 0x0073),
     'LPC55': (0x1FC9, 0x0021),
     'IMXRT': (0x1FC9, 0x0135),
+    'MXRT20': (0x15A2, 0x0073),  # this is ID of flash-loader for RT102x
     'MXRT50': (0x15A2, 0x0073),  # this is ID of flash-loader for RT105x
     'MXRT60': (0x15A2, 0x0073),  # this is ID of flash-loader for RT106x
     'LPC55xx': (0x1FC9, 0x0020),

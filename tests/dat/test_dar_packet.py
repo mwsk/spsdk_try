@@ -14,8 +14,7 @@ import yaml
 from spsdk.dat.dar_packet import DebugAuthenticateResponseRSA, \
     DebugAuthenticateResponseECC
 from spsdk.dat.debug_credential import DebugCredentialRSA, DebugCredentialECC
-from spsdk.dat.utils import use_working_directory
-from spsdk.utils.misc import load_binary
+from spsdk.utils.misc import load_binary, use_working_directory
 
 
 def test_dar_packet_rsa(tmpdir, data_dir):

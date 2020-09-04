@@ -5,9 +5,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 """Miscellaneous functions used throughout the SPSDK."""
-
+import contextlib
 import os
-from typing import Callable, Iterable, Optional, TypeVar, List, Union
+from typing import Callable, Iterable, Iterator, Optional, TypeVar, List, Union
 
 from spsdk.utils.crypto import crypto_backend
 
@@ -121,12 +121,35 @@ def write_file(data: Union[str, bytes], *path_segments: str, mode: str = 'w') ->
         return f.write(data)
 
 
+@contextlib.contextmanager
+def use_working_directory(path: str) -> Iterator[None]:
+    # pylint: disable=missing-yield-doc
+    """Execute the block in given directory.
+
+    Cd into specific directory.
+    Execute the block.
+    Change the directory back into the original one.
+
+    :param path: the path, where the current directory will be changed to
+    """
+    current_dir = os.getcwd()
+    try:
+        os.chdir(path)
+        yield
+    finally:
+        os.chdir(current_dir)
+        assert os.getcwd() == current_dir
+
+
 class DebugInfo:
-    """The class is used to provide detailed information about export process and exported data for debugging."""
+    """The class is used to provide detailed information about export process and exported data.
+
+    It is handy for analyzing content and debugging changes in the exported binary output.
+    """
 
     @classmethod
     def disabled(cls) -> 'DebugInfo':
-        """Return an instance of DebugInfo with deabled message collecting."""
+        """Return an instance of DebugInfo with disabled message collecting."""
         return DebugInfo(enabled=False)
 
     def __init__(self, enabled: bool = True):
@@ -185,11 +208,11 @@ class DebugInfo:
 
     @property
     def lines(self) -> Iterable[str]:
-        """:return: list of logged lines; empty list if nothing logged ot log disabled."""
+        """:return: list of logged lines; empty list if nothing logged or log disabled."""
         if self._lines:
             return self._lines
         return list()
 
     def info(self) -> str:
-        """:return: multi-line text with log; empty string if nothing logged ot log disabled."""
+        """:return: multi-line text with log; empty string if nothing logged or log disabled."""
         return "\n".join(self.lines)

@@ -52,7 +52,7 @@ class JLinkWrapper(object):
         """
         self.apnumber = apnumber
         self.jlink = pylink.JLink()
-        self.jlink.target_connection_required = False
+
         self.jlink.open(serial_no=serial_no, ip_addr=ip_addr)
         self.jlink.set_tif(pylink.enums.JLinkInterfaces.SWD)
         # self.jlink.set_speed(4000)

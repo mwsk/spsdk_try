@@ -13,7 +13,7 @@ from click.testing import CliRunner
 from spsdk.apps.nxpkeygen import main, determine_protocol_version, determine_key_parameters
 from spsdk.crypto import load_public_key, load_private_key, EllipticCurvePublicKey, RSAPrivateKey, \
     RSAPublicKey, EllipticCurvePrivateKey
-from spsdk.dat.utils import use_working_directory
+from spsdk.utils.misc import use_working_directory
 
 
 def test_command_line_interface():

@@ -48,6 +48,7 @@ USB_DEVICES = {
     'MX7ULP': (0x1FC9, 0x0126),
     'VYBRID': (0x15A2, 0x006A),
 
+    'MXRT20': (0x1FC9, 0x0130),
     'MXRT50': (0x1FC9, 0x0130),
     'MXRT60': (0x1FC9, 0x0135),
 
