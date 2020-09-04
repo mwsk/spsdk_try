@@ -54,7 +54,7 @@ Download a flashloader into i.MX RT10xx device and read bootloader properties.
 -------------------------------------------------------------------------------
 Located at: `examples/sdp_mboot.py`
 
-.. automodule:: examples.sdp
+.. automodule:: examples.sdp_mboot
 
 Write memory using SDPS.
 -------------------------
