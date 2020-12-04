@@ -1,6 +1,6 @@
 # tox has to installed first
 tox
--r requirements.txt
+#-r requirements.txt
 # testing
 pyyaml
 pytest
