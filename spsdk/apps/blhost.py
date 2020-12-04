@@ -14,10 +14,9 @@ import sys
 
 import click
 from click_option_group import MutuallyExclusiveOptionGroup, optgroup
-from hexdump import hexdump
 
 from spsdk import __version__ as spsdk_version
-from spsdk.apps.utils import INT, get_interface
+from spsdk.apps.utils import INT, get_interface, format_raw_data
 from spsdk.mboot import McuBoot, StatusCode, parse_property_value
 
 
@@ -89,7 +88,7 @@ def efuse_read_once(ctx: click.Context, address: int) -> None:
     """
     with McuBoot(ctx.obj['interface']) as mboot:
         response = mboot.efuse_read_once(address)
-        display_output([response], mboot.status_code, ctx.obj['use_json'])
+        display_output([4, response], mboot.status_code, ctx.obj['use_json'])
 
 
 @main.command()
@@ -158,9 +157,10 @@ def get_property(ctx: click.Context, property_tag: int, index: int) -> None:
 @click.argument('byte_count', type=INT(), required=True)
 @click.argument('out_file', metavar='FILE', type=click.File('wb'), required=False)
 @click.argument('memory_id', type=int, default=0, required=False)
+@click.option('-h', '--use-hexdump', is_flag=True, default=False, help='Use hexdump format')
 @click.pass_context
 def read_memory(ctx: click.Context, address: int, byte_count: int,
-                out_file: click.File, memory_id: int) -> None:
+                out_file: click.File, memory_id: int, use_hexdump: bool) -> None:
     """Read memory.
 
     \b
@@ -175,7 +175,7 @@ def read_memory(ctx: click.Context, address: int, byte_count: int,
     if out_file:
         out_file.write(response)    # type: ignore
     else:
-        hexdump(response)
+        click.echo(format_raw_data(response, use_hexdump=use_hexdump))
 
     display_output(
         [len(response)], mboot.status_code, ctx.obj['use_json'],

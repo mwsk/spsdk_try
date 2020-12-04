@@ -2235,7 +2235,6 @@ class KernelImg:
 
     def info(self) -> None:
         """String representation of the IMX Kernel Image."""
-        pass
 
     def export(self) -> bytes:
         """Export."""

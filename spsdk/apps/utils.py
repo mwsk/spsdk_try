@@ -11,6 +11,7 @@ import sys
 from typing import Union
 
 import click
+import hexdump
 
 from spsdk.mboot import interfaces as MBootInterfaceModule
 from spsdk.mboot.interfaces import Interface as MBootInterface
@@ -84,7 +85,7 @@ def get_interface(module: str, port: str = None, usb: str = None,
         name = port.split(',')[0] if ',' in port else port
         devices = interface_module.scan_uart(port=name, timeout=timeout)  # type: ignore
         if len(devices) != 1:
-            click.echo(f"Error: cannot open PC UART port '{name}'.")
+            click.echo(f"Error: cannot ping device on UART port '{name}'.")
             sys.exit(1)
     if usb:
         pid_vid = usb.replace(',', ':')
@@ -97,3 +98,24 @@ def get_interface(module: str, port: str = None, usb: str = None,
             sys.exit(1)
         devices[0].timeout = timeout
     return devices[0]
+
+
+def _split_string(string: str, length: int) -> list:
+    """Split the string into chunks of same length."""
+    return [string[i:i+length] for i in range(0, len(string), length)]
+
+
+def format_raw_data(data: bytes, use_hexdump: bool = False, line_length: int = 16) -> str:
+    """Format bytes data into human-readable form.
+
+    :param data: Data to format
+    :param use_hexdump: Use hexdump with addresses and ASCII, defaults to False
+    :param line_length: bytes per line, defaults to 32
+    :return: formated string (multilined if necessary)
+    """
+    if use_hexdump:
+        return hexdump.hexdump(data, result='return')
+    data_string = data.hex()
+    parts = [_split_string(line, 2) for line in _split_string(data_string, line_length * 2)]
+    result = '\n'.join(' '.join(line) for line in parts)
+    return result

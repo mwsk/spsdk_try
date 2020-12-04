@@ -31,13 +31,15 @@ class MasterBootImageType(Enum):
     ENCRYPTED_RAM_IMAGE = (0x03, "Encrypted Load-to-RAM Image")
     SIGNED_XIP_IMAGE = (0x04, "Plain Signed XIP Image")
     CRC_XIP_IMAGE = (0x05, "Plain CRC XIP Image")
+    SIGNED_XIP_NXP_IMAGE = (0x08, "Plain Signed XIP Image NXP Key")
 
     @staticmethod
     def is_xip(image_type: int) -> bool:
         """True is the image type is executed in place (XIP)."""
         return image_type in [MasterBootImageType.PLAIN_IMAGE,
                               MasterBootImageType.SIGNED_XIP_IMAGE,
-                              MasterBootImageType.CRC_XIP_IMAGE]
+                              MasterBootImageType.CRC_XIP_IMAGE,
+                              MasterBootImageType.SIGNED_XIP_NXP_IMAGE]
 
     @staticmethod
     def is_copied_to_ram(image_type: int) -> bool:
@@ -56,7 +58,8 @@ class MasterBootImageType(Enum):
         """True is the image type is signed; False otherwise."""
         return image_type in [MasterBootImageType.SIGNED_XIP_IMAGE,
                               MasterBootImageType.SIGNED_RAM_IMAGE,
-                              MasterBootImageType.ENCRYPTED_RAM_IMAGE]
+                              MasterBootImageType.ENCRYPTED_RAM_IMAGE,
+                              MasterBootImageType.SIGNED_XIP_NXP_IMAGE]
 
     @staticmethod
     def is_encrypted(image_type: int) -> bool:
@@ -289,7 +292,7 @@ class MasterBootImage:
                  trust_zone: Optional[TrustZone] = None, app_table: Optional[MultipleImageTable] = None,
                  cert_block: Optional[CertBlockV2] = None, priv_key_pem_data: Optional[bytes] = None,
                  hmac_key: Union[bytes, str] = None, key_store: KeyStore = None,
-                 enable_hw_user_mode_keys: bool = False, ctr_init_vector: bytes = None):
+                 enable_hw_user_mode_keys: bool = False, ctr_init_vector: bytes = None) -> None:
         """Constructor.
 
         :param app: input image (binary)
@@ -353,7 +356,7 @@ class MasterBootImage:
                 raise ValueError("app_table is empty")
 
         # image size
-        if len(self.data) < self.HMAC_OFFSET:
+        if len(self.app) < self.HMAC_OFFSET:
             raise ValueError("Image must be at least {} bytes".format(str(self.HMAC_OFFSET)))
 
         # security stuff
@@ -408,10 +411,7 @@ class MasterBootImage:
             msg += "Private Key  : {Yes}\n"
         return msg
 
-    def _update_ivt(self, data: bytes) -> bytes:
-        data = bytearray(data)
-        data[self.IMAGE_LENGTH_OFFSET: self.IMAGE_LENGTH_OFFSET + 4] = struct.pack("<I", self.total_len)
-        # flags
+    def _calculate_flags(self) -> int:
         flags = (self.trust_zone.type << 8) + self.image_type
         if self.key_store and self.key_store.export():
             flags |= self._KEY_STORE_FLAG
@@ -419,6 +419,13 @@ class MasterBootImage:
             flags |= self._RELOC_TABLE_FLAG
         if self.enable_hw_user_mode_keys:
             flags |= self._HW_USER_KEY_EN_FLAG
+        return flags
+
+    def _update_ivt(self, data: bytes) -> bytes:
+        data = bytearray(data)
+        data[self.IMAGE_LENGTH_OFFSET: self.IMAGE_LENGTH_OFFSET + 4] = struct.pack("<I", self.total_len)
+        # flags
+        flags = self._calculate_flags()
         data[self.IMAGE_FLAGS_OFFSET: self.IMAGE_FLAGS_OFFSET + 4] = struct.pack("<I", flags)
         #
         data[self.LOAD_ADDR_OFFSET: self.LOAD_ADDR_OFFSET + 4] = struct.pack("<I", self.load_addr)
@@ -517,3 +524,110 @@ class MasterBootImage:
     def parse(cls, data: bytes, offset: int = 0, **kwargs: Any) -> None:
         """Parse."""
         raise NotImplementedError()
+
+
+class MasterBootImageManifest:
+    """MasterBootImage Manifest used in Niobe4Analog."""
+
+    MAGIC = b"imgm"
+    FORMAT = "<4s2H3L"
+    FORMAT_VERSION = "1.0"
+    DIGEST_PRESENT_FLAG = 0x8000_0000
+
+    def __init__(self, firmware_version: int, trust_zone: TrustZone,
+                 sign_hash_len: int = None) -> None:
+        """Initialize MBI Manifest object.
+
+        :param firmware_version: firmware version
+        :param sign_hash_len: length of hash used for singing, defaults to None
+        :param trust_zone: TrustZone instance, defaults to None
+        """
+        self.firmware_version = firmware_version
+        self.sign_hash_len = sign_hash_len
+        self.trust_zone = trust_zone
+        self.total_length = self._calculate_length()
+        self.flags = self._calculate_flags()
+
+    def _calculate_length(self) -> int:
+        length = struct.calcsize(self.FORMAT)
+        # trustzone is always present
+        length += len(self.trust_zone.export())
+        return length
+
+    def _calculate_flags(self) -> int:
+        if not self.sign_hash_len:
+            return 0
+        hash_len_types = {0: 0, 32: 1, 48: 2, 64: 3}
+        return self.DIGEST_PRESENT_FLAG | hash_len_types[self.sign_hash_len]
+
+    def export(self) -> bytes:
+        """Serialize MBI Manifest."""
+        data = struct.pack(
+            self.FORMAT,
+            self.MAGIC,
+            *[int(part) for part in self.FORMAT_VERSION.split('.')],
+            self.firmware_version,
+            self.total_length,
+            self.flags
+        )
+        return data
+
+
+class MasterBootImageN4Analog(MasterBootImage):
+    """Master Boot Image layout specific for Niobe4Analog."""
+
+    # flag indication presence of dual boot version (Used by Niobe4Analog)
+    _DUAL_BOOT_VERSION_FLAG = 0x400
+
+    def __init__(self, app: bytes, load_addr: int,
+                 dual_boot_version: int = None, firmware_version: int = 1,
+                 sign_hash_len: int = 0, **kwargs: Any) -> None:
+        """Initialize MBI for Niobe4Analog.
+
+        :param app: application binary
+        :param load_addr: Addres where to load application
+        :param dual_boot_version: Version of dualboot application, defaults to None
+        :param firmware_version: Firmware version, defaults to None
+        :param sign_hash_len: Length of hash used for singing, defaults to 0
+        :param kwargs: keyword arguments passed to MasterBootImage
+        """
+        super().__init__(app=app, load_addr=load_addr, **kwargs)
+        self.dual_boot_version = dual_boot_version
+        self.manifest = None
+        assert self.trust_zone, "TrustZone was not set in parent class!"
+        if MasterBootImageType.is_signed(self.image_type):
+            self.manifest = MasterBootImageManifest(
+                firmware_version, sign_hash_len=sign_hash_len,
+                trust_zone=self.trust_zone
+            )
+
+    def _calculate_flags(self) -> int:
+        flags = super()._calculate_flags()
+        if self.dual_boot_version:
+            flags |= self._DUAL_BOOT_VERSION_FLAG
+            flags |= self.dual_boot_version << 16
+        return flags
+
+    @property
+    def data(self) -> bytes:
+        """Plain, unsigned binary data for the image.
+
+        It consists of:
+        - application image
+        - image manifest for signed image types
+        - optionally trust zone data
+        Please mind the result does not contain: certification block, HMAC, keystore and signature
+        """
+        # binary image
+        data = self.app
+        # manifest
+        if MasterBootImageType.is_signed(self.image_type):
+            assert self.manifest, "MasterBootImageManifest is not set!"
+            data += self.manifest.export()
+        # trust zone data
+        data += self.trust_zone.export()
+        return data
+
+    def _validate_new_instance(self) -> None:
+        # temporarily disable instance checking
+        pass

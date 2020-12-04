@@ -230,9 +230,10 @@ if os.name == "nt":
                 raw_data, data_index = self._encode_report(report_id, report_size, data, data_index)
                 self.report[report_id - 1].send(raw_data)
 
-        def read(self) -> CmdResponse:
+        def read(self, length: int = None) -> CmdResponse:
             """Read data on the IN endpoint associated to the HID interfaces.
 
+            :param length: Count of bytes (NOT USED)
             :return: Response to the last command
             :raises SdpConnectionError: Exception caused by time-out
             """

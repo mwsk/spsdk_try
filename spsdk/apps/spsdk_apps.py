@@ -20,8 +20,10 @@ from spsdk import __version__ as spsdk_version
 from .blhost import main as blhost_main
 from .pfr import main as pfr_main
 from .sdphost import main as sdphost_main
+from .sdpshost import main as sdpshost_main
 from .nxpkeygen import main as nxpkeygen_main
 from .nxpdebugmbox import main as nxpdebugmbox_main
+from .elftosb import main as elftosb_main
 
 
 @click.group()
@@ -33,9 +35,11 @@ def main() -> int:
 
 main.add_command(blhost_main, name='blhost')
 main.add_command(sdphost_main, name='sdphost')
+main.add_command(sdpshost_main, name='sdpshost')
 main.add_command(pfr_main, name='pfr')
 main.add_command(nxpkeygen_main, name='nxpkeygen')
 main.add_command(nxpdebugmbox_main, name='nxpdebugmbox')
+main.add_command(elftosb_main, name='elftosb')
 
 
 if __name__ == "__main__":
