@@ -62,7 +62,7 @@ setup(
     ],
     install_requires=[
         get_requirements(),
-        'astunparse @ git+ssh://git@github.com/tbennun/astunparse#egg=astunparse'
+        'astunparse @ git+https://github.com/tbennun/astunparse#egg=astunparse'
     ],
     include_package_data=True,
     classifiers=[
