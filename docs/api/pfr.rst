@@ -10,7 +10,7 @@ Support for Protected Flash Region areas (CMPA, CFPA).
 Protected Flash Region
 -----------------------
 .. automodule:: spsdk.pfr.pfr
-   :special-members: BaseConfigArea
+   :special-members: CMPA, CFPA, BaseConfigArea
    :exclude-members: CONFIG_DIR
    :undoc-members:
    :show-inheritance:
