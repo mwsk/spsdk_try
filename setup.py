@@ -28,8 +28,6 @@ if sys.version_info >= (3, 8, 0) and sanitize_version(pip.__version__) < '19.2.3
     print(f"With python {sys.version}, you're using an old version of pip: {pip.__version__}")
     print("Please update pip using: 'python -m pip install --upgrade pip'.")
     sys.exit(1)
-if sanitize_version(pip.__version__) > 20.2.4:
-    sys.exit(1)
 
 def get_requirements() -> List[str]:
     """Get the list of requirements from requirements.txt file."""
