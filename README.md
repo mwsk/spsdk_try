@@ -52,6 +52,8 @@ Install SPSDK from sources:
 ```
 > In **Windows OS** you need to install [Microsoft Visual C++ Build Tools](https://www.scivision.dev/python-windows-visual-c-14-required/)
  
+ Note: If you use pip version 20.3, please downgrade it to 20.2.4, because of new resolver functionality.
+
 Usage
 -----
 
@@ -72,7 +74,8 @@ To run examples using i.MX RT 1050 you need to download a flashloader:
 Dependencies
 ------------
 
-- requirements.txt
-  - list of requirements for running SPSDK core + apps
-- requirements-develop.txt
-  - requirements needed for development (running tests, checking coding style, generating docs...)
+SPSDK requires [Python](https://www.python.org) >3.5 and <3.9 interpreter, old version 2.x is not supported !
+
+The core dependencies are included in requirements.txt file. 
+
+The dependencies for the development and testing are included in requirements-develop.txt.
