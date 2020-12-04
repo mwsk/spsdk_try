@@ -10,39 +10,48 @@ foundation from quick customer prototyping up to production deployment. Is follo
 
 **SPSDK Modules:**
 
-- **MBoot** - Covering functionality of `blhost` tool
-- **SDP** - Covering functionality of `sdphost` tool
+- **Crypto** - Support for key's and certificate's operations
+- **DAT** - Covering functionality of `debug authentication` tool
 - **Image** - Covering functionality of `srktool`, `dcdgen`, `mkimage` and other similar tools
+- **MBoot** - Covering functionality of `blhost` tool
+- **PFR** - Support for configuration of Protected Flash Region areas (CMPA, CFPA)
 - **SBFile** - Covering functionality of `elftosb` tool
+- **SDP** - Covering functionality of `sdphost` tool
 
-
-Dependencies
-============
-
-SPSDK requires [Python](https://www.python.org) >3.5 interpreter, old version 2.x is not supported !
-
-The core dependencies are included in requirements.txt file. 
-
-The dependencies for the development are included in requirements-develop.txt.
 
 Installation
 ============
 
-Directly from GitHub:
+Installation directly from master branch [bitbucket.sw.nxp.com](https://bitbucket.sw.nxp.com/projects/SPSDK/repos/spsdk/browse):
 
-``` bash
-    $ pip install -U https://github.com/NXPmicro/spsdk/archive/master.zip
+```bash
+pip install -U https://bitbucket.sw.nxp.com/rest/api/latest/projects/SPSDK/repos/spsdk/archive?format=zip
 ```
 
-Install SPSDK from sources:
+If you will be asked for credentials, use your NXP login and password:
 
-``` bash
-    $ git clone https://github.com/NXPmicro/spsdk.git
-    $ cd spsdk
-    $ pip install -r requirements-develop.txt
-    $ pip install -U -e .
+```text
+User for bitbucket.sw.nxp.com: nxa...
+Password: ******
 ```
-> In Windows OS you need to instal [Microsoft Visual C++ Build Tools](https://www.scivision.dev/python-windows-visual-c-14-required/)
 
-Contribution
+In case of development, install SPSDK from sources:
+
+```bash
+git clone ssh://git@bitbucket.sw.nxp.com/spsdk/spsdk.git
+cd spsdk
+pip install -r requirements-develop.txt
+pip install -U -e .
+```
+
+Note: If you use pip version 20.3, please downgrade it to 20.2.4, because of new resolver functionality.
+ 
+ 
+Dependencies
 ============
+
+SPSDK requires [Python](https://www.python.org) >3.5 and <3.9 interpreter, old version 2.x is not supported !
+
+The core dependencies are included in requirements.txt file. 
+
+The dependencies for the development and testing are included in requirements-develop.txt.
