@@ -17,6 +17,7 @@ import yaml
 
 from spsdk import __version__ as version
 from spsdk.apps.elftosb_helper import RootOfTrustInfo
+from spsdk.apps.utils import catch_spsdk_error
 from spsdk.crypto import (generate_ecc_private_key, generate_ecc_public_key,
                           generate_rsa_private_key, generate_rsa_public_key,
                           save_ecc_private_key, save_ecc_public_key,
@@ -203,5 +204,11 @@ def gendc(ctx: click.Context, plugin: click.Path, dc_file_path: str, config: cli
         f.write(data)
 
 
+@catch_spsdk_error
+def safe_main() -> int:
+    """Call the main function."""
+    sys.exit(main())  # pragma: no cover  # pylint: disable=no-value-for-parameter
+
+
 if __name__ == "__main__":
-    sys.exit(main())  # pragma: no cover   # pylint: disable=no-value-for-parameter
+    safe_main()  # pragma: no cover

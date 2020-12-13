@@ -14,7 +14,7 @@ import sys
 import click
 
 from spsdk import __version__ as spsdk_version
-from spsdk.apps.utils import INT
+from spsdk.apps.utils import INT, catch_spsdk_error
 from spsdk.dat import (DebugAuthenticationChallenge, DebugCredential,
                        DebugAuthenticateResponse, dm_commands)
 from spsdk.dat.debug_mailbox import DebugMailbox
@@ -52,7 +52,7 @@ def main(ctx: click.Context, interface: str, protocol: str, log_level: str, timi
 
     # Get the Debug probe object
     try:
-        #TODO solve following parameters:
+        # TODO solve following parameters:
         # ip_addr
         # tool
         debug_probes = DebugProbeUtils.get_connected_probes(interface=interface, hardware_id=serial_no)
@@ -101,7 +101,7 @@ def auth(pass_obj: dict, beacon: int, certificate: str, key: str, force: bool) -
         logger.debug(f'DAR:\n{dar.info()}')
         dar_data = dar.export()
         # convert bytes to List[int]
-        dar_data_words = list(struct.unpack(f'<{len(dar_data)//4}I', dar_data))
+        dar_data_words = list(struct.unpack(f'<{len(dar_data) // 4}I', dar_data))
         dar_response = dm_commands.DebugAuthenticationResponse(
             dm=mail_box, paramlen=len(dar_data_words)
         ).run(dar_data_words)
@@ -169,5 +169,11 @@ def ispmode(pass_obj: dict, mode: int) -> None:
         logger.error("Entering into ISP mode failed!")
 
 
+@catch_spsdk_error
+def safe_main() -> int:
+    """Call the main function."""
+    sys.exit(main())  # pragma: no cover  # pylint: disable=no-value-for-parameter
+
+
 if __name__ == "__main__":
-    sys.exit(main())  # pragma: no cover # pylint: disable=no-value-for-parameter
+    safe_main()  # pragma: no cover

@@ -14,7 +14,7 @@ import click
 from click_option_group import MutuallyExclusiveOptionGroup, optgroup
 
 from spsdk import __version__ as spsdk_version
-from spsdk.apps.utils import get_interface
+from spsdk.apps.utils import get_interface, catch_spsdk_error
 from spsdk.sdp import SDPS
 from spsdk.sdp.sdps import ROM_INFO
 
@@ -64,5 +64,11 @@ def write_file(ctx: click.Context, bin_file: click.File) -> None:
         sdps.write_file(data)
 
 
+@catch_spsdk_error
+def safe_main() -> int:
+    """Call the main function."""
+    sys.exit(main())  # pragma: no cover  # pylint: disable=no-value-for-parameter
+
+
 if __name__ == "__main__":
-    sys.exit(main())    #pragma: no cover   # pylint: disable=no-value-for-parameter
+    safe_main()  # pragma: no cover

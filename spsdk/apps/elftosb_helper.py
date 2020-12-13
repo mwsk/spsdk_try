@@ -41,13 +41,18 @@ class CertificateBlockConfig:
         self.root_certificate_1_file = config_data.get('rootCertificate1File')
         self.root_certificate_2_file = config_data.get('rootCertificate2File')
         self.root_certificate_3_file = config_data.get('rootCertificate3File')
+        self.root_certs = [
+            self.root_certificate_0_file, self.root_certificate_1_file,
+            self.root_certificate_2_file, self.root_certificate_3_file
+        ]
+        self.root_certs = [item for item in self.root_certs if item]
         self.root_certificate_curve = config_data.get('rootCertificateEllipticCurve')
         self.main_root_cert_id = config_data.get('mainRootCertId', 0)
         self.main_root_private_key_file = config_data.get('mainRootCertPrivateKeyFile')
         self.use_isk = config_data.get('useIsk', False)
         self.isk_certificate = config_data.get('signingCertificateFile')
         self.isk_private_key_file = config_data.get('signingCertificatePrivateKeyFile')
-        self.isk_constraint = config_data.get('signingCertificateConstraint', 0)
+        self.isk_constraint = int(config_data.get('signingCertificateConstraint', '0'), 0)
         self.isk_certificate_curve = config_data.get('iskCertificateEllipticCurve')
         self.isk_sign_data_path = config_data.get('signCertData')
 
@@ -71,7 +76,7 @@ class MasterBootImageConfig(CertificateBlockConfig):
         if self.is_dual_boot:
             assert self.dual_boot_version
             self.dual_boot_version = int(self.dual_boot_version, 0)
-        self.firmware_version = config_data.get('firmwareVersion', 1)
+        self.firmware_version = int(config_data.get('firmwareVersion', '1'), 0)
         self.master_boot_output_file = config_data.get('masterBootOutputFile')
 
 

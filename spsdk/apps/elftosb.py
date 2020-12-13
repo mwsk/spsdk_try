@@ -11,11 +11,18 @@ import sys
 import click
 import commentjson as json
 from click_option_group import RequiredMutuallyExclusiveOptionGroup, optgroup
+from Crypto.PublicKey import ECC
 
 from spsdk import __version__ as spsdk_version
 from spsdk.apps import elftosb_helper
+from spsdk.apps.utils import catch_spsdk_error
+from spsdk.crypto import (
+    load_private_key, load_certificate, SignatureProvider,
+    EllipticCurvePrivateKeyWithSerialization
+)
 from spsdk.image import MasterBootImageN4Analog, MasterBootImageType, TrustZone
 from spsdk.utils.misc import load_binary, load_file, write_file
+from spsdk.utils.crypto import CertBlockV3
 
 SUPPORTED_FAMILIES = ['lpc55s3x']
 
@@ -32,7 +39,7 @@ def generate_trustzone_binary(tzm_conf: click.File) -> None:
 
 def _get_trustzone(config: elftosb_helper.MasterBootImageConfig) -> TrustZone:
     """Create appropriate TrustZone instance."""
-    if config.trustzone_preset_file is None:
+    if not config.trustzone_preset_file:
         return TrustZone.disabled()
     try:
         tz_config_data = json.loads(load_file(config.trustzone_preset_file))
@@ -70,11 +77,46 @@ def generate_master_boot_image(image_conf: click.File) -> None:
     dual_boot_version = config.dual_boot_version
     firmware_version = config.firmware_version
 
+    cert_block = None
+    signature_provider = None
+    if MasterBootImageType.is_signed(image_type):
+        cert_config = elftosb_helper.CertificateBlockConfig(config_data)
+        root_certs = [
+            load_binary(cert_file) for cert_file in cert_config.root_certs  # type: ignore
+        ]
+        user_data = None
+        if cert_config.isk_sign_data_path:
+            user_data = load_binary(cert_config.isk_sign_data_path)
+        isk_private_key = None
+        if cert_config.isk_private_key_file:
+            isk_private_key = load_private_key(cert_config.isk_private_key_file)
+            assert isinstance(isk_private_key, EllipticCurvePrivateKeyWithSerialization)
+
+        isk_cert = None
+        if cert_config.isk_certificate:
+            cert_data = load_binary(cert_config.isk_certificate)
+            isk_cert = ECC.import_key(cert_data)
+
+        ca_flag = not cert_config.use_isk
+        cert_block = CertBlockV3(
+            root_certs=root_certs, ca_flag=ca_flag,
+            used_root_cert=cert_config.main_root_cert_id, constraints=cert_config.isk_constraint,
+            isk_private_key=isk_private_key, isk_cert=isk_cert,  # type: ignore
+            user_data=user_data
+        )
+        if cert_config.use_isk:
+            signing_private_key_path = cert_config.isk_private_key_file
+        else:
+            signing_private_key_path = cert_config.main_root_private_key_file
+        signature_provider = SignatureProvider.create(f'type=file;file_path={signing_private_key_path}')
+
     assert config.master_boot_output_file
     mbi = MasterBootImageN4Analog(
         app=app, load_addr=load_addr, image_type=image_type,
         trust_zone=trustzone, dual_boot_version=dual_boot_version,
-        firmware_version=firmware_version
+        firmware_version=firmware_version,
+        cert_block=cert_block,
+        signature_provider=signature_provider
     )
     mbi_data = mbi.export()
 
@@ -112,5 +154,11 @@ def main(chip_family: str, image_conf: click.File, container_conf: click.File, t
         generate_trustzone_binary(tzm_conf)
 
 
+@catch_spsdk_error
+def safe_main() -> int:
+    """Call the main function."""
+    sys.exit(main())  # pragma: no cover  # pylint: disable=no-value-for-parameter
+
+
 if __name__ == "__main__":
-    sys.exit(main())    # pragma: no cover  # pylint: disable=no-value-for-parameter
+    safe_main()  # pragma: no cover

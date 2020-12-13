@@ -13,10 +13,11 @@ from typing import Any, List, Optional, Sequence, Union
 from Crypto.Cipher import AES
 from crccheck.crc import Crc32Mpeg2
 
+from spsdk.crypto import SignatureProvider
 from spsdk.image.keystore import KeySourceType, KeyStore
 from spsdk.image.trustzone import TrustZone, TrustZoneType
 from spsdk.utils import misc
-from spsdk.utils.crypto import crypto_backend, CertBlockV2
+from spsdk.utils.crypto import crypto_backend, CertBlock, serialize_ecc_signature
 from spsdk.utils.easy_enum import Enum
 
 
@@ -290,7 +291,7 @@ class MasterBootImage:
                  load_addr: int,
                  image_type: MasterBootImageType = MasterBootImageType.PLAIN_IMAGE,
                  trust_zone: Optional[TrustZone] = None, app_table: Optional[MultipleImageTable] = None,
-                 cert_block: Optional[CertBlockV2] = None, priv_key_pem_data: Optional[bytes] = None,
+                 cert_block: Optional[CertBlock] = None, priv_key_pem_data: Optional[bytes] = None,
                  hmac_key: Union[bytes, str] = None, key_store: KeyStore = None,
                  enable_hw_user_mode_keys: bool = False, ctr_init_vector: bytes = None) -> None:
         """Constructor.
@@ -332,8 +333,8 @@ class MasterBootImage:
         # security stuff
         self.cert_block = cert_block
         if self.cert_block:
-            self.cert_block.alignment = 4  # this value is used by elf-to-sb-gui
-            self.signature_len = self.cert_block.signature_size
+            self.cert_block.alignment = 4  #type: ignore   # this value is used by elf-to-sb-gui
+            self.signature_len = self.cert_block.signature_size  #type: ignore
         else:
             self.signature_len = 0
         self._priv_key_pem_data = priv_key_pem_data
@@ -393,7 +394,7 @@ class MasterBootImage:
         if self._priv_key_pem_data:
             cert_blk = self.cert_block
             assert cert_blk is not None
-            if not cert_blk.verify_private_key(self._priv_key_pem_data):
+            if not cert_blk.verify_private_key(self._priv_key_pem_data):  #type: ignore
                 raise ValueError('Signature verification failed, private key does not match to certificate')
 
     def info(self) -> str:
@@ -457,7 +458,7 @@ class MasterBootImage:
             encr_header = encr_data[:56] + self.ctr_init_vector
         else:
             encr_header = bytes()
-        self.cert_block.image_length = len(encr_data) + len(self.cert_block.export()) + len(encr_header)
+        self.cert_block.image_length = len(encr_data) + len(self.cert_block.export()) + len(encr_header)  #type: ignore
         return self.cert_block.export() + encr_header
 
     def _hmac(self, data: bytes) -> bytes:
@@ -502,7 +503,7 @@ class MasterBootImage:
         if MasterBootImageType.is_signed(self.image_type):
             assert self._priv_key_pem_data
             cb = self.cert_block
-            assert (cb is not None) and cb.verify_private_key(self._priv_key_pem_data)
+            assert (cb is not None) and cb.verify_private_key(self._priv_key_pem_data)  # type: ignore
             # encrypt
             encr_data = self._encrypt(data)
             encr_data = (self._update_ivt(encr_data[:self.HMAC_OFFSET]) +  # header
@@ -530,8 +531,10 @@ class MasterBootImageManifest:
     """MasterBootImage Manifest used in Niobe4Analog."""
 
     MAGIC = b"imgm"
-    FORMAT = "<4s2H3L"
-    FORMAT_VERSION = "1.0"
+    # FORMAT = "<4s2H3L"
+    FORMAT = "<4s4L"
+    # FORMAT_VERSION = "1.0"
+    FORMAT_VERSION = 0x0001_0000
     DIGEST_PRESENT_FLAG = 0x8000_0000
 
     def __init__(self, firmware_version: int, trust_zone: TrustZone,
@@ -565,7 +568,8 @@ class MasterBootImageManifest:
         data = struct.pack(
             self.FORMAT,
             self.MAGIC,
-            *[int(part) for part in self.FORMAT_VERSION.split('.')],
+            # *[int(part) for part in self.FORMAT_VERSION.split('.')],
+            self.FORMAT_VERSION,
             self.firmware_version,
             self.total_length,
             self.flags
@@ -581,7 +585,8 @@ class MasterBootImageN4Analog(MasterBootImage):
 
     def __init__(self, app: bytes, load_addr: int,
                  dual_boot_version: int = None, firmware_version: int = 1,
-                 sign_hash_len: int = 0, **kwargs: Any) -> None:
+                 sign_hash_len: int = 0,
+                 signature_provider: SignatureProvider = None, **kwargs: Any) -> None:
         """Initialize MBI for Niobe4Analog.
 
         :param app: application binary
@@ -589,11 +594,13 @@ class MasterBootImageN4Analog(MasterBootImage):
         :param dual_boot_version: Version of dualboot application, defaults to None
         :param firmware_version: Firmware version, defaults to None
         :param sign_hash_len: Length of hash used for singing, defaults to 0
+        :param signature_provider: Signature provider meant to sign the image
         :param kwargs: keyword arguments passed to MasterBootImage
         """
         super().__init__(app=app, load_addr=load_addr, **kwargs)
         self.dual_boot_version = dual_boot_version
         self.manifest = None
+        self.signature_provider = signature_provider
         assert self.trust_zone, "TrustZone was not set in parent class!"
         if MasterBootImageType.is_signed(self.image_type):
             self.manifest = MasterBootImageManifest(
@@ -620,14 +627,39 @@ class MasterBootImageN4Analog(MasterBootImage):
         """
         # binary image
         data = self.app
-        # manifest
         if MasterBootImageType.is_signed(self.image_type):
+            assert self.cert_block, "Certificate Block is not set!"
+            data += self.cert_block.export()
             assert self.manifest, "MasterBootImageManifest is not set!"
             data += self.manifest.export()
         # trust zone data
         data += self.trust_zone.export()
+        if MasterBootImageType.is_signed(self.image_type):
+            assert self.signature_provider, "Signature provider is not set!"
+            signature = self.signature_provider.sign(data)
+            assert signature, "Signature is not set!"
+            data += serialize_ecc_signature(signature, 32)
         return data
 
     def _validate_new_instance(self) -> None:
-        # temporarily disable instance checking
+        """Temporarily disable instance checking due to external singing."""
         pass
+
+    @property
+    def total_len(self) -> int:
+        """Return the total (expected) length of the image."""
+        image_length = len(self.app)
+        image_length += len(self.trust_zone.export())
+        if MasterBootImageType.is_signed(self.image_type):
+            assert self.manifest, "MasterBootImageManifest is not set!"
+            image_length += len(self.manifest.export())
+            assert self.cert_block, "Certificate Block is not set!"
+            image_length += self.cert_block.expected_size  # type: ignore
+            # signature length
+            image_length += 64
+        return image_length
+
+    def export(self) -> bytes:
+        """Master boot image (binary)."""
+        data = self._update_ivt(self.data)
+        return data

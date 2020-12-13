@@ -29,6 +29,7 @@ if sys.version_info >= (3, 8, 0) and sanitize_version(pip.__version__) < '19.2.3
     print("Please update pip using: 'python -m pip install --upgrade pip'.")
     sys.exit(1)
 
+
 def get_requirements() -> List[str]:
     """Get the list of requirements from requirements.txt file."""
     with open('requirements.txt') as req_file:
@@ -66,7 +67,7 @@ setup(
     ],
     include_package_data=True,
     classifiers=[
-        'Development Status :: 3 - Alpha'
+        'Development Status :: 3 - Alpha',
         'Programming Language :: Python :: 3 :: Only',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
@@ -83,15 +84,15 @@ setup(
     packages=find_packages(exclude=["tests.*", "tests", "examples"]),
     entry_points={
         'console_scripts': [
-            'elftosb=spsdk.apps.elftosb:main',
-            'pfr=spsdk.apps.pfr:main',
-            'pfrc=spsdk.apps.pfrc:main',
-            'blhost=spsdk.apps.blhost:main',
-            'sdphost=spsdk.apps.sdphost:main',
-            'sdpshost=spsdk.apps.sdpshost:main',
-            'spsdk=spsdk.apps.spsdk_apps:main',
-            'nxpkeygen=spsdk.apps.nxpkeygen:main',
-            'nxpdebugmbox=spsdk.apps.nxpdebugmbox:main'
+            'elftosb=spsdk.apps.elftosb:safe_main',
+            'pfr=spsdk.apps.pfr:safe_main',
+            'pfrc=spsdk.apps.pfrc:safe_main',
+            'blhost=spsdk.apps.blhost:safe_main',
+            'sdphost=spsdk.apps.sdphost:safe_main',
+            'sdpshost=spsdk.apps.sdpshost:safe_main',
+            'spsdk=spsdk.apps.spsdk_apps:safe_main',
+            'nxpkeygen=spsdk.apps.nxpkeygen:safe_main',
+            'nxpdebugmbox=spsdk.apps.nxpdebugmbox:safe_main'
         ],
     },
 )

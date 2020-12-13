@@ -18,6 +18,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from spsdk import __version__ as spsdk_version
 from spsdk import crypto, pfr
+from spsdk.apps.utils import catch_spsdk_error
 from spsdk.image.misc import dict_diff
 
 from spsdk.apps.elftosb_helper import RootOfTrustInfo
@@ -25,6 +26,7 @@ from spsdk.apps.elftosb_helper import RootOfTrustInfo
 HTMLDataElement = Mapping[str, Union[str, Iterable[dict]]]
 HTMLData = List[HTMLDataElement]
 PFRArea = Union[Type[pfr.CMPA], Type[pfr.CFPA]]
+
 
 @no_type_check
 def _store_output(data: str, path: Optional[click.Path], mode: str = 'w') -> None:
@@ -158,7 +160,7 @@ def parse(device: str, revision: str, area: str, output: click.Path, binary: cli
           show_calc: bool, show_diff: bool) -> None:
     """Parse binary a extract configuration."""
     pfr_obj = _get_pfr_class(area)(device=device, revision=revision)
-    data = binary.read()    # type: ignore
+    data = binary.read()  # type: ignore
     parsed = pfr_obj.parse(data, exclude_computed=False)
     if show_diff:
         parsed = dict_diff(
@@ -194,7 +196,7 @@ def generate(output: click.Path, user_config_file: click.File, add_seal: bool, c
     user_config = _load_user_config(user_config_file)
     root_of_trust = None
     if elf2sb_config:
-        keys = RootOfTrustInfo(json.load(elf2sb_config)).public_keys    #type: ignore
+        keys = RootOfTrustInfo(json.load(elf2sb_config)).public_keys  # type: ignore
         root_of_trust = tuple(keys)
     if secret_file:
         root_of_trust = secret_file
@@ -227,5 +229,11 @@ def info(device: str, revision: str, area: str, output: click.Path, open_result:
         click.launch(f'{output}')
 
 
+@catch_spsdk_error
+def safe_main() -> int:
+    """Call the main function."""
+    sys.exit(main())  # pragma: no cover  # pylint: disable=no-value-for-parameter
+
+
 if __name__ == "__main__":
-    sys.exit(main())  # pragma: no cover
+    safe_main()  # pragma: no cover

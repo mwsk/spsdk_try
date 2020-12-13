@@ -16,7 +16,7 @@ import click
 from click_option_group import MutuallyExclusiveOptionGroup, optgroup
 
 from spsdk import __version__ as spsdk_version
-from spsdk.apps.utils import INT, get_interface, format_raw_data
+from spsdk.apps.utils import INT, get_interface, format_raw_data, catch_spsdk_error
 from spsdk.mboot import McuBoot, StatusCode, parse_property_value
 
 
@@ -144,7 +144,7 @@ def get_property(ctx: click.Context, property_tag: int, index: int) -> None:
     MEMORY_ID    - id/index of the memory (default: 0)
     """
     with McuBoot(ctx.obj['interface']) as mboot:
-        response = mboot.get_property(property_tag, index=index)    # type: ignore
+        response = mboot.get_property(property_tag, index=index)  # type: ignore
         assert response, f"Error reading property {property_tag}"
         display_output(
             response, mboot.status_code, ctx.obj['use_json'],
@@ -173,7 +173,7 @@ def read_memory(ctx: click.Context, address: int, byte_count: int,
         response = mboot.read_memory(address, byte_count, memory_id)
     assert response, "Error reading memory"
     if out_file:
-        out_file.write(response)    # type: ignore
+        out_file.write(response)  # type: ignore
     else:
         click.echo(format_raw_data(response, use_hexdump=use_hexdump))
 
@@ -278,5 +278,11 @@ def decode_status_code(status_code: int) -> str:
     return f"{status_code} ({status_code:#x}) {StatusCode.desc(status_code)}."
 
 
+@catch_spsdk_error
+def safe_main() -> int:
+    """Call the main function."""
+    sys.exit(main())  # pragma: no cover  # pylint: disable=no-value-for-parameter
+
+
 if __name__ == "__main__":
-    sys.exit(main())    # pragma: no cover  # pylint: disable=no-value-for-parameter
+    safe_main()  # pragma: no cover

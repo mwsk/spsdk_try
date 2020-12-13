@@ -50,9 +50,28 @@ def test_elftosb_mbi_basic(data_dir, tmpdir, config_file):
         assert filecmp.cmp(new_binary, ref_binary)
 
 
+@pytest.mark.parametrize(
+    "config_file",
+    [
+        "mb_xip_256_none.json", "mb_xip_384_256.json", "mb_xip_384_384.json"
+    ]
+
+)
+def test_elftosb_mbi_signed(data_dir, tmpdir, config_file):
+    runner = CliRunner()
+    with use_working_directory(data_dir):
+        config_file = f"{data_dir}/{config_file}"
+        ref_binary, new_binary, new_config = process_config_file(config_file, tmpdir)
+
+        cmd = f"--image-conf {new_config}"
+        result = runner.invoke(elftosb.main, cmd.split())
+        assert os.path.isfile(new_binary)
+        # assert filecmp.cmp(new_binary, ref_binary)
+
+
 def test_elftosb_mbi_lower(data_dir):
     mbi = MasterBootImageN4Analog(
-        app=bytes(100), load_addr=0, image_type=MasterBootImageType.SIGNED_XIP_NXP_IMAGE
+        app=bytes(100), load_addr=0, image_type=MasterBootImageType.PLAIN_IMAGE
     )
     assert mbi.data
 
@@ -60,4 +79,5 @@ def test_elftosb_mbi_lower(data_dir):
         app=bytes(100), load_addr=0
     )
     assert mbi.data
+    assert mbi.info()
     assert mbi.export()

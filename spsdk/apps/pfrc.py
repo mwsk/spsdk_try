@@ -13,6 +13,7 @@ import sys
 
 import click
 
+from spsdk.apps.utils import catch_spsdk_error
 from spsdk.pfr import Translator, Processor, PFR_DATA_FOLDER
 
 
@@ -56,5 +57,11 @@ def main(cmpa_config: click.File, cfpa_config: click.File, rules_file: click.Fil
         print("-" * 40)
 
 
+@catch_spsdk_error
+def safe_main() -> int:
+    """Call the main function."""
+    sys.exit(main())  # pragma: no cover  # pylint: disable=no-value-for-parameter
+
+
 if __name__ == "__main__":
-    sys.exit(main())     # pragma: no cover  # pylint: disable=no-value-for-parameter
+    safe_main()  # pragma: no cover

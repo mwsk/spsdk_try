@@ -22,30 +22,24 @@ foundation from quick customer prototyping up to production deployment. Is follo
 Installation
 ============
 
-Installation directly from master branch [bitbucket.sw.nxp.com](https://bitbucket.sw.nxp.com/projects/SPSDK/repos/spsdk/browse):
+Directly from GitHub:
 
-```bash
-pip install -U https://bitbucket.sw.nxp.com/rest/api/latest/projects/SPSDK/repos/spsdk/archive?format=zip
+``` bash
+    $ pip install -U https://github.com/NXPmicro/spsdk/archive/master.zip
 ```
 
-If you will be asked for credentials, use your NXP login and password:
+Install SPSDK from sources:
 
-```text
-User for bitbucket.sw.nxp.com: nxa...
-Password: ******
+``` bash
+    $ git clone https://github.com/NXPmicro/spsdk.git
+    $ cd spsdk
+    $ pip install -r requirements-develop.txt
+    $ pip install -U -e .
 ```
+> In Windows OS you need to install [Microsoft Visual C++ Build Tools](https://www.scivision.dev/python-windows-visual-c-14-required/)
 
-In case of development, install SPSDK from sources:
-
-```bash
-git clone ssh://git@bitbucket.sw.nxp.com/spsdk/spsdk.git
-cd spsdk
-pip install -r requirements-develop.txt
-pip install -U -e .
-```
 
 Note: If you use pip version 20.3, please downgrade it to 20.2.4, because of new resolver functionality.
- 
  
 Dependencies
 ============
