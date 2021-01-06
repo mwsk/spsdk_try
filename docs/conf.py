@@ -16,7 +16,6 @@ import spsdk
 from recommonmark.transform import AutoStructify
 
 sys.path.insert(0, os.path.abspath('..'))
-autodoc_mock_imports = ['hidapi']
 sys.setrecursionlimit(1500)
 
 # -- Project information -----------------------------------------------------
@@ -44,6 +43,7 @@ extensions = [
     'sphinx.ext.todo',
     'recommonmark'
 ]
+autodoc_mock_imports = ['hidapi']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
