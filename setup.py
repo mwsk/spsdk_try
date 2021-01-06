@@ -56,7 +56,7 @@ install_requires=[
 # from the installed dependencies here, and mock it for import in docs/conf.py
 # using the autodoc_mock_imports parameter:
 if os.getenv('READTHEDOCS'):
-    install_requires.remove('hidapi==0.10.1')
+    install_requires = get_requirements().remove('hidapi==0.10.1')
     
 setup(
     name='spsdk',
