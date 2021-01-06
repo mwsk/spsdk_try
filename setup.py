@@ -46,6 +46,18 @@ base_dir = os.path.dirname(__file__)
 with open(os.path.join(base_dir, "spsdk", "__version__.py")) as f:
     exec(f.read(), version_info)
 
+install_requires=[
+        get_requirements(),
+        'astunparse @ git+https://github.com/tbennun/astunparse#egg=astunparse'
+    ]
+
+# We are installing the PUDL module to build the docs, but the C libraries
+# required to build snappy aren't available on RTD, so we need to exclude it
+# from the installed dependencies here, and mock it for import in docs/conf.py
+# using the autodoc_mock_imports parameter:
+if os.getenv('READTHEDOCS'):
+    install_requires.remove('hidapi==0.10.1')
+    
 setup(
     name='spsdk',
     version=version_info["__version__"],
@@ -61,10 +73,7 @@ setup(
     setup_requires=[
         'setuptools>=40.0'
     ],
-    install_requires=[
-        get_requirements(),
-        'astunparse @ git+https://github.com/tbennun/astunparse#egg=astunparse'
-    ],
+    install_requires=install_requires,
     include_package_data=True,
     classifiers=[
         'Development Status :: 3 - Alpha',
