@@ -62,7 +62,7 @@ setup(
         'setuptools>=40.0'
     ],
     install_requires=[
-        get_requirements(),
+        get_requirements().remove('hidapi') if os.getenv('READTHEDOCS') else get_requirements(),
         'astunparse @ git+https://github.com/tbennun/astunparse#egg=astunparse'
     ],
     include_package_data=True,
