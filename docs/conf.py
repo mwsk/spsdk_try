@@ -16,6 +16,7 @@ import spsdk
 from recommonmark.transform import AutoStructify
 
 sys.path.insert(0, os.path.abspath('..'))
+autodoc_mock_imports = ['hidapi']
 sys.setrecursionlimit(1500)
 
 # -- Project information -----------------------------------------------------
@@ -52,7 +53,6 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
-autodoc_mock_imports = ['hidapi']
 
 # -- Options for HTML output -------------------------------------------------
 
