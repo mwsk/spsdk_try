@@ -17,5 +17,5 @@ python:
     - method: pip
       path: .
 
-conda:
-  environment: environment.yml
+# conda:
+#   environment: environment.yml
