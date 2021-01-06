@@ -34,7 +34,13 @@ def get_requirements() -> List[str]:
     """Get the list of requirements from requirements.txt file."""
     with open('requirements.txt') as req_file:
         requirements = req_file.read().splitlines()
-    return [x for x in requirements if "astunparse" not in x] + ["astunparse"]
+    req_list = [x for x in requirements if "astunparse" not in x]
+    install_requires = req_list + [
+        'astunparse @ git+https://github.com/tbennun/astunparse#egg=astunparse'
+    ]
+    if os.getenv('READTHEDOCS'):
+        install_requires = [x for x in install_requires if "hidapi" not in x]
+    return install_requires
 
 
 with open("README.md", "r") as f:
@@ -46,17 +52,6 @@ base_dir = os.path.dirname(__file__)
 with open(os.path.join(base_dir, "spsdk", "__version__.py")) as f:
     exec(f.read(), version_info)
 
-install_requires=[
-        get_requirements(),
-        'astunparse @ git+https://github.com/tbennun/astunparse#egg=astunparse'
-    ]
-
-# We are installing the PUDL module to build the docs, but the C libraries
-# required to build snappy aren't available on RTD, so we need to exclude it
-# from the installed dependencies here, and mock it for import in docs/conf.py
-# using the autodoc_mock_imports parameter:
-if os.getenv('READTHEDOCS'):
-    install_requires = get_requirements().remove('hidapi==0.10.1')
     
 setup(
     name='spsdk',
@@ -73,7 +68,7 @@ setup(
     setup_requires=[
         'setuptools>=40.0'
     ],
-    install_requires=install_requires,
+    install_requires=get_requirements(),
     include_package_data=True,
     classifiers=[
         'Development Status :: 3 - Alpha',
