@@ -34,7 +34,7 @@ def get_requirements() -> List[str]:
     """Get the list of requirements from requirements.txt file."""
     with open('requirements.txt') as req_file:
         requirements = req_file.read().splitlines()
-    return [x for x in requirements if "astunparse" not in x] + ["astunparse"] - ["hidapi"]
+    return [x for x in requirements if "astunparse" not in x] + ["astunparse"]
 
 
 with open("README.md", "r") as f:
