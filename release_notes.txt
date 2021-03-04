@@ -13,7 +13,6 @@ Features:
 - elftosb application based on legacy elf2sb supporting SB 3.1 support 
 - nxpdevscan - application for connected USB, UART devices discovery
 - shadowregs -  application for shadow registers management using DebugProbe
-- nxpdebugmbox - include Lauterbach support in debuggers
 - support USB path argument in blhost/sdphost (all supported OS)
 - nxpcertgen cli application (basicConstrains, self-signed)
 - extend blhost commands:
@@ -33,9 +32,9 @@ Features:
 
 Supported devices: 
 ==================
-- LPC55S69, LPC55S28 (Niobe4) 	
-- LPC55S06 (Niobe 4 Nano)
-- LPC55S16 (Niobe4 Mini) 
+- LPC55S6x, LPC55S2x (Niobe4) 	
+- LPC55S0x (Niobe 4 Nano)
+- LPC55S1x (Niobe4 Mini) 
 - i.MX RT105x, RT106x 
 - i.MX RT595S, RT685S 
 

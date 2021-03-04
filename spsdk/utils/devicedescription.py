@@ -79,8 +79,7 @@ class USBDeviceDescription(DeviceDescription):
         :pid: Product ID
         :product_string: Product string
         :manufacturer_string: Manufacturer string
-        :name: Name(s) of NXP devices as defined under spsdk.mboot.interfaces.usb or
-        spsdk.sdp.interfaces.usb
+        :name: Name(s) of NXP devices as defined under spsdk.mboot.interfaces.usb or spsdk.sdp.interfaces.usb
 
         See :py:func:`get_usb_device_name` function to getg the name from
         VID and PID.

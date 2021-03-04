@@ -192,7 +192,7 @@ class CmdErase(BaseCmd):
     def __init__(self, address: int, length: int, memory_id: int = 0) -> None:
         """Constructor for command.
 
-        :param address:Input address
+        :param address: Input address
         :param length: Input length
         :param memory_id: Memory ID
         """
@@ -381,7 +381,7 @@ class CmdCopy(BaseCmd):
                  ) -> None:
         """Constructor for command.
 
-        :param address:Input address
+        :param address: Input address
         :param length: Input length
         :param destination_address: Destination address
         :param memory_id_from: Memory ID
@@ -527,7 +527,7 @@ class CmdFillMemory(BaseCmd):
     def __init__(self, address: int, length: int, pattern: int) -> None:
         """Constructor for command.
 
-        :param address:Input address
+        :param address: Input address
         :param length: Input length
         :param pattern: Pattern for fill memory with
         """

@@ -794,7 +794,7 @@ class CmdUnlockCAAM(CmdUnlockAbstract):
     def __init__(self, features: int = 0):
         """Initialize.
 
-        :param features: mask of FEATURE_UNLOCK_ constants, defaults to 0
+        :param features: mask of FEATURE_UNLOCK_x constants, defaults to 0
         """
         super().__init__(EnumEngine.CAAM, features)
 
@@ -838,7 +838,7 @@ class CmdUnlockOCOTP(CmdUnlockAbstract):
     def __init__(self, features: int = 0, uid: int = 0):
         """Initialize.
 
-        :param features: mask of FEATURE_UNLOCK_ constants, defaults to 0
+        :param features: mask of FEATURE_UNLOCK_x constants, defaults to 0
         :param uid: Unique ID required by some engine/feature combinations
         """
         super().__init__(EnumEngine.OCOTP, features, uid=uid)

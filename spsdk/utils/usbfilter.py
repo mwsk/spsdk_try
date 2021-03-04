@@ -78,8 +78,7 @@ class USBDeviceFilter:
         """Initialize the USB Device Filtering.
 
         :param usb_id: usb_id string
-        :param nxp_device_names: Dictionary holding NXP device vid/pid
-        {"device_name": [vid(int), pid(int)]}
+        :param nxp_device_names: Dictionary holding NXP device vid/pid {"device_name": [vid(int), pid(int)]}
         """
         self.usb_id = usb_id
         self.nxp_device_names = nxp_device_names or {}
