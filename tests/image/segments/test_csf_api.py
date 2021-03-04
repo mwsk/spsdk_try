@@ -2,11 +2,10 @@
 # -*- coding: UTF-8 -*-
 #
 # Copyright 2017-2018 Martin Olejar
-# Copyright 2019-2020 NXP
+# Copyright 2019-2021 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-import os
 import pytest
 from spsdk.image import SegCSF, CmdWriteData, CmdCheckData, EnumWriteOps, EnumCheckOps
 

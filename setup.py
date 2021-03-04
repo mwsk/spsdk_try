@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2019-2020 NXP
+# Copyright 2019-2021 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -30,29 +30,22 @@ if sys.version_info >= (3, 8, 0) and sanitize_version(pip.__version__) < '19.2.3
     sys.exit(1)
 
 
-def get_requirements() -> List[str]:
-    """Get the list of requirements from requirements.txt file."""
-    with open('requirements.txt') as req_file:
-        requirements = req_file.read().splitlines()
-    req_list = [x for x in requirements if "astunparse" not in x]
-    install_requires = req_list + [
-        'astunparse @ git+https://github.com/tbennun/astunparse#egg=astunparse'
-    ]
+with open('requirements.txt') as req_file:
+    requirements = req_file.read().splitlines()
+    # avoid build errors on readthedocs (excluding hidapi, which depends on C module)
     if os.getenv('READTHEDOCS'):
-        install_requires = [x for x in install_requires if "hidapi" not in x]
-    return install_requires
-
+        requirements = [x for x in requirements if "hidapi" not in x]
+    
 
 with open("README.md", "r") as f:
     long_description = f.read()
 
 # extract version info indirectly
-version_info = {}   # type: ignore
+version_info = {}
 base_dir = os.path.dirname(__file__)
 with open(os.path.join(base_dir, "spsdk", "__version__.py")) as f:
     exec(f.read(), version_info)
 
-    
 setup(
     name='spsdk',
     version=version_info["__version__"],
@@ -68,7 +61,7 @@ setup(
     setup_requires=[
         'setuptools>=40.0'
     ],
-    install_requires=get_requirements(),
+    install_requires=requirements,
     include_package_data=True,
     classifiers=[
         'Development Status :: 3 - Alpha',
@@ -96,7 +89,10 @@ setup(
             'sdpshost=spsdk.apps.sdpshost:safe_main',
             'spsdk=spsdk.apps.spsdk_apps:safe_main',
             'nxpkeygen=spsdk.apps.nxpkeygen:safe_main',
-            'nxpdebugmbox=spsdk.apps.nxpdebugmbox:safe_main'
+            'nxpdebugmbox=spsdk.apps.nxpdebugmbox:safe_main',
+            'nxpcertgen=spsdk.apps.nxpcertgen:safe_main',
+            'nxpdevscan=spsdk.apps.nxpdevscan:safe_main',
+            'shadowregs=spsdk.apps.shadowregs:safe_main'
         ],
     },
 )

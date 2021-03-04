@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2020 NXP
+# Copyright 2020-2021 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -75,7 +75,7 @@ class Translator:
             value = reg_val
         else:
             value = int(value, 0)
-        self.logger.debug("Extracted value {value:x}")
+        self.logger.debug(f"Extracted value {value:x}")
 
         return value
 

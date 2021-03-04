@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 #
 # Copyright 2017-2018 Martin Olejar
-# Copyright 2019-2020 NXP
+# Copyright 2019-2021 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -19,13 +19,15 @@ from spsdk.crypto import Certificate, Encoding
 from spsdk.utils.crypto import matches_key_and_cert, crypto_backend
 from spsdk.utils.easy_enum import Enum
 from spsdk.utils.misc import DebugInfo
-from .header import CmdTag, CmdHeader
+from .header import CmdTag, CmdHeader, Header, SegTag
 from .secret import BaseClass, CertificateImg, EnumAlgorithm, MAC, Signature, SrkTable
 
 
 ########################################################################################################################
 # Enums
 ########################################################################################################################
+from .. import SPSDKError
+
 
 class EnumWriteOps(Enum):
     """Enum definition for 'flags' control flags in 'par' parameter of Write Data command."""
@@ -1123,6 +1125,10 @@ class CmdInstallKey(CmdBase):
 SignatureOrMAC = Union[MAC, Signature]
 
 
+class ExpectedSignatureOrMACError(SPSDKError):
+    """CmdAuthData additional data block: expected Signature or MAC object."""
+
+
 class CmdAuthData(CmdBase):
     """Authenticate data command."""
 
@@ -1212,13 +1218,14 @@ class CmdAuthData(CmdBase):
 
         :param value: to be set
         :raise ValueError: if cmd reference not supported by the command
+        :raise ExpectedSignatureOrMACError: if unspported data object is provided
         """
         if self.sig_format == EnumCertFormat.AEAD:
             assert isinstance(value, MAC)
         elif self.sig_format == EnumCertFormat.CMS:
             assert isinstance(value, Signature)
         else:
-            assert False
+            raise ExpectedSignatureOrMACError()
         self._signature = value
 
     def parse_cmd_data(self, data: bytes, offset: int) -> SignatureOrMAC:
@@ -1227,12 +1234,16 @@ class CmdAuthData(CmdBase):
         :param data: to be parsed
         :param offset: start position in data to parse
         :return: parsed data object; command-specific: Signature or MAC
+        :raise ExpectedSignatureOrMACError: if unspported data object is provided
         """
-        if self.key_index == 0:  # TODO check by header
+        header = Header.parse(data, offset)
+        if header.tag == SegTag.MAC:
             self._signature = MAC.parse(data, offset)
-        else:
+            return self._signature
+        if header.tag == SegTag.SIG:
             self._signature = Signature.parse(data, offset)
-        return self._signature
+            return self._signature
+        raise ExpectedSignatureOrMACError(f'TAG = {header.tag}')
 
     @property
     def signature(self) -> Optional[SignatureOrMAC]:

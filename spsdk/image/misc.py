@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 #
 # Copyright 2017-2018 Martin Olejar
-# Copyright 2019-2020 NXP
+# Copyright 2019-2021 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -13,6 +13,19 @@ from io import SEEK_CUR
 from typing import Union
 
 from .header import Header
+from .. import SPSDKError
+
+
+class RawDataException(SPSDKError):
+    """Raw data read failed."""
+
+
+class StreamReadFailed(RawDataException):
+    """Read_raw_data could not read stream."""
+
+
+class NotEnoughBytesException(RawDataException):
+    """Read_raw_data could not read enough data."""
 
 
 def size_fmt(num: Union[float, int], use_kibibyte: bool = True) -> str:
@@ -25,15 +38,19 @@ def size_fmt(num: Union[float, int], use_kibibyte: bool = True) -> str:
     return "{0:3.1f} {1:s}".format(num, i)
 
 
-def modulus_fmt(modulus: bytes, tab: int = 4, length: int = 15, sep: str = ':') -> str:
-    """Modulus format."""
+def hexdump_fmt(data: bytes, tab: int = 4, length: int = 16, sep: str = ':') -> str:
+    """Dump some potentially larger data in hex."""
     text = ' ' * tab
-    data = b'\0' + modulus
     for i, j in enumerate(data):
         text += "{:02x}{}".format(j, sep)
         if ((i + 1) % length) == 0:
             text += '\n' + ' ' * tab
     return text
+
+
+def modulus_fmt(modulus: bytes, tab: int = 4, length: int = 15, sep: str = ':') -> str:
+    """Modulus format."""
+    return hexdump_fmt(b'\0' + modulus, tab, length, sep)
 
 
 def read_raw_data(stream: Union[io.BufferedReader, io.BytesIO], length: int, index: int = None,
@@ -51,10 +68,10 @@ def read_raw_data(stream: Union[io.BufferedReader, io.BytesIO], length: int, ind
     try:
         data = stream.read(length)
     except Exception:
-        raise Exception(" stream.read() failed, requested {} bytes".format(length))
+        raise StreamReadFailed(" stream.read() failed, requested {} bytes".format(length))
 
     if len(data) != length:
-        raise Exception(" Could not read enough bytes, expected {}, found {}".format(length, len(data)))
+        raise NotEnoughBytesException(" Could not read enough bytes, expected {}, found {}".format(length, len(data)))
 
     if no_seek:
         stream.seek(-length, SEEK_CUR)
