@@ -31,7 +31,7 @@ version = f"{spsdk.__version__}"
 # -- General configuration ---------------------------------------------------
 master_doc = 'index'
 source_suffix = ['.rst', '.md']
-autodoc_mock_imports = ['hidapi']
+autodoc_mock_imports = ['hidapi', 'hid']
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
