@@ -9,8 +9,6 @@ import os
 import sys
 from typing import List
 
-import pip  # type: ignore
-
 from setuptools import setup, find_packages  # type: ignore
 
 
@@ -22,12 +20,6 @@ def sanitize_version(version_str: str) -> str:
         6: version_str
     }
     return sanitizer[len(version_str)]
-
-
-if sys.version_info >= (3, 8, 0) and sanitize_version(pip.__version__) < '19.2.3':
-    print(f"With python {sys.version}, you're using an old version of pip: {pip.__version__}")
-    print("Please update pip using: 'python -m pip install --upgrade pip'.")
-    sys.exit(1)
 
 
 with open('requirements.txt') as req_file:
