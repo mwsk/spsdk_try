@@ -51,6 +51,11 @@ setup(
     version=version_info["__version__"],
     description='Open Source Secure Provisioning SDK for NXP MCU/MPU',
     url="https://github.com/NXPmicro/spsdk",
+    project_urls={
+        "Code": 'https://github.com/NXPmicro/spsdk',
+        "Issue tracker": 'https://github.com/NXPmicro/spsdk/issues',
+        "Documentation": 'https://spsdk.readthedocs.io',
+    },
     author="NXP",
     author_email="michal.starecek@nxp.com",
     license='BSD-3-Clause',
