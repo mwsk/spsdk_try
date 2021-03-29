@@ -673,10 +673,11 @@ class SrkItemRSA(SrkItem):
         flag = 0
         try:
             key_usage = cert.extensions.get_extension_for_class(KeyUsage)
+            assert isinstance(key_usage.value, KeyUsage)
+            if key_usage.value.key_cert_sign:
+                flag = 0x80
         except ExtensionNotFound:
             pass
-        if key_usage.value.key_cert_sign:
-            flag = 0x80
 
         if isinstance(cert.public_key(), rsa.RSAPublicKey):
             public_key = cert.public_key()

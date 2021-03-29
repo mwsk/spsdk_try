@@ -28,7 +28,6 @@ from spsdk.sbfile.sb1 import SecureBootV1, BootSectionV1, SecureBootFlagsV1, Cmd
 from spsdk.sdp import SDP, ResponseValue, StatusCode, SdpCommandError
 from spsdk.sdp import scan_usb as sdp_scan_usb
 from spsdk.utils.easy_enum import Enum
-from enum import Enum as PyEnum
 from spsdk.utils.misc import load_binary, DebugInfo, align, align_block
 from tests.misc import compare_bin_files, write_dbg_log
 
@@ -842,7 +841,7 @@ def test_sb(cpu_params: CpuParams) -> None:
     :param cpu_params: processor specific parameters of the test
     """
     # timestamp is fixed for the test, do not not for production
-    timestamp = datetime(year=2020, month=4, day=24, hour=16, minute=33, second=32)
+    timestamp = datetime(year=2020, month=4, day=24, hour=15, minute=33, second=32, tzinfo=timezone.utc)
 
     # load application to add into SB
     img_name = f'{cpu_params.board}_iled_blinky_ext_FLASH_unsigned_nopadding'
@@ -852,13 +851,13 @@ def test_sb(cpu_params: CpuParams) -> None:
     sb = SecureBootV1(version=SB_FILE_VERSION, timestamp=timestamp)
     sect = BootSectionV1(0, SecureBootFlagsV1.ROM_SECTION_BOOTABLE)
     # load 0xc0233007 > 0x2000;
-    sect.append(CmdFill(INT_RAM_ADDR_DATA, pack("<I", cpu_params.ext_flash_cfg_word0)))
+    sect.append(CmdFill(INT_RAM_ADDR_DATA, int.from_bytes(pack("<I", cpu_params.ext_flash_cfg_word0), 'little')))
     # enable flexspinor 0x2000;
     sect.append(CmdMemEnable(INT_RAM_ADDR_DATA, 4, ExtMemId.FLEX_SPI_NOR))
     # erase 0x60000000..0x60100000;
     sect.append(CmdErase(EXT_FLASH_ADDR, align(boot_img.ivt_offset + boot_img.size, 0x1000)))
     # load 0xf000000f > 0x3000;
-    sect.append(CmdFill(INT_RAM_ADDR_DATA, pack("<I", FCB_FLASH_NOR_CFG_WORD)))
+    sect.append(CmdFill(INT_RAM_ADDR_DATA, int.from_bytes(pack("<I", FCB_FLASH_NOR_CFG_WORD), 'little')))
     # enable flexspinor 0x3000;
     sect.append(CmdMemEnable(INT_RAM_ADDR_DATA, 4, ExtMemId.FLEX_SPI_NOR))
     # load myBinFile > kAbsAddr_Ivt;
@@ -879,7 +878,7 @@ def test_sb_multiple_sections(cpu_params: CpuParams) -> None:
         return  # this test case is supported only for RT1050 and RT1060
 
     # timestamp is fixed for the test, do not not for production
-    timestamp = datetime(year=2020, month=4, day=24, hour=16, minute=33, second=32)
+    timestamp = datetime(year=2020, month=4, day=24, hour=15, minute=33, second=32, tzinfo=timezone.utc)
 
     # load application to add into SB
     img_name = f'{cpu_params.board}_iled_blinky_ext_FLASH_unsigned_nofcb'
@@ -889,7 +888,7 @@ def test_sb_multiple_sections(cpu_params: CpuParams) -> None:
     sb = SecureBootV1(version=SB_FILE_VERSION, timestamp=timestamp)
     sect = BootSectionV1(0, SecureBootFlagsV1.ROM_SECTION_BOOTABLE)
     # load 0xc0233007 > 0x2000;
-    sect.append(CmdFill(INT_RAM_ADDR_DATA, pack("<I", cpu_params.ext_flash_cfg_word0)))
+    sect.append(CmdFill(INT_RAM_ADDR_DATA, int.from_bytes(pack("<I", cpu_params.ext_flash_cfg_word0), 'little')))
     # enable flexspinor 0x2000;
     sect.append(CmdMemEnable(INT_RAM_ADDR_DATA, 4, ExtMemId.FLEX_SPI_NOR))
     # erase 0x60000000..0x60010000;
@@ -897,7 +896,7 @@ def test_sb_multiple_sections(cpu_params: CpuParams) -> None:
     # For example this fails on EVK-RT1060: sect.append(CmdErase(EXT_FLASH_ADDR, 0x100000))
     sect.append(CmdErase(EXT_FLASH_ADDR, 0x10000))
     # load 0xf000000f > 0x3000;
-    sect.append(CmdFill(INT_RAM_ADDR_DATA, pack("<I", FCB_FLASH_NOR_CFG_WORD)))
+    sect.append(CmdFill(INT_RAM_ADDR_DATA, int.from_bytes(pack("<I", FCB_FLASH_NOR_CFG_WORD), 'little')))
     # enable flexspinor 0x3000;
     sect.append(CmdMemEnable(INT_RAM_ADDR_DATA, 4, ExtMemId.FLEX_SPI_NOR))
     # load myBinFile > kAbsAddr_Ivt;
