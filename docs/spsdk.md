@@ -1,6 +1,7 @@
 Overview
 ========
 
+NEW 
 Secure Provisioning SDK (SPSDK) is unified, reliable and easy to use SW library working across NXP MCU and MPU portfolio providing strong 
 foundation from quick customer prototyping up to production deployment. Is following the philosophy: **code less but do more**. 
 
