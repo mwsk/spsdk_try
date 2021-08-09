@@ -89,8 +89,6 @@ html_css_files = [
     "css/nxp.css",
 ]
 
-notfound_urls_prefix = "/projects/spsdk_try/en/latest/"
-
 # app setup hook
 def setup(app):
     app.add_config_value(
