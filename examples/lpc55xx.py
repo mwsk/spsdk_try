@@ -8,12 +8,11 @@
 """This example demonstrates how to create and Secure Boot image for LPC55xx and download it to the target."""
 
 import os
-
 from binascii import unhexlify
 
 from spsdk.mboot import McuBoot, McuBootCommandError, StatusCode, scan_usb
-from spsdk.sbfile.images import BootImageV20, BootSectionV2
-from spsdk.sbfile.commands import CmdErase, CmdLoad, CmdReset
+from spsdk.sbfile.sb2.commands import CmdErase, CmdLoad, CmdReset
+from spsdk.sbfile.sb2.images import BootImageV20, BootSectionV2
 
 # Uncomment for printing debug messages
 # import logging

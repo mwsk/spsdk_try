@@ -75,13 +75,9 @@ def test_swap16_invalid():
 
 def test_pack_timestamp_invalid():
     with pytest.raises(SPSDKError, match="Incorrect result of convertion"):
-        pack_timestamp(
-            value=datetime(1000, 1, 1, 0, 0, 0, 0, tzinfo=timezone.utc)
-        )
+        pack_timestamp(value=datetime(1000, 1, 1, 0, 0, 0, 0, tzinfo=timezone.utc))
 
 
 def test_unpack_timestamp_invalid():
     with pytest.raises(SPSDKError, match="Incorrect result of convertion"):
-        unpack_timestamp(
-            value=99999999999999999999999
-        )
+        unpack_timestamp(value=99999999999999999999999)

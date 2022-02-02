@@ -52,7 +52,7 @@ class Translator:
         if len(splitted) == 2:
             value = register.find_bitfield(splitted[1]).get_value()
         else:
-            value = register.get_int_value()
+            value = register.get_value()
         logger.debug(f"Extracted value {value:x}")
 
         return value
@@ -65,7 +65,7 @@ class Translator:
         if len(splitted) == 2:
             value = register.find_bitfield(splitted[1]).get_value()
         else:
-            value = register.get_int_value()
+            value = register.get_value()
         logger.debug(f"Extracted value {value:x}")
 
         return value

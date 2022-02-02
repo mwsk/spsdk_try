@@ -5,9 +5,9 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-from spsdk.exceptions import SPSDKError
 import pytest
 
+from spsdk.exceptions import SPSDKError
 from spsdk.sbfile.sb1 import CmdNop
 from spsdk.sbfile.sb1.commands import parse_v1_command
 

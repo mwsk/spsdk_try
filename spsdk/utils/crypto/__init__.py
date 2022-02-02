@@ -7,15 +7,16 @@
 
 """Module for cryptographic utilities."""
 
-from .common import (
-    matches_key_and_cert,
-    crypto_backend,
-    Counter,
-    serialize_ecc_signature,
-)
+import os
+
+from spsdk.utils import UTILS_DATA_FOLDER
+
+CRYPTO_SCH_FILE: str = os.path.join(UTILS_DATA_FOLDER, "sch_crypto.yml")
+
 from .abstract import BackendClass
-from .cert_blocks import CertBlockV2, CertBlockV31, CertBlock
+from .cert_blocks import CertBlock, CertBlockV2, CertBlockV31
 from .certificate import Certificate
+from .common import Counter, crypto_backend, matches_key_and_cert, serialize_ecc_signature
 from .otfad import KeyBlob, Otfad
 
 __all__ = [

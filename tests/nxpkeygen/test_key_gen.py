@@ -7,7 +7,6 @@
 """ Tests for key management (generating public/private key)
 """
 from os import path
-from typing import ByteString
 
 import pytest
 

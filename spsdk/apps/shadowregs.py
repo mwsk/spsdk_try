@@ -320,7 +320,7 @@ def info(pass_obj: dict, output: str, open_result: bool) -> None:
 @catch_spsdk_error
 def safe_main() -> None:
     """Safe main method."""
-    sys.exit(main())  # pragma: no cover # pylint: disable=no-value-for-parameter
+    sys.exit(main())  # pylint: disable=no-value-for-parameter
 
 
 if __name__ == "__main__":

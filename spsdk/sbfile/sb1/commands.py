@@ -11,7 +11,7 @@ from typing import Mapping, Type
 
 from spsdk import SPSDKError
 
-from ..commands import (
+from ..sb2.commands import (
     CmdBaseClass,
     CmdCall,
     CmdErase,

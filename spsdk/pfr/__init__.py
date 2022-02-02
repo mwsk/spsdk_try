@@ -13,12 +13,12 @@ from spsdk import SPSDK_DATA_FOLDER
 
 PFR_DATA_FOLDER: str = os.path.join(SPSDK_DATA_FOLDER, "pfr")
 
-from .pfr import CMPA, CFPA, PfrConfiguration
 from .exceptions import (
-    SPSDKPfrError,
     SPSDKPfrConfigError,
     SPSDKPfrConfigReadError,
+    SPSDKPfrError,
     SPSDKPfrRotkhIsNotPresent,
 )
-from .translator import Translator
+from .pfr import CFPA, CMPA, PfrConfiguration
 from .processor import Processor
+from .translator import Translator

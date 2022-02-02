@@ -8,6 +8,6 @@
 """Wrappers for various types of debuggers."""
 
 from .debug_probe import DebugProbe
-from .debug_probe_pyocd import DebugProbePyOCD
 from .debug_probe_jlink import DebugProbePyLink
 from .debug_probe_pemicro import DebugProbePemicro
+from .debug_probe_pyocd import DebugProbePyOCD

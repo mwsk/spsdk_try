@@ -9,10 +9,11 @@
 
 import os
 import sys
+
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
-from spsdk.image import SrkItem, SrkTable
 
+from spsdk.image import SrkItem, SrkTable
 
 # The path to directory with certificates
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "certificates")

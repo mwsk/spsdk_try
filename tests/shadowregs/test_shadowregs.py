@@ -266,11 +266,8 @@ def test_shadow_register_crc8():
 
 def test_shadow_register_crc8_hook():
     """Test Shadow Registers - CRC8 algorithm hook test."""
-    bytes_value = SR.value_to_bytes(0x03020100)
-    assert SR.ShadowRegisters.comalg_dcfg_cc_socu_crc8(bytes_value) == b"\x03\x02\x01\x1d"
-
-    bytes_value = SR.value_to_bytes(0x80FFFF00)
-    assert SR.ShadowRegisters.comalg_dcfg_cc_socu_crc8(bytes_value) == SR.value_to_bytes(0x80FFFF20)
+    assert SR.ShadowRegisters.comalg_dcfg_cc_socu_crc8(0x03020100) == 0x0302011D
+    assert SR.ShadowRegisters.comalg_dcfg_cc_socu_crc8(0x80FFFF00) == 0x80FFFF20
 
 
 def test_shadow_register_enable_debug_invalid_probe():

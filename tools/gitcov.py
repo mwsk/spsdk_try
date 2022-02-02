@@ -368,7 +368,9 @@ def get_parent_commit() -> str:
         logging.debug(f"All branches containing sha {current_sha}: {branches}")
 
         current_branch = (
-            subprocess.check_output(["git", "branch", "--show-current"]).strip().decode("utf-8")
+            subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"])
+            .strip()
+            .decode("utf-8")
         )
         logging.debug(f"We are on branch: {current_branch}")
 

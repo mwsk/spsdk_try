@@ -14,6 +14,7 @@ def test_boot_section_v1():
     assert sect.section_id == 0xA5
     assert sect.flags == SecureBootFlagsV1.ROM_SECTION_BOOTABLE
     assert sect.bootable
+    assert not sect.rom_last_tag
     assert sect.info()
     assert sect.cmd_size == 0
     assert len(sect.commands) == 0
@@ -26,3 +27,4 @@ def test_boot_section_v1():
     assert len(data) == sect.size
     parsed_sect = BootSectionV1.parse(data)
     assert sect == parsed_sect
+    assert str(sect)

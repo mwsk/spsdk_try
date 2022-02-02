@@ -7,20 +7,20 @@
 """SB31 module of sbfile."""
 
 from spsdk.sbfile.sb31.commands import (
-    CmdErase,
-    CmdLoad,
-    CmdExecute,
     CmdCall,
+    CmdConfigureMemory,
+    CmdCopy,
+    CmdErase,
+    CmdExecute,
+    CmdFillMemory,
+    CmdLoad,
+    CmdLoadCmac,
+    CmdLoadHashLocking,
+    CmdLoadKeyBlob,
     CmdProgFuses,
     CmdProgIfr,
     CmdSectionHeader,
-    CmdLoadCmac,
-    CmdLoadHashLocking,
-    CmdCopy,
-    CmdFillMemory,
     parse_command,
-    CmdLoadKeyBlob,
-    CmdConfigureMemory,
 )
 from spsdk.sbfile.sb31.constants import EnumCmdTag
 

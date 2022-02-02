@@ -60,4 +60,4 @@ def safe_main() -> Any:
 
 
 if __name__ == "__main__":
-    safe_main()  # pragma: no cover   # pylint: disable=no-value-for-parameter
+    safe_main()  # pylint: disable=no-value-for-parameter

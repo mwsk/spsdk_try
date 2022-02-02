@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 #
 # Copyright 2016-2018 Martin Olejar
-# Copyright 2019-2021 NXP
+# Copyright 2019-2022 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -20,6 +20,7 @@ from serial.tools.list_ports import comports
 from spsdk.mboot.commands import CmdPacket, CmdResponse, parse_cmd_response
 from spsdk.mboot.exceptions import McuBootConnectionError, McuBootDataAbortError
 from spsdk.utils.easy_enum import Enum
+from spsdk.utils.misc import Timeout
 
 from .base import Interface
 
@@ -105,6 +106,7 @@ PING_RESPONSE = construct.Struct(
 )
 
 MAX_PING_RESPONSE_DUMMY_BYTES = 50
+MAX_UART_OPEN_ATTEMPTS = 3
 
 ########################################################################################################################
 # UART Interface Class
@@ -125,6 +127,7 @@ class Uart(Interface):
     """UART interface."""
 
     FRAME_START_BYTE = 0x5A
+    FRAME_START_BYTE_NOT_READY = 0x00
 
     @property
     def is_opened(self) -> bool:
@@ -136,11 +139,12 @@ class Uart(Interface):
 
         :param port: name of the serial port, defaults to None
         :param baudrate: baudrate of the serial port, defaults to 57600
-        :param timeout: read/write timeout in milliseconds, defaults to 2000
+        :param timeout: read/write timeout in milliseconds, defaults to 5000
         :raises McuBootConnectionError: when the port could not be opened
         """
         super().__init__()
         try:
+            self.timeout = timeout
             self.device = Serial(port=port, timeout=timeout / 1000, baudrate=baudrate)
             self.close()
             self.protocol_version = None
@@ -153,12 +157,21 @@ class Uart(Interface):
 
         :raises McuBootConnectionError: In any case of fail of UART open operation.
         """
-        try:
-            self.device.open()
-            self.ping()
-        except Exception as exc:
-            self.device.close()
-            raise McuBootConnectionError("UART Interface open operation fails.") from exc
+        for n in range(MAX_UART_OPEN_ATTEMPTS):
+            try:
+                self.device.open()
+                self.ping()
+                logger.debug(f"Interface opened after {n + 1} attempts.")
+                return
+            except (McuBootConnectionError, TimeoutError) as e:
+                self.device.close()
+                logger.debug(f"Opening interace failed with: {str(e)}")
+            except Exception as exc:
+                self.device.close()
+                raise McuBootConnectionError("UART Interface open operation fails.") from exc
+        raise McuBootConnectionError(
+            f"Cannot open UART interface after {MAX_UART_OPEN_ATTEMPTS} attempts."
+        )
 
     def close(self) -> None:
         """Close the UART interface.
@@ -272,7 +285,12 @@ class Uart(Interface):
         :raises McuBootConnectionError: Unexpected frame header or frame type (if specified)
         :raises McuBootConnectionError: When received invalid ACK
         """
-        header = to_int(self._read(1))
+        timeout = Timeout(self.timeout, "ms")
+        while not timeout.overflow():
+            header = to_int(self._read(1))
+            if header != self.FRAME_START_BYTE_NOT_READY:
+                break
+
         if header != self.FRAME_START_BYTE:
             raise McuBootConnectionError(
                 f"Received invalid frame header '{header:#X}' expected '{self.FRAME_START_BYTE:#X}'"

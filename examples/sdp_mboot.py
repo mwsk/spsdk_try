@@ -11,7 +11,7 @@ import os
 import sys
 from time import sleep
 
-from spsdk import sdp, mboot
+from spsdk import mboot, sdp
 
 # Uncomment for printing debug messages
 # import logging

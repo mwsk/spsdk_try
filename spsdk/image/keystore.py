@@ -16,8 +16,8 @@ from spsdk.utils.easy_enum import Enum
 class KeySourceType(Enum):
     """Device key source."""
 
-    OTP = (0, "Device keys stored in OTP")
-    KEYSTORE = (1, "Device keys stored in KeyStore")
+    OTP = (0, "OTP", "Device keys stored in OTP")
+    KEYSTORE = (1, "KEYSTORE", "Device keys stored in KeyStore")
 
 
 class KeyStore:

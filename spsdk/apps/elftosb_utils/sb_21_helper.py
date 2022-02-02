@@ -11,7 +11,7 @@ import struct
 from numbers import Number
 from typing import Callable, Dict, List, Optional
 
-import spsdk.sbfile.commands as commands
+import spsdk.sbfile.sb2.commands as commands
 import spsdk.utils.crypto as crypto
 import spsdk.utils.misc as misc
 from spsdk import SPSDKError
