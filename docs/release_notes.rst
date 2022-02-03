@@ -1,6 +1,7 @@
 .. NXP location
 
 .. _LIBUSBSIO_link: https://www.nxp.com/design/software/development-software/library-for-windows-macos-and-ubuntu-linux:LIBUSBSIO?tid=vanLIBUSBSIO
+.. _crypto: api/crypto.html
 
 =============
 Release Notes
@@ -55,7 +56,7 @@ Release Notes
   * different return code on Linux/Mac and Windows
   * USBSIO - fixed issue when busy signal on I2C was interpreted as data
 
-* :ref:`crypto`:
+* `crypto`_:
 
   * DER encoded certificates are loaded as PEM
   * fixed dependency on cryptography's internal keys

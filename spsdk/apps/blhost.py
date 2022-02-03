@@ -47,7 +47,8 @@ from spsdk.mboot.error_codes import stringify_status_code
     "-p",
     "--port",
     metavar="COM[,speed]",
-    help="""Serial port configuration. Use 'nxpdevscan' utility to list devices on serial port.""",
+    help="""Serial port configuration. Default baud rate is 57600.
+    Use 'nxpdevscan' utility to list devices on serial port.""",
 )
 @optgroup.option(
     "-u",
@@ -766,7 +767,7 @@ def read_memory(
     help=(
         "This flag should be used when the `receive-sb-file` operation fails using USB interface. "
         "Without this flag USB transfer is significantly faster (roughly 20x) "
-        "However, the status code might be missleading in case of an error. "
+        "However, the status code might be misleading in case of an error. "
         "In case of an error using USB interface, "
         "rerun `receive-sb-file` with this setting for clearer error message. "
         "This setting has no effect interfaces other than USB."

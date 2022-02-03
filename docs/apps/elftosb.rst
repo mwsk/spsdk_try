@@ -68,6 +68,8 @@ Supported execution targets are: *Internal flash (XIP), External Flash (XIP) and
 The following table shows the supported image types for each device,
 it either shows "N/A" if the configuration is not available or respective class that will be used for image creation.
 
+*Target* in the table represents *outputImageExecutionTarget* in the configuration file and *authentication* in the table represents *outputImageAuthenticationType*.
+
 .. include:: table.inc
 
 --------------------------------
@@ -75,7 +77,7 @@ Supported configuration options
 --------------------------------
 
 Refer to the documentation below for the supported configuration options for each image type.
-Please note that the *outputImageAuthenticationType* and *outputImageAuthenticationType* must be filled in addition to the basic settings according to the table with supported devices.
+Please note that the *outputImageExecutionTarget* and *outputImageAuthenticationType* must be filled in addition to the basic settings according to the table with supported devices.
 
 
 .. code-block:: yaml

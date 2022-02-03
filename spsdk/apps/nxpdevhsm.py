@@ -572,7 +572,8 @@ def main(log_level: str) -> int:
     "-p",
     "--port",
     metavar="COM[,speed]",
-    help="""Serial port configuration. Use 'nxpdevscan' utility to list devices on serial port.""",
+    help="""Serial port configuration. Default baud rate is 57600.
+    Use 'nxpdevscan' utility to list devices on serial port.""",
 )
 @optgroup.option(
     "-u",
