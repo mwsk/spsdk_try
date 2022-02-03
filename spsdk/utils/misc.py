@@ -97,7 +97,7 @@ def find_first(iterable: Iterable[T], predicate: Callable[[T], bool]) -> Optiona
 
 
 def load_binary_image(*path_segments: str) -> BinFile:
-    """Load binary data file.
+    r"""Load binary data file.
 
     :param \*path_segments: list that consists of:
         - absolute path
