@@ -580,12 +580,19 @@ class McuBoot:  # pylint: disable=too-many-public-methods
         return cmd_response.status == StatusCode.SUCCESS
 
     def receive_sb_file(
-        self, data: bytes, progress_callback: Callable[[int, int], None] = None
+        self,
+        data: bytes,
+        progress_callback: Callable[[int, int], None] = None,
+        check_errors: bool = False,
     ) -> bool:
         """Receive SB file.
 
         :param  data: SB file data
         :param progress_callback: Callback for updating the caller about the progress
+        :param check_errors: Check for ABORT_FRAME (and related errors) on USB interface between data packets.
+            When this parameter is set to `False` significantly improves USB transfer speed (cca 20x)
+            However, the final status code might be missleading (original root cause may get overridden)
+            In case `receive-sb-file` fails, re-run the operation with this flag set to `True`
         :return: False in case of any problem; True otherwise
         """
         logger.info(f"CMD: ReceiveSBfile(data_length={len(data)})")
@@ -593,7 +600,7 @@ class McuBoot:  # pylint: disable=too-many-public-methods
         cmd_packet = CmdPacket(CommandTag.RECEIVE_SB_FILE, CommandFlag.HAS_DATA_PHASE, len(data))
         cmd_response = self._process_cmd(cmd_packet)
         if cmd_response.status == StatusCode.SUCCESS:
-            self.enable_data_abort = True
+            self.enable_data_abort = check_errors
             result = self._send_data(CommandTag.RECEIVE_SB_FILE, data_chunks, progress_callback)
             self.enable_data_abort = False
             return result

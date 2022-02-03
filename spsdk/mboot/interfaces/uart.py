@@ -10,9 +10,8 @@
 
 import logging
 import struct
-from typing import List, Optional, Tuple, Union
+from typing import List, NamedTuple, Optional, Tuple, Union
 
-import construct
 from crcmod.predefined import mkPredefinedCrcFun
 from serial import Serial
 from serial.tools.list_ports import comports
@@ -90,20 +89,19 @@ def to_int(data: bytes, little_endian: bool = True) -> int:
     return int.from_bytes(data, byteorder=byte_order)
 
 
-#: Version of protocol used in serial communication
-PROTOCOL_VERSION = construct.Struct(
-    "bugfix" / construct.Int8ul,
-    "minor" / construct.Int8ul,
-    "major" / construct.Int8ul,
-    "name" / construct.Int8ul,
-)
+class PingResponse(NamedTuple):
+    """Special type of response for Ping Command."""
 
-#: Type of frame used for pig response
-PING_RESPONSE = construct.Struct(
-    "version" / PROTOCOL_VERSION,
-    "options" / construct.Int16ul,
-    "crc" / construct.Int16ul,
-)
+    version: int
+    options: int
+    crc: int
+
+    @classmethod
+    def parse(cls, data: bytes) -> "PingResponse":
+        """Parse raw data into PingResponse object."""
+        version, options, crc = struct.unpack("<I2H", data)
+        return cls(version, options, crc)
+
 
 MAX_PING_RESPONSE_DUMMY_BYTES = 50
 MAX_UART_OPEN_ATTEMPTS = 3
@@ -147,8 +145,8 @@ class Uart(Interface):
             self.timeout = timeout
             self.device = Serial(port=port, timeout=timeout / 1000, baudrate=baudrate)
             self.close()
-            self.protocol_version = None
-            self.options = None
+            self.protocol_version = 0
+            self.options = 0
         except Exception as e:
             raise McuBootConnectionError(str(e)) from e
 
@@ -165,7 +163,7 @@ class Uart(Interface):
                 return
             except (McuBootConnectionError, TimeoutError) as e:
                 self.device.close()
-                logger.debug(f"Opening interace failed with: {str(e)}")
+                logger.debug(f"Opening interface failed with: {repr(e)}")
             except Exception as exc:
                 self.device.close()
                 raise McuBootConnectionError("UART Interface open operation fails.") from exc
@@ -367,7 +365,7 @@ class Uart(Interface):
         response_data = self._read(8)
         if response_data is None:
             raise McuBootConnectionError("Failed to receive ping response")
-        response = PING_RESPONSE.parse(response_data)
+        response = PingResponse.parse(response_data)
 
         # ping response has different crc computation than the other responses
         # that's why we can't use calc_frame_crc method

@@ -6,7 +6,6 @@ click-option-group>=0.3.0,<0.6
 click>=7.1,<8
 colorama>=0.4.4,<1
 commentjson>=0.9,<1
-construct~=2.10
 crcmod==1.7
 cryptography>=3.4.4,<37
 deepmerge==0.3.0
@@ -14,7 +13,6 @@ fastjsonschema >=2.15.1
 hexdump~=3.3
 jinja2>=2.11,<3
 libusbsio>=2.1.5
-munch<2.5.1
 oscrypto~=1.2
 pycryptodome>=3.9.3,<4
 pylink-square>=0.8.2,<0.11.9

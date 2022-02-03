@@ -129,7 +129,7 @@ def load_binary_image(*path_segments: str) -> BinFile:
 
 
 def load_binary(*path_segments: str) -> bytes:
-    """Loads binary file into bytes.
+    r"""Loads binary file into bytes.
 
     :param \*path_segments: list that consists of:
         - absolute path
@@ -144,7 +144,7 @@ def load_binary(*path_segments: str) -> bytes:
 
 
 def load_text(*path_segments: str) -> str:
-    """Loads binary file into bytes.
+    r"""Loads binary file into bytes.
 
     :param \*path_segments: list that consists of:
         - absolute path
@@ -160,7 +160,7 @@ def load_text(*path_segments: str) -> str:
 
 def load_file(*path_segments: str, mode: str = "r") -> Union[str, bytes]:
     # pylint: disable=missing-param-doc
-    """Loads a file into bytes.
+    r"""Loads a file into bytes.
 
     :param \*path_segments: list that consists of:
         - absolute path
@@ -178,7 +178,7 @@ def load_file(*path_segments: str, mode: str = "r") -> Union[str, bytes]:
 
 def write_file(data: Union[str, bytes], *path_segments: str, mode: str = "w") -> int:
     # pylint: disable=missing-param-doc
-    """Writes data into a file.
+    r"""Writes data into a file.
 
     :param data: data to write
     :param \*path_segments: pieces of path to the file, might be just a single str

@@ -217,12 +217,6 @@
             "is_manual": false
         },
         {
-            "name": "munch",
-            "license": "MIT",
-            "home_page": "https://github.com/Infinidat/munch",
-            "is_manual": false
-        },
-        {
             "name": "naturalsort",
             "license": "MIT",
             "home_page": "https://github.com/xolox/python-naturalsort",

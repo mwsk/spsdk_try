@@ -758,8 +758,22 @@ def read_memory(
 
 @main.command()
 @click.argument("sb_file", metavar="FILE", type=click.File("rb"), required=True)
+@click.option(
+    "-c",
+    "--check-errors",
+    is_flag=True,
+    default=False,
+    help=(
+        "This flag should be used when the `receive-sb-file` operation fails using USB interface. "
+        "Without this flag USB transfer is significantly faster (roughly 20x) "
+        "However, the status code might be missleading in case of an error. "
+        "In case of an error using USB interface, "
+        "rerun `receive-sb-file` with this setting for clearer error message. "
+        "This setting has no effect interfaces other than USB."
+    ),
+)
 @click.pass_context
-def receive_sb_file(ctx: click.Context, sb_file: click.File) -> None:
+def receive_sb_file(ctx: click.Context, sb_file: click.File, check_errors: bool) -> None:
     """Receives a file in a Secure Binary (SB) format.
 
     An SB file is an encapsulated, binary stream of bootloader commands that can be optionally encrypted.
@@ -772,7 +786,7 @@ def receive_sb_file(ctx: click.Context, sb_file: click.File) -> None:
             suppress=ctx.obj["suppress_progress_bar"], label="Sending SB file"
         ) as progress_callback:
             data = sb_file.read()  # type: ignore
-            mboot.receive_sb_file(data, progress_callback)
+            mboot.receive_sb_file(data, progress_callback, check_errors)
         display_output([], mboot.status_code, ctx.obj["use_json"])
 
 
