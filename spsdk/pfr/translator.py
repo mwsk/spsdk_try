@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2020-2021 NXP
+# Copyright 2020-2022 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -70,7 +70,7 @@ class Translator:
 
         return value
 
-    def _util_translate(self, key: str) -> int:
+    def _util_translate(self, key: str) -> int:  # pylint: disable=no-self-use
         """Handler for Utils data."""
         values = {"isUDSKeyCodeValid": False}
         return values[key]

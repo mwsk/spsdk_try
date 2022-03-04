@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2020-2021 NXP
+# Copyright 2020-2022 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 """Module for parsing original elf2sb configuration files."""
@@ -14,7 +14,7 @@ from spsdk.utils.crypto import CRYPTO_SCH_FILE
 from spsdk.utils.schema_validator import ValidationSchemas, check_config
 
 
-class RootOfTrustInfo:
+class RootOfTrustInfo:  # pylint: disable=too-few-public-methods
     """Filters out Root Of Trust information given to elf2sb application."""
 
     def __init__(self, data: dict) -> None:

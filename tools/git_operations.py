@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2020-2021 NXP
+# Copyright 2020-2022 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 """Module for any git operations needed for checkers."""
@@ -45,7 +45,7 @@ def get_changed_files(
     all_files = subprocess.check_output(cmd.split(), cwd=repo_path).decode("utf-8")
     filtered = []
     for item in all_files.split("\n"):
-        m = file_regex.match(item)
-        if m:
-            filtered.append(m.group("path"))
+        matched = file_regex.match(item)
+        if matched:
+            filtered.append(matched.group("path"))
     return filtered

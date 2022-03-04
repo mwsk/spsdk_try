@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2020-2021 NXP
+# Copyright 2020-2022 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -58,11 +58,10 @@ class KeyStore:
 
     def info(self) -> str:
         """Information about key store in text form."""
-        msg = (
+        return (
             f"Device key source:    {KeySourceType.name(self.key_source)}\n"
-            + f"Device key store len: {str(len(self.export()))}"
+            f"Device key store len: {str(len(self.export()))}"
         )
-        return msg
 
     @staticmethod
     def derive_hmac_key(hmac_key: bytes) -> bytes:
