@@ -7,4 +7,4 @@
 
 
 def test_always_pass():
-    assert 1 + 1 == 2
+    assert 1 + 10 == 2
