@@ -96,13 +96,3 @@ html_static_path = ["_static"]
 html_css_files = [
     "custom.css",
 ]
-
-
-class Mock(MagicMock):
-    @classmethod
-    def __getattr__(cls, name):
-        return MagicMock()
-
-
-MOCK_MODULES = ["pyscard"]
-sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
