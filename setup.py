@@ -14,7 +14,6 @@ with open("requirements.txt") as req_file:
     # avoid build errors on readthedocs (excluding pyscard)
     if os.getenv("READTHEDOCS"):
         requirements = [x for x in requirements if "pyscard" not in x]
-        print(requirements)
 
 
 with open("README.md", "r") as f:

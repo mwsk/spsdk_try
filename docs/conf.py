@@ -10,6 +10,7 @@ import datetime
 import logging
 import os
 import sys
+from unittest.mock import MagicMock
 
 import spsdk
 
@@ -39,7 +40,7 @@ source_suffix = {
     ".rst": "restructuredtext",
     ".md": "markdown",
 }
-autodoc_mock_imports = ['pyscard']
+autodoc_mock_imports = ["pyscard"]
 
 autoclass_content = "both"
 suppress_warnings = ["autosectionlabel.*"]
@@ -95,3 +96,13 @@ html_static_path = ["_static"]
 html_css_files = [
     "custom.css",
 ]
+
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+
+
+MOCK_MODULES = ["pyscard"]
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
