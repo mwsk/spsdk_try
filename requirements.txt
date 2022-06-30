@@ -28,4 +28,3 @@ sly==0.4
 # https://github.com/pyocd/cmsis-pack-manager/issues/176
 cmsis-pack-manager<0.3.0
 typing-extensions
-libpcsclite-dev
