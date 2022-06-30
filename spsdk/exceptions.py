@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2019-2021 NXP
+# Copyright 2019-2022 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -30,9 +30,28 @@ class SPSDKValueError(SPSDKError, ValueError):
     """SPSDK standard value error."""
 
 
-class SPSDKTypeError(SPSDKError, TypeError):
-    """SPSDK standard type error."""
-
-
 class SPSDKIOError(SPSDKError, IOError):
     """SPSDK standard IO error."""
+
+
+class SPSDKNotImplementedError(SPSDKError, NotImplementedError):
+    """SPSDK standard not implemented error."""
+
+
+class SPSDKLengthError(SPSDKError, ValueError):
+    """SPSDK parsing error of any AHAB containers.
+
+    Input/output data must be of at least container declared length bytes long.
+    """
+
+
+class SPSDKOverlapError(SPSDKError, ValueError):
+    """Data overlap error."""
+
+
+class SPSDKAlignmentError(SPSDKError, ValueError):
+    """Data improperly aligned."""
+
+
+class SPSDKParsingError(SPSDKError):
+    """Cannot parse binary data."""

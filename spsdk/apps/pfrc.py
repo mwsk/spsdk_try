@@ -12,11 +12,13 @@ import sys
 from typing import Dict, List
 
 import click
+from click_option_group import MutuallyExclusiveOptionGroup, optgroup
 
 from spsdk import __version__ as spsdk_version
-from spsdk.apps.utils import catch_spsdk_error, load_configuration
+from spsdk.apps.utils.utils import catch_spsdk_error
 from spsdk.pfr import PFR_DATA_FOLDER, Processor, Translator
 from spsdk.pfr.pfr import PfrConfiguration
+from spsdk.utils.misc import load_configuration
 
 PFRC_DATA_FOLDER = os.path.join(PFR_DATA_FOLDER, "pfrc")
 DATABASE_FILE = os.path.join(PFRC_DATA_FOLDER, "database.yaml")
@@ -39,12 +41,12 @@ def load_rules(family: str, additional_rules_file: click.Path = None) -> List[Di
         rules.extend(load_configuration(os.path.join(PFRC_DATA_FOLDER, rules_file)))
 
     if additional_rules_file:
-        rules.extend(load_configuration(additional_rules_file))
+        rules.extend(load_configuration(str(additional_rules_file)))
 
     return rules
 
 
-@click.command(no_args_is_help=True)
+@click.command(name="pfrc", no_args_is_help=True)
 @click.option(
     "-m",
     "--cmpa-config",
@@ -66,19 +68,33 @@ def load_rules(family: str, additional_rules_file: click.Path = None) -> List[Di
     type=click.Path(exists=True),
     help="Custom additional file containing checker rules",
 )
-@click.option("-d", "--debug", is_flag=True, default=False, help="Enable debugging output")
+@optgroup.group("Additional info specification", cls=MutuallyExclusiveOptionGroup)
+@optgroup.option(
+    "-v",
+    "--verbose",
+    "log_level",
+    flag_value=logging.INFO,
+    help="Print more detailed information",
+)
+@optgroup.option(
+    "-vv",
+    "--debug",
+    "log_level",
+    flag_value=logging.DEBUG,
+    help="Display more debugging information.",
+)
 @click.version_option(spsdk_version, "--version")
 def main(
     cmpa_config: click.Path,
     cfpa_config: click.Path,
     rules_file: click.Path,
-    debug: bool,
+    log_level: str,
 ) -> None:
     """Utility to search for brick-conditions in PFR settings."""
-    logging.basicConfig(level=logging.DEBUG if debug else logging.INFO)
+    logging.basicConfig(level=log_level or logging.WARNING)
 
-    cmpa_prf_cfg = PfrConfiguration(cmpa_config)
-    cfpa_prf_cfg = PfrConfiguration(cfpa_config)
+    cmpa_prf_cfg = PfrConfiguration(str(cmpa_config))
+    cfpa_prf_cfg = PfrConfiguration(str(cfpa_config))
     if cmpa_prf_cfg.device != cfpa_prf_cfg.device:
         click.echo(
             "Error: CMPA has different chip family than CFPA configuration."

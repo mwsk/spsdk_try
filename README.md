@@ -4,6 +4,16 @@
 
 <img src="docs/_static/images/spsdk-architecture.png" alt="drawing" width="600"/>
 
+## Internal Link
+
+* [Documentation](http://spsdk.nxp.com/)
+* [BitBucket](https://bitbucket.sw.nxp.com/projects/SPSDK/repos/spsdk/browse)
+* [Confluence](https://confluence.sw.nxp.com/display/SPSDK)
+* [SharePoint](https://nxp1.sharepoint.com/sites/BSDKCommunity)
+
+## External Link
+
+* [GitHub](https://github.com/NXPmicro/spsdk)
 * [PyPi](https://pypi.org/project/spsdk/)
 * [Documentation](https://spsdk.readthedocs.io)
 
@@ -22,9 +32,36 @@ Following NXP devices are supported:
 - Ubuntu 18.04 or above, 64bit
 - Mac OS 10.15 or above, x64, ARM64
 
+## Installation
+
+- Make sure to have [Python](https://www.python.org) 3.7+ installed
+- Create a virtual environment (venv, pipenv, etc.)
+
+> SPSDK is tested on Python >=3.7 and <3.11 interpreter, old version 2.x is not supported
+
+### BitBucket
+
+``` bash
+    $ pip install -U https://bitbucket.sw.nxp.com/rest/api/latest/projects/spsdk/repos/spsdk/archive?format=zip
+```
+> If you will be asked for credentials, use your NXP login and password
+
+### SPSDK from sources - BitBucket:
+
+``` bash
+    $ git clone ssh://git@bitbucket.sw.nxp.com/spsdk/spsdk.git
+    $ cd spsdk
+    $ pip install -r requirements-develop.txt
+    $ pip install -U -e .
+```
+
+> In **Windows OS** you need to install [Microsoft Visual C++ Build Tools](https://www.scivision.dev/python-windows-visual-c-14-required/)
+
+ Note: In case of problems during installation, please make sure that you have the latest pip version.
+ You can upgrade pip using this command: 'pip install --upgrade pip'.
+
 ## Usage
 
-- See [installation](https://spsdk.readthedocs.io/en/latest/usage/installation.html) guide
 - See [examples](examples) directory
 - See [application](spsdk/apps) directory
 
