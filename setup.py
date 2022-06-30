@@ -11,7 +11,7 @@ from setuptools import find_packages, setup  # type: ignore
 
 with open("requirements.txt") as req_file:
     requirements = req_file.read().splitlines()
-        # avoid build errors on readthedocs (excluding hidapi, which depends on C module)
+    # avoid build errors on readthedocs (excluding pyscard)
     if os.getenv('READTHEDOCS'):
         requirements = [x for x in requirements if "pyscard" not in x]
 
