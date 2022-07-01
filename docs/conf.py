@@ -10,7 +10,6 @@ import datetime
 import logging
 import os
 import sys
-from unittest.mock import MagicMock
 
 import spsdk
 
@@ -40,7 +39,6 @@ source_suffix = {
     ".rst": "restructuredtext",
     ".md": "markdown",
 }
-autodoc_mock_imports = ["pyscard"]
 
 autoclass_content = "both"
 suppress_warnings = ["autosectionlabel.*"]
