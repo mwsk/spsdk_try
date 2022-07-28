@@ -20,7 +20,6 @@ pylink-square>=0.8.2,<0.11.9
 pyocd-pemicro>=1.1.1,<1.2.0
 pyocd>=0.28.3,<=0.31.0
 pypemicro>=0.1.9,<0.2.0
-pyscard==2.0.2
 pyserial>=3.1,<4
 ruamel.yaml>=0.17,<0.18.0
 sly==0.4

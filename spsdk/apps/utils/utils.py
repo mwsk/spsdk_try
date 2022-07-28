@@ -41,6 +41,7 @@ class SPSDKAppError(SPSDKError):
         :param error_code: Error code passed to OS, defaults to 1
         """
         super().__init__(desc)
+        self.description = desc
         self.error_code = error_code
 
 
@@ -204,7 +205,8 @@ def catch_spsdk_error(function: Callable) -> Callable:
             retval = function(*args, **kwargs)
             return retval
         except SPSDKAppError as app_exc:
-            click.echo(str(app_exc))
+            if app_exc.description:
+                click.echo(str(app_exc))
             sys.exit(app_exc.error_code)
         except (AssertionError, SPSDKError) as spsdk_exc:
             click.echo(f"ERROR:{spsdk_exc}", err=True)

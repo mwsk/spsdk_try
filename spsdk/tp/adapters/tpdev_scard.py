@@ -13,7 +13,15 @@ from typing import Any, Dict, List, Optional, cast
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509 import NameOID, load_der_x509_certificate
-from smartcard.CardConnectionDecorator import CardConnection
+
+from spsdk import SPSDKError
+
+try:
+    from smartcard.CardConnectionDecorator import CardConnection
+except ImportError:
+    raise SPSDKError(
+        "pyscard package is missing, please install it with pip install 'spsdk[tp]' in order to use TP"
+    )
 
 from spsdk.crypto.certificate_management import (
     convert_certificate_into_bytes,

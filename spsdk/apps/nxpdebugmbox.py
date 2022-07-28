@@ -23,6 +23,7 @@ from spsdk.apps.elftosb_utils.sb_31_helper import RootOfTrustInfo
 from spsdk.apps.utils.common_cli_options import CommandsTreeGroup, spsdk_apps_common_options
 from spsdk.apps.utils.utils import (
     INT,
+    SPSDKAppError,
     catch_spsdk_error,
     check_destination_dir,
     check_file_exists,
@@ -64,12 +65,12 @@ def print_output(succeeded: bool, title: str) -> None:
 
     :param succeeded: Result of operation.
     :param title: Name of operation
+    :raises SPSDKAppError: Operation failed
     """
     if succeeded:
         click.echo(f"{title} succeeded.")
     else:
-        click.echo(f"{title} failed!", err=True)
-    click.get_current_context().exit(0 if succeeded else 1)
+        raise SPSDKAppError(f"{title} failed!")
 
 
 @contextlib.contextmanager
@@ -270,7 +271,7 @@ def auth(pass_obj: dict, beacon: int, certificate: str, key: str, no_exit: bool)
                 )
                 logger.info(f"Debug Authentication ends {res_str}{colorama.Fore.RESET}.")
                 if not ahb_access_granted:
-                    click.get_current_context().exit(1)
+                    raise SPSDKAppError()
             else:
                 logger.info(
                     "Debug Authentication ends without exit and without test of AHB access."
@@ -278,7 +279,7 @@ def auth(pass_obj: dict, beacon: int, certificate: str, key: str, no_exit: bool)
 
     except SPSDKError as e:
         logger.error(f"Start Debug Mailbox failed!\n{e}")
-        click.get_current_context().exit(1)
+        raise SPSDKAppError() from e
 
 
 @main.command(name="start")
@@ -387,7 +388,7 @@ def blankauth(pass_obj: dict, file: str, no_exit: bool) -> None:
                 )
                 logger.info(f"Debug Authentication ends {res_str}{colorama.Fore.RESET}.")
                 if not ahb_access_granted:
-                    click.get_current_context().exit(1)
+                    raise SPSDKAppError()
             else:
                 logger.info(
                     "Debug Authentication ends without exit and without test of AHB access."
@@ -395,7 +396,7 @@ def blankauth(pass_obj: dict, file: str, no_exit: bool) -> None:
 
     except SPSDKError as e:
         logger.error(colorama.Fore.RED + f"Debug authentication for Blank device failed!\n{e}")
-        click.get_current_context().exit(1)
+        raise SPSDKAppError() from e
 
 
 @main.command(name="get-crp")

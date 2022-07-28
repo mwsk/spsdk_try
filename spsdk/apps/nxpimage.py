@@ -15,7 +15,7 @@ from typing import List
 import click
 
 from spsdk.apps.utils.common_cli_options import CommandsTreeGroup, spsdk_apps_common_options
-from spsdk.apps.utils.utils import catch_spsdk_error
+from spsdk.apps.utils.utils import SPSDKAppError, catch_spsdk_error
 from spsdk.exceptions import SPSDKError
 from spsdk.image import SB3_SCH_FILE, TrustZone, get_mbi_class
 from spsdk.image.ahab.ahab_container import AHABImage
@@ -172,8 +172,7 @@ def sb21_export(
     EXTERNAL is a space separated list of external binary files defined in BD file
     """
     if output is None:
-        click.echo("Error: no output file was specified")
-        sys.exit(1)
+        raise SPSDKAppError("Error: no output file was specified")
     try:
         sb2_data = generate_SB21(
             bd_file_path=command,
@@ -186,8 +185,7 @@ def sb21_export(
         )
         write_file(sb2_data, output, mode="wb")
     except SPSDKError as exc:
-        click.echo(f"The SB2.1 file generation failed: ({str(exc)}).")
-        sys.exit(1)
+        raise SPSDKAppError(f"The SB2.1 file generation failed: ({str(exc)}).") from exc
     else:
         click.echo(f"Success. (Secure binary 2.1: {output} created.)")
 
@@ -825,7 +823,7 @@ def binary_merge(config: str, output: str) -> None:
     "--size",
     type=str,
     required=True,
-    help="Size of extracted chunk.",
+    help="Size of extracted chunk. For '0' it extract rest of the file from given address.",
 )
 @click.argument("output", type=click.Path())
 def binary_extract(binary: str, address: str, size: str, output: str) -> None:
@@ -834,9 +832,13 @@ def binary_extract(binary: str, address: str, size: str, output: str) -> None:
     \b
     OUTPUT - File name of stored chunk.
     """
-    start = value_to_int(address)
-    end = start + value_to_int(size)
     bin_data = load_binary(binary)
+    start = value_to_int(address)
+    size_int = value_to_int(size)
+    if not size_int:
+        size_int = len(bin_data) - start
+    end = start + size_int
+
     if end > len(bin_data):
         click.echo(f"The required binary chunk is out of [{binary}] file space.")
         return

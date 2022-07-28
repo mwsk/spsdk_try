@@ -242,3 +242,13 @@ class TpTargetInterface(TpInterface):
         :raises NotImplementedError: This function is not implemented
         """
         raise NotImplementedError()
+
+    def erase_memory(self, address: int, length: int, memory_id: int = 0) -> None:
+        """Erase target's memory.
+
+        :param address: Start address
+        :param length: Number of bytes to erase
+        :param memory_id: Memory ID, defaults to 0
+        :raises NotImplementedError: This function is not implemented
+        """
+        raise NotImplementedError()

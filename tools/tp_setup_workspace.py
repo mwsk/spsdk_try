@@ -5,7 +5,6 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-import glob
 import os
 import shutil
 import sys
@@ -51,9 +50,7 @@ def setup_tp_device_model(tp_device_id: str, use_ctr: bool) -> str:
     model_top_dir = "tp_device_models"
     model_sub_dir = f"tp_device_{tp_device_id}"
     model_dir = f"{model_top_dir}/{model_sub_dir}"
-    os.makedirs(model_dir, exist_ok=True)
-    for file in glob.glob(f"{TP_DATA_FOLDER}/blank_device/*.*"):
-        shutil.copy(file, model_dir)
+    shutil.copytree(f"{TP_DATA_FOLDER}/blank_device", model_dir)
 
     yaml = ruamel.yaml.YAML()
     with open(f"{model_dir}/config.yaml") as f:
@@ -73,9 +70,7 @@ def setup_tp_target_model(tp_target_id: str, use_ctr: bool) -> str:
     model_top_dir = "tp_target_models"
     model_sub_dir = f"tp_target_{tp_target_id.split('/')[-1]}"
     model_dir = f"{model_top_dir}/{model_sub_dir}"
-    os.makedirs(model_dir, exist_ok=True)
-    for file in glob.glob(f"{TP_DATA_FOLDER}/blank_target/*.*"):
-        shutil.copy(file, model_dir)
+    shutil.copytree(f"{TP_DATA_FOLDER}/blank_target", model_dir)
 
     yaml = ruamel.yaml.YAML()
     with open(f"{model_dir}/config.yaml") as f:

@@ -13,8 +13,7 @@ Requirements
 
 .. warning::
 
-    Please note that not all SPSDK dependencies might be distributed as wheels (built package format for Python). In this case please ensure that you have C compiler on your system.
-    Also you will need `swig compiler <http://www.swig.org>`_ which is a requirement for pyscard. In some cases `rust compiler <https://rustup.rs/>`_ is also needed
+    Please note that not all SPSDK dependencies might be distributed as wheels (built package format for Python). In this case please ensure that you have C compiler on your system. In some cases `rust compiler <https://rustup.rs/>`_ is also needed
 
 -------
 Windows
@@ -34,7 +33,7 @@ To install *SPSDK* under *Windows* follow:
 
 .. note::
 
-    In **Windows OS** you need to install `Microsoft Visual C++ Build Tools <https://www.scivision.dev/python-windows-visual-c-14-required/>`_ and `swig compiler <http://www.swig.org>`_
+    In **Windows OS** you need to install `Microsoft Visual C++ Build Tools <https://www.scivision.dev/python-windows-visual-c-14-required/>`_
 
 -----
 Linux
@@ -101,10 +100,6 @@ macOS @ Intel
 -------------
 
 To install *SPSDK* under *macOS* follow:
-
-.. note::
-
-    In **Mac OS** you need to install gcc, swig (http://www.swig.org), and pcsc-lite (https://pcsclite.apdu.fr/)
 
 .. code-block:: bash
 
@@ -224,3 +219,22 @@ To bundle SPSDK applications into executables run the following line:
 
     $ pyinstaller --clean --noconfirm apps.spec
 
+
+-------------------
+Trust Provisioning
+-------------------
+
+Extra dependencies must be installed in order to use Trust Provisioning.
+Also you will need `swig compiler <http://www.swig.org>`_ which is a requirement for pyscard
+
+.. note::
+
+    In **Mac OS** you need to install gcc, swig (http://www.swig.org), and pcsc-lite (https://pcsclite.apdu.fr/).
+    (**brew install swig pcsc-lite**)
+    In **Linux** you need to install pcscd and libpcsclite-dev. (**sudo apt install pcdcs libpcsclite-dev**)
+
+.. code:: bash
+
+    $ pip install 'spsdk[tp]'
+
+This command will install SPSDK with Trust Provisioning support

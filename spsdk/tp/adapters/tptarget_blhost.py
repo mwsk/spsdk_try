@@ -282,14 +282,24 @@ class TpTargetBlHost(TpTargetInterface):
         """Write data to target's memory.
 
         :param address: Start address
-        :type address: int
         :param data: Data to write
-        :type data: bytes
         :param memory_id: Memory ID, defaults to 0
-        :type memory_id: int, optional
         :raises SPSDKTpTargetError: In case of a MBoot failure
         """
         if not self.mboot.write_memory(address=address, data=data, mem_id=memory_id):
             raise SPSDKTpTargetError(
                 f"Unable to write data (address=0x{address:08x}) Error: {self.mboot.status_string}"
+            )
+
+    def erase_memory(self, address: int, length: int, memory_id: int = 0) -> None:
+        """Erase target's memory.
+
+        :param address: Start address
+        :param length: Number of bytes to erase
+        :param memory_id: Memory ID, defaults to 0
+        :raises SPSDKTpTargetError: In case of a MBoot failure
+        """
+        if not self.mboot.flash_erase_region(address=address, length=length, mem_id=memory_id):
+            raise SPSDKTpTargetError(
+                f"Unable to erase memory (address=0x{address:08x}, length=0x{length:08x}"
             )

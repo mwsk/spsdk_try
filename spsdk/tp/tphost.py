@@ -71,13 +71,8 @@ class TrustProvisioningHost:
                 "Please make sure your device supports TrustProvisioning."
             ) from e
 
-    def update_cfpa_page(self, family: str) -> None:
+    def update_cfpa_page(self, family: str, database: Database) -> None:
         """Update CFPA page according to chip family."""
-        database = Database(os.path.join(TP_DATA_FOLDER, "database.yaml"))
-
-        if family not in database.get_devices():
-            raise SPSDKError(f"Database info missing for '{family}'")
-
         if not database.get_device_value("need_cfpa_update", family):
             logger.info("CFPA update not required")
             return
@@ -110,6 +105,18 @@ class TrustProvisioningHost:
         self.tptarget.write_memory(cfpa_address, data=bytes(cfpa_data))
         logger.info("CFPA update completed")
 
+    def erase_memory(self, family: str, database: Database) -> None:
+        """Erase part(s) of flash memory if needed."""
+        if not database.get_device_value("erase_memory", family):
+            logger.info("Erasing memory is not needed")
+            return
+
+        start = value_to_int(database.get_device_value("erase_memory_start", family))
+        length = value_to_int(database.get_device_value("erase_memory_length", family))
+
+        self.tptarget.erase_memory(address=start, length=length)
+        logger.info("Erasing memory completed")
+
     def do_provisioning(
         self,
         family: str,
@@ -127,9 +134,16 @@ class TrustProvisioningHost:
         :param product_fw: Load also the final product application, defaults to None
         :param timeout: The timeout of operation is seconds.
         :param save_debug_data: Save transmitted data in CWD for debugging purposes
+        :raises SPSDKTpError: Device family is not supported
+        :raises SPSDKTpError: Error during trust-provisioning operation
         """
         try:
             loc_timeout = Timeout(timeout, "s")
+
+            logger.debug("Looking up device in database")
+            database = Database(os.path.join(TP_DATA_FOLDER, "database.yaml"))
+            if family not in database.get_devices():
+                raise SPSDKTpError(f"Database info missing for '{family}'")
 
             logger.debug("Opening TP DEVICE interface")
             self.tpdev.open()
@@ -149,7 +163,9 @@ class TrustProvisioningHost:
             self.info_print("1.Step - Provide to target provisioning firmware if needed.")
             if prov_fw:
                 self.info_print(" - Updating CFPA page")
-                self.update_cfpa_page(family=family)
+                self.update_cfpa_page(family=family, database=database)
+                self.info_print(" - Erase memory for provisioning firmware")
+                self.erase_memory(family=family, database=database)
                 self.info_print(" - Loading OEM provisioning firmware")
                 self.load_provisioning_fw(
                     prov_fw=prov_fw, timeout=loc_timeout.get_rest_time_ms(True)

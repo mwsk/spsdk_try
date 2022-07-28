@@ -179,19 +179,18 @@ class TrustZone:
 
         :param family: Family description.
         :param revision: Chip revision specification, as default, latest is used.
-        :raises SPSDKError: Family or revision is not supported.
+        :raises SPSDKError: Revision is not supported.
         :return: Dictionary of individual templates (key is name of template, value is template itself).
         """
         ret: Dict[str, str] = {}
-
-        try:
-            if not revision or revision == "latest":
-                config_file = cls.load_config_file()
-                revision = config_file[family]["latest"]
-        except (KeyError, SPSDKError) as exc:
-            raise SPSDKError(f"Family {family} or revision {revision} is not supported") from exc
-
         if family in cls.get_supported_families():
+            try:
+                if not revision or revision == "latest":
+                    config_file = cls.load_config_file()
+                    revision = config_file[family]["latest"]
+            except (KeyError, SPSDKError) as exc:
+                raise SPSDKError(f"Revision {revision} is not supported") from exc
+
             schemas = cls.get_validation_schemas(family, revision)
             override = {}
             override["family"] = family

@@ -9,13 +9,20 @@
 import logging
 from typing import List, NamedTuple
 
-from smartcard.CardConnectionDecorator import CardConnection
-from smartcard.CardConnectionEvent import CardConnectionEvent
-from smartcard.CardConnectionObserver import CardConnectionObserver
-from smartcard.CardRequest import CardRequest
-from smartcard.CardType import ATRCardType
-from smartcard.System import readers
-from smartcard.util import toBytes
+from spsdk import SPSDKError
+
+try:
+    from smartcard.CardConnectionDecorator import CardConnection
+    from smartcard.CardConnectionEvent import CardConnectionEvent
+    from smartcard.CardConnectionObserver import CardConnectionObserver
+    from smartcard.CardRequest import CardRequest
+    from smartcard.CardType import ATRCardType
+    from smartcard.System import readers
+    from smartcard.util import toBytes
+except ImportError:
+    raise SPSDKError(
+        "pyscard package is missing, please install it with pip install 'spsdk[tp]' in order to use TP"
+    )
 
 from spsdk.apps.utils import format_raw_data
 from spsdk.utils.easy_enum import Enum

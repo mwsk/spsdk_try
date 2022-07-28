@@ -20,10 +20,10 @@ class SPSDKError(Exception):
     def __init__(self, desc: str = None) -> None:
         """Initialize the base SPSDK Exception."""
         super().__init__()
-        self.description = "Unknown Error" if desc is None else desc
+        self.description = desc
 
     def __str__(self) -> str:
-        return self.fmt.format(description=self.description)
+        return self.fmt.format(description=self.description or "Unknown Error")
 
 
 class SPSDKValueError(SPSDKError, ValueError):

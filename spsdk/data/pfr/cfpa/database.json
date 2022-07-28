@@ -6,7 +6,18 @@
                 "1b": "lpc55s6x_1b.xml"
             },
             "latest": "1b",
-            "address": "0x9_DE00"
+            "address": "0x9_DE00",
+            "computed_fields": {
+                "VENDOR_USAGE": {
+                    "INVERSE_VALUE": "pfr_reg_inverse_high_half"
+                },
+                "DCFG_CC_SOCU_NS_PIN": {
+                    "INVERSE_VALUE": "pfr_reg_inverse_high_half"
+                },
+                "DCFG_CC_SOCU_NS_DFLT": {
+                    "INVERSE_VALUE": "pfr_reg_inverse_high_half"
+                }
+            }
         },
         "lpc551x": {
             "revisions": {
@@ -20,7 +31,18 @@
                 "a": "lpc55s1x_a.xml"
             },
             "latest": "a",
-            "address": "0x3_DE00"
+            "address": "0x3_DE00",
+            "computed_fields": {
+                "VENDOR_USAGE": {
+                    "INVERSE_VALUE": "pfr_reg_inverse_high_half"
+                },
+                "DCFG_CC_SOCU_NS_PIN": {
+                    "INVERSE_VALUE": "pfr_reg_inverse_high_half"
+                },
+                "DCFG_CC_SOCU_NS_DFLT": {
+                    "INVERSE_VALUE": "pfr_reg_inverse_high_half"
+                }
+            }
         },
         "lpc550x": {
             "revisions": {
@@ -34,7 +56,18 @@
                 "a": "lpc55s0x_a.xml"
             },
             "latest": "a",
-            "address": "0x3_DE00"
+            "address": "0x3_DE00",
+            "computed_fields": {
+                "VENDOR_USAGE": {
+                    "INVERSE_VALUE": "pfr_reg_inverse_high_half"
+                },
+                "DCFG_CC_SOCU_NS_PIN": {
+                    "INVERSE_VALUE": "pfr_reg_inverse_high_half"
+                },
+                "DCFG_CC_SOCU_NS_DFLT": {
+                    "INVERSE_VALUE": "pfr_reg_inverse_high_half"
+                }
+            }
         },
         "lpc552x": {
             "revisions": {
@@ -50,7 +83,18 @@
                 "1b": "lpc55s2x_1b.xml"
             },
             "latest": "1b",
-            "address": "0x9_DE00"
+            "address": "0x9_DE00",
+            "computed_fields": {
+                "VENDOR_USAGE": {
+                    "INVERSE_VALUE": "pfr_reg_inverse_high_half"
+                },
+                "DCFG_CC_SOCU_NS_PIN": {
+                    "INVERSE_VALUE": "pfr_reg_inverse_high_half"
+                },
+                "DCFG_CC_SOCU_NS_DFLT": {
+                    "INVERSE_VALUE": "pfr_reg_inverse_high_half"
+                }
+            }
         },
         "lpc55s3x": {
             "revisions": {
@@ -61,7 +105,18 @@
             "address": "0x3_DC00",
             "seal_start": "CFPA_CRC32",
             "seal_count": 1,
-            "mandatory_computed_regs": 1
+            "mandatory_computed_regs": 1,
+            "computed_fields": {
+                "VENDOR_USAGE": {
+                    "INVERSE_VALUE": "pfr_reg_inverse_high_half"
+                },
+                "DCFG_CC_SOCU_NS_PIN": {
+                    "INVERSE_VALUE": "pfr_reg_inverse_high_half"
+                },
+                "DCFG_CC_SOCU_NS_DFLT": {
+                    "INVERSE_VALUE": "pfr_reg_inverse_high_half"
+                }
+            }
         },
         "lpc553x": {
             "revisions": {
@@ -105,17 +160,6 @@
     "computed_registers": [
         "SHA256_DIGEST"
     ],
-    "computed_fields": {
-        "VENDOR_USAGE": {
-            "INVERSE_VALUE": "pfr_reg_inverse_high_half"
-        },
-        "DCFG_CC_SOCU_NS_PIN": {
-            "INVERSE_VALUE": "pfr_reg_inverse_high_half"
-        },
-        "DCFG_CC_SOCU_NS_DFLT": {
-            "INVERSE_VALUE": "pfr_reg_inverse_high_half"
-        }
-    },
     "ignored_registers": [
         "PRINCE_REGION0_IV_CODE",
         "PRINCE_REGION1_IV_CODE",

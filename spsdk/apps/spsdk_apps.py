@@ -15,6 +15,7 @@ from typing import Any
 
 import click
 
+from spsdk import SPSDKError
 from spsdk import __version__ as spsdk_version
 from spsdk.apps.utils.common_cli_options import CommandsTreeGroup
 
@@ -32,8 +33,13 @@ from .pfrc import main as pfrc_main
 from .sdphost import main as sdphost_main
 from .sdpshost import main as sdpshost_main
 from .shadowregs import main as shadowregs_main
-from .tpconfig import main as tpconfig_main
-from .tphost import main as tphost_main
+
+try:
+    TP = True
+    from .tpconfig import main as tpconfig_main
+    from .tphost import main as tphost_main
+except SPSDKError:
+    TP = False
 from .utils.utils import catch_spsdk_error
 
 
@@ -58,8 +64,13 @@ main.add_command(pfrc_main, name="pfrc")
 main.add_command(sdphost_main, name="sdphost")
 main.add_command(sdpshost_main, name="sdpshost")
 main.add_command(shadowregs_main, name="shadowregs")
-main.add_command(tpconfig_main, name="tpconfig")
-main.add_command(tphost_main, name="tphost")
+if TP:
+    main.add_command(tpconfig_main, name="tpconfig")
+    main.add_command(tphost_main, name="tphost")
+else:
+    click.echo(
+        "Please install SPSDK with pip install 'spsdk[tp]' in order to use tphost and tpconfig apps"
+    )
 
 
 @catch_spsdk_error

@@ -33,6 +33,7 @@ from spsdk.apps.utils.common_cli_options import (
 )
 from spsdk.apps.utils.utils import (
     INT,
+    SPSDKAppError,
     catch_spsdk_error,
     format_raw_data,
     get_interface,
@@ -331,7 +332,7 @@ def flash_image(ctx: click.Context, image_file_path: str, erase: str, memory_id:
                 )
                 if mboot.status_code != StatusCode.SUCCESS:
                     display_output([], mboot.status_code, ctx.obj["use_json"], ctx.obj["silent"])
-                    sys.exit(1)
+                    raise SPSDKAppError()
         for i, segment in enumerate(bin_image.sub_images, start=1):
             with progress_bar(
                 suppress=ctx.obj["suppress_progress_bar"], label=f"Writing segment #{i}"
@@ -1511,6 +1512,7 @@ def display_output(
     :param use_json: Format the output in JSON format, defaults to False
     :param suppress: Suppress display
     :param extra_output: Extra string to print out, defaults to None
+    :raises SPSDKAppError: Command is executed properly, how MBoot status code is non-zero
     """
     if suppress:
         pass
@@ -1537,7 +1539,7 @@ def display_output(
     # Force exit to handover the current status code.
     # We could do that because this function is called as last from each subcommand
     if status_code:
-        click.get_current_context().exit(1)
+        raise SPSDKAppError()
 
 
 # For backward compatibility

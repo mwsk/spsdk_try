@@ -19,7 +19,13 @@ from spsdk.apps.utils.common_cli_options import (
     isp_interfaces,
     spsdk_apps_common_options,
 )
-from spsdk.apps.utils.utils import INT, catch_spsdk_error, format_raw_data, get_interface
+from spsdk.apps.utils.utils import (
+    INT,
+    SPSDKAppError,
+    catch_spsdk_error,
+    format_raw_data,
+    get_interface,
+)
 from spsdk.sdp import SDP
 from spsdk.sdp.commands import ResponseValue
 
@@ -131,10 +137,9 @@ def read_register(
     with SDP(ctx.obj["interface"]) as sdp:
         response = sdp.read_safe(address, count, item_length)
     if not response:
-        click.echo(
+        raise SPSDKAppError(
             f"Error: invalid sub-command or arguments 'read-register {address:#8X} {item_length} {count}'"
         )
-        sys.exit(1)
     if file:
         file.write(response)  # type: ignore
     else:

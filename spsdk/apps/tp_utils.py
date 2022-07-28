@@ -18,6 +18,7 @@ import yaml
 from typing_extensions import Literal
 
 from spsdk.apps.utils import FC
+from spsdk.apps.utils.utils import SPSDKAppError
 from spsdk.tp import TP_DATA_FOLDER, TP_SCH_FILE, SPSDKTpError
 from spsdk.tp.tp_intf import TpDevInterface
 from spsdk.tp.tphost import TrustProvisioningHost
@@ -401,7 +402,7 @@ def process_tp_inputs(
         )
         print_func(print_device_table(interfaces))
         print_func(f"You need to provide search criteria that fit only one {styled_header}.")
-        sys.exit(1)
+        raise SPSDKTpError()
     return interfaces[0]
 
 

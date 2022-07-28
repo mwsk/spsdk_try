@@ -30,6 +30,9 @@ exclude_lines = [
     "sys.exit(main())",
 ]
 
+[tool.coverage.run]
+relative_files = true
+
 [tool.pydocstyle]
 convention = "google"
 add_ignore = "D105,D301"

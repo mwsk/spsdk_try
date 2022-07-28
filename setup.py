@@ -80,4 +80,7 @@ setup(
             "tphost=spsdk.apps.tphost:safe_main",
         ],
     },
+    extras_require={
+        "tp": ["pyscard==2.0.2"],
+    },
 )

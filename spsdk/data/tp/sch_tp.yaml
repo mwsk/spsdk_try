@@ -10,7 +10,7 @@ family:
       title: Family name of target MCU
       description: The name of target MCU family that should be provisioned.
       type: string
-      enum: [lpc55s6x, lpc55s2x]
+      enum: [lpc55s6x, lpc55s2x, lpc55s1x, lpc55s0x]
       template_value: lpc55s6x
   required: family
 

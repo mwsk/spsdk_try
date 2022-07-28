@@ -10,6 +10,12 @@ from os import path
 
 import pytest
 
+# Skip test collection of TP tests if smartcard package cannot be imported
+try:
+    import smartcard
+except ImportError:
+    collect_ignore_glob = ["tp*"]
+
 
 @pytest.fixture(scope="module")
 def data_dir(request):

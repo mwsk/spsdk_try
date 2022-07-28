@@ -10,7 +10,14 @@ import logging
 from struct import pack
 from typing import Tuple
 
-from smartcard.CardConnection import CardConnection
+from spsdk import SPSDKError
+
+try:
+    from smartcard.CardConnection import CardConnection
+except ImportError:
+    raise SPSDKError(
+        "pyscard package is missing, please install it with pip install 'spsdk[tp]' in order to use TP"
+    )
 
 from spsdk.utils.easy_enum import Enum
 

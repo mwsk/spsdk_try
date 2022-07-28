@@ -89,7 +89,7 @@ def _print_validation_fail_reason(
         message += f"; Missing field(s): {', '.join(missing)}"
     elif exc.rule == "format":
         if exc.rule_definition == "file":
-            message += f"; Non-exiting file: {exc.value}"
+            message += f"; Non-existing file: {exc.value}"
     elif exc.rule == "oneOf":
         # re-run just the part where the rule failed and get the exact mistake to print
         for rule_def_ix, rule_def in enumerate(exc.rule_definition):

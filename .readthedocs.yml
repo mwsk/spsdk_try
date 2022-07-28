@@ -16,3 +16,9 @@ python:
     - method: pip
       path: .
     - requirements: docs/requirements.txt
+
+build:
+  apt_packages:
+    - swig
+    - pcscd
+    - libpcsclite-dev

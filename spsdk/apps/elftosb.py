@@ -14,7 +14,7 @@ import click
 from click_option_group import RequiredMutuallyExclusiveOptionGroup, optgroup
 
 from spsdk import __version__ as spsdk_version
-from spsdk.apps.utils.utils import catch_spsdk_error
+from spsdk.apps.utils.utils import SPSDKAppError, catch_spsdk_error
 from spsdk.exceptions import SPSDKError
 from spsdk.image import SB3_SCH_FILE, TrustZone, get_mbi_class
 from spsdk.image.mbimg import mbi_generate_config_templates, mbi_get_supported_families
@@ -111,11 +111,10 @@ def generate_secure_binary_21(
     None, 'hash.bin' is created under working directory.
     :param external_files: external files referenced from BD file.
 
-    :raises SPSDKError: If incorrect bf file is provided
+    :raises SPSDKAppError: If incorrect bf file is provided
     """
     if output_file_path is None:
-        click.echo("Error: no output file was specified")
-        sys.exit(1)
+        raise SPSDKAppError("Error: no output file was specified")
     try:
         sb2_data = generate_SB21(
             bd_file_path=str(bd_file_path),
@@ -128,8 +127,7 @@ def generate_secure_binary_21(
         )
         write_file(sb2_data, str(output_file_path), mode="wb")
     except SPSDKError as exc:
-        click.echo(f"The SB2.1 file generation failed: ({str(exc)}).")
-        sys.exit(1)
+        raise SPSDKAppError(f"The SB2.1 file generation failed: ({str(exc)}).") from exc
     else:
         click.echo(f"Success. (Secure binary 2.1: {output_file_path} created.)")
 
@@ -249,8 +247,7 @@ def main(
     """
     if command:
         if output is None:
-            click.echo("Error: no output file was specified")
-            sys.exit(1)
+            raise SPSDKAppError("Error: no output file was specified")
         generate_secure_binary_21(
             bd_file_path=command,
             output_file_path=output,
