@@ -11,3 +11,5 @@ jsonschema2md
 pytablewriter
 Pillow
 docutils==0.17
+# pyscard package is requirements for TP
+pyscard

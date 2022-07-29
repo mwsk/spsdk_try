@@ -122,12 +122,8 @@ venv*
 .mypy_cache/
 
 # IDE
-.idea/workspace.xml
-.idea/pylint.xml
-.idea/mypy.xml
-.idea/dictionaries/
-.idea/
 .vscode
+.idea
 
 # PyPI
 pip-wheel-metadata

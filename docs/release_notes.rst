@@ -9,14 +9,14 @@ Release Notes
 =============
 
 --------------------
-1.7.0 (1-July-2022)
+1.7.0 (29-July-2022)
 --------------------
 
 **New features**
 
-* nxpimage application as replacement for elftosb
-* nxpcrypto application for generating and verifying keys, certificates, hash digest, converting key's format
-* trust provisioning applications (tphost and tpconfig)
+* :ref:`nxpimage` application as replacement for elftosb
+* :ref:`nxpcrypto` application for generating and verifying keys, certificates, hash digest, converting key's format
+* trust provisioning applications (:ref:`tphost` and :ref:`tpconfig`)
 * :ref:`blhost`:
     - support LifeCycleUpdate command for RT1180
     - add option to specify peripheral index of SPI/I2C for LIBUSBSIO
@@ -42,6 +42,9 @@ Release Notes
 * unify debug options within applications
 * add API to compute RKTH
 * support LPC553x in elftosb/nxpimage
+* support dual image boot on RT5xx and RT6xx
+* replace click/sys.exit with raising an SPSDKAppError exception
+* encryption of remapped images
 
 **Bugfixes**
 

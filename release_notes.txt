@@ -10,7 +10,7 @@ delivered in the form of a python library and command-line applications.
 Version: 1.7.0
 
 ==============
-Date: 1-July-2022
+Date: 29-July-2022
 
 New features
 
@@ -42,6 +42,9 @@ New features
 - unify debug options within applications
 - API to compute RKTH
 - support LPC553x in elftosb/nxpimage
+- support dual image boot on RT5xx and RT6xx
+- replace click/sys.exit with raising an SPSDKAppError exception
+- encryption of remapped images
 
 Bugfixes
 
@@ -86,6 +89,13 @@ Python 3.7+ interpreter, old version 2.x is not supported
 
 Revision History
 ================
+1.6.3
+- pypemicro dependency update in order to cover latest bug fixes in this package
+- libusbsio update to version 2.1.11
+- fix in rescanning LIBUSBSIO devices when target MCU is not connected
+- efuse_program_once returns failure message when using 'lock' option but still the fuse is burnt
+- fix memory leaks in elftosb
+
 1.6.2
 - bump-up version of bincopy to <17.11
 - add plain load image to build example bootable i.MX-RT image
