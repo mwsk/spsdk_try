@@ -72,13 +72,6 @@ devices:
       a1: nhs52s04.xml
     latest: a1
     address: 0x10_4000
-    grouped_registers:
-      - name: ROTKH
-        width: 256
-        config_as_hexstring: true
-        description:
-          ROTKH field is compounded by 8 32-bit fields and contains Root key
-          table hash.
     computed_fields:
       CC_SOCU_PIN:
         INVERSE_VALUE: pfr_reg_inverse_high_half

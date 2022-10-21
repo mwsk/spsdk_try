@@ -7,7 +7,7 @@ configure the device, prepare, download and upload data, including security oper
 delivered in the form of a python library and command-line applications.
 
 
-Version: 1.7.1
+Version: 1.8.0
 
 ==============
 Date: 21-October-2022
