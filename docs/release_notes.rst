@@ -9,34 +9,13 @@ Release Notes
 =============
 
 -------------------------
-1.8.0 (21-October-2022)
+1.7.2 (11-November-2022)
 -------------------------
-
-**New features**
-
-* :ref:`nxpimage`:
-    - add support for BEE
-    - enable OTFAD on RT1180
-* :ref:`pfr`:
-    - move the functionality of pfrc tool into PFR tool
-* :ref:`tphost`/:ref:`tpconfig`:
-    - implement USB re-enumeration in TPHost after OEM ProvFW is started
-    - create command for checking the Chain of Trust used in TP
-    - investigate TP performance loss during device reset after TP is completed
-    - add possibility to select TP SmartCard via card reader's name
-* unify option for getting template across tools
-* add API for parsing XMCD
-* support cryptography >= 37.0.0
-* support bincopy 17.14
 
 **Bugfixes**
 
-* :ref:`nxpdevscan`:
-    - fix hanging up for serial communication
-* :ref:`tphost`/:ref:`tpconfig`:
-    - blhost_port should not be mandatory in TP target settings
-    - fix disabling timeout in TP is ignored
-* fix documentation regarding SB31 programFuses
+* :ref:`nxpimage`:
+    - fix LPC55S3x MBI image XiP in external memory
 
 -------------------------
 1.7.1 (16-September-2022)
