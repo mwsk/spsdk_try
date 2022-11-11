@@ -28,5 +28,3 @@ InquirerPy
 # examples
 flask
 requests
-ipython
-notebook

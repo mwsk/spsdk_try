@@ -22,4 +22,3 @@ build:
     - swig
     - pcscd
     - libpcsclite-dev
-    - pandoc

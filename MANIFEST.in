@@ -1,5 +1,4 @@
 include LICENSE
-include SW_Content_Register_SPSDK.txt
 include requirements*
 include spsdk/py.typed
 recursive-include spsdk/data *

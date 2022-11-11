@@ -228,7 +228,7 @@ Release Notes
 
   * fix problem in registers class with another size of register than 32 bits
 
-* pfrc:
+* :ref:`pfrc`:
 
   * displays false brick conditions
   * wrong validation of CMPA.CC_SOCU_PIN bits
@@ -393,7 +393,7 @@ Release Notes
 
 * support for LPC55S3x devices
 * extend support for LPC55S1x, LPC55S0x
-* pfrc - console script for searching for brick conditions in pfr settings
+* :ref:`pfrc` - console script for searching for brick conditions in pfr settings
 * custom HSM support
 * sdpshost CLI utility using sdpshost communication protocol
 * remote signing for Debug Credential

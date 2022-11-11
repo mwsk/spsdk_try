@@ -31,10 +31,3 @@ Flashloader         Name: Flashloader
                     Type: Binary
                     URL: https://mcuxpresso.nxp.com/en/welcome
                     Note: Built from Flashloader sources in NXP MCUXpresso SDK
-
-Roboto              Name: Roboto
-                    License: Apache License, Version 2.0
-                    Location: spsdk/docs/_static/fonts/Roboto-Medium.ttf
-                    Type: Source
-                    URL: https://fonts.google.com/specimen/Roboto/
-                    Note: Font used in docs
