@@ -17,7 +17,7 @@ from spsdk.mboot import McuBoot, scan_usb
 # logging.basicConfig(level=logging.DEBUG)
 
 
-def mboot_properties(name: str = None) -> Optional[list]:
+def mboot_properties(name: Optional[str] = None) -> Optional[list]:
     """Get McuBoot properties.
 
     :param name: Device name ('KL27Z', 'LPC55', ...), VID:PID ('0x15A2:0x0073') or None (any from known devices)

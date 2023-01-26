@@ -9,7 +9,7 @@
 """Commands and responses used by MBOOT module."""
 
 from struct import pack, unpack, unpack_from
-from typing import Dict, List, Type
+from typing import Dict, List, Optional, Type
 
 from spsdk.utils.easy_enum import Enum
 
@@ -225,7 +225,7 @@ class CmdPacket:
     SIZE = 32
     EMPTY_VALUE = 0x00
 
-    def __init__(self, tag: int, flags: int, *args: int, data: bytes = None) -> None:
+    def __init__(self, tag: int, flags: int, *args: int, data: Optional[bytes] = None) -> None:
         """Initialize the Command Packet object.
 
         :param tag: Tag identifying the command

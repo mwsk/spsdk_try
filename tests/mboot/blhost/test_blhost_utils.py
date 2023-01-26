@@ -40,6 +40,22 @@ def test_parse_property_tag(input, expected):
 
 
 @pytest.mark.parametrize(
+    "input,family,expected",
+    [
+        ("verify-erase", "kw45xx", 10),
+        ("verify-erase", "k32w1xx", 10),
+        ("verify-erase", None, 0xFF),
+        ("current-version", None, 1),
+        ("current-version", "kw45xx", 1),
+        ("current-version", "k32w1xx", 1),
+    ],
+)
+def test_parse_property_tag_override(input, family, expected):
+    actual = parse_property_tag(input, family)
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
     "input, expected",
     [
         ("1", 1),

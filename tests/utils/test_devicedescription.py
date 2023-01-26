@@ -27,6 +27,7 @@ def test_usb_device_description():
         "Vendor ID: 0x000a\n"
         "Product ID: 0x0014\n"
         "Path: some_path\n"
+        "Path Hash: N/A\n"
         "Name: mboot device\n"
         "Serial number: 12345678"
     )

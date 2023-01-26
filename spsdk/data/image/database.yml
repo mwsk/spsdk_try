@@ -95,6 +95,16 @@ devices:
         crc: Mbi_CrcRam
         signed: Mbi_SignedRam
 
+  nhs52sxx:
+    images:
+      int_xip:
+        plain: Mbi_PlainXip
+        crc: Mbi_CrcXip
+        signed: Mbi_SignedXip
+      ram:
+        crc: Mbi_CrcRam
+        signed: Mbi_SignedRam
+
   rt5xx:
     images:
       ext_xip:
@@ -132,6 +142,20 @@ devices:
       ram:
         plain: Mbi_PlainRamLpc55s3x
         crc: Mbi_CrcRamLpc55s3x
+
+  kw45xx:
+    images:
+      int_xip:
+        plain: Mbi_PlainXipKw45xx
+        crc: Mbi_CrcXipKw45xx
+        signed: Mbi_PlainXipSignedKw45xx
+
+  k32w1xx:
+    images:
+      int_xip:
+        plain: Mbi_PlainXipKw45xx
+        crc: Mbi_CrcXipKw45xx
+        signed: Mbi_PlainXipSignedKw45xx
 
   lpc553x:
     images:

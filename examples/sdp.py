@@ -16,7 +16,7 @@ from spsdk.sdp import SDP, scan_usb
 # logging.basicConfig(level=logging.DEBUG)
 
 
-def read_memory(address: int, length: int, device_name: str = None) -> Optional[bytes]:
+def read_memory(address: int, length: int, device_name: Optional[str] = None) -> Optional[bytes]:
     """Read memory using USB interface.
 
     To see all available device names (and their respective VID:PID):

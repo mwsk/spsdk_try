@@ -8,7 +8,7 @@
 
 """Various types of memory identifiers used in the MBoot module."""
 
-from typing import Any, List, Optional, Union
+from typing import List, Optional, Union
 
 from spsdk.utils.easy_enum import Enum, EnumKeyType
 from spsdk.utils.misc import size_fmt

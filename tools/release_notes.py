@@ -100,7 +100,7 @@ class RecordsList(List[TicketRecord]):
         return cls(data)
 
 
-def parse_inputs(input_args: List[str] = None) -> RNParams:
+def parse_inputs(input_args: Optional[List[str]] = None) -> RNParams:
     """Parse user inputs."""
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,

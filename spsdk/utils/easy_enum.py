@@ -23,7 +23,7 @@ __license__ = "Apache 2.0"
 __status__ = "Development"
 __all__ = ["Enum"]
 
-from typing import Sequence, Union
+from typing import Optional, Sequence, Union
 
 from spsdk import SPSDKError
 
@@ -91,7 +91,7 @@ class Enum(metaclass=MetaEnum):
     """Enum Type Class."""
 
     @classmethod
-    def get(cls, key: EnumKeyType, default: EnumKeyType = None) -> str:
+    def get(cls, key: EnumKeyType, default: Optional[EnumKeyType] = None) -> str:
         """Converts enumeration value to name OR name to enumeration value.
 
         :param key: either value or name (name is case INSENSITIVE)
@@ -128,7 +128,7 @@ class Enum(metaclass=MetaEnum):
         raise TypeError(f"'{cls.__name__}' has no item with type '{type(key)}'")
 
     @classmethod
-    def name(cls, key: int, default: str = None) -> str:
+    def name(cls, key: int, default: Optional[str] = None) -> str:
         """Returns name of selected enumeration tag.
 
         :param key: enumeration tag

@@ -61,7 +61,7 @@ def test_command_line_interface_invalid_device():
 def test_command_line_interface_printregs_exe_fail():
     """Test for printregs execution menu options."""
     runner = CliRunner()
-    disable_debug = '-o subs_ap={"12":["Exception","Exception"]}'
+    disable_debug = "-o mem_read_exp=1"
     cmd = f"-dev rt5xx -i virtual -s {DebugProbeVirtual.UNIQUE_SERIAL} {disable_debug} printregs"
     result = runner.invoke(main, cmd.split())
 

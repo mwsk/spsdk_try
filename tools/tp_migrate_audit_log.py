@@ -9,7 +9,7 @@
 import argparse
 import shutil
 import sys
-from typing import Sequence
+from typing import Optional, Sequence
 
 from spsdk.tp.data_container import audit_log
 from spsdk.tp.exceptions import SPSDKTpError
@@ -48,7 +48,7 @@ MIGRATION_HANDLERS = {
 }
 
 
-def main(argv: Sequence[str] = None) -> int:
+def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Helper script for migrating TP Audit log.")
     parser.add_argument("-p", "--audit-log-path", required=True, help="Path to audit log")
     args = parser.parse_args(argv)

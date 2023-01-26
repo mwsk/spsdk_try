@@ -11,12 +11,12 @@ from numbers import Number
 from typing import Callable, Dict, List, Optional, Union
 
 from spsdk import SPSDKError
-from spsdk.exceptions import SPSDKValueError
 from spsdk.mboot.memories import MemId
 from spsdk.sbfile.sb2.commands import (
     CmdBaseClass,
     CmdErase,
     CmdFill,
+    CmdJump,
     CmdKeyStoreBackup,
     CmdKeyStoreRestore,
     CmdLoad,
@@ -33,6 +33,22 @@ from spsdk.utils.misc import (
     value_to_bytes,
     value_to_int,
 )
+
+
+def get_mem_id(mem_opt: Union[int, str]) -> int:
+    """Get memory ID from str or int in BD file.
+
+    :param mem_opt: memory option in BD file
+    :raises SPSDKError: if memory option is not supported
+    :return: int memory ID
+    """
+    if isinstance(mem_opt, str):
+        mem_id = int(MemId.get_legacy_str(mem_opt))  # type: ignore
+    elif isinstance(mem_opt, int):
+        mem_id = mem_opt
+    if not mem_id:
+        raise SPSDKError(f"Unsupported memory option: {mem_opt}")
+    return mem_id
 
 
 def get_command(cmd_name: str) -> Callable[[Dict], CmdBaseClass]:
@@ -71,17 +87,12 @@ def _load(cmd_args: dict) -> Union[CmdLoad, CmdProg]:
     :raises SPSDKError: If dict doesn't contain 'file' or 'values' key
     :return: CmdLoad object
     """
-    PROG_MEM_ID = 4
+    prog_mem_id = 4
     address = cmd_args["address"]
     load_opt = cmd_args.get("load_opt")
     mem_id = 0
     if load_opt:
-        if isinstance(load_opt, str):
-            mem_id = MemId.get_legacy_str(load_opt)  # type: ignore
-        elif isinstance(load_opt, int):
-            mem_id = load_opt
-        if not mem_id:
-            raise SPSDKError(f"Unsupported LOAD option: {load_opt}")
+        mem_id = get_mem_id(load_opt)
 
     # general non-authenticated load command
     if cmd_args.get("file"):
@@ -89,7 +100,7 @@ def _load(cmd_args: dict) -> Union[CmdLoad, CmdProg]:
         return CmdLoad(address=address, data=data, mem_id=mem_id)
     if cmd_args.get("values"):
         # if the memory ID is fuse or IFR change load command to program command
-        if mem_id == PROG_MEM_ID:
+        if mem_id == prog_mem_id:
             return _prog(cmd_args, mem_id)
 
         values = [int(s, 16) for s in cmd_args["values"].split(",")]
@@ -98,7 +109,7 @@ def _load(cmd_args: dict) -> Union[CmdLoad, CmdProg]:
     if cmd_args.get("pattern"):
         # if the memory ID is fuse or IFR change load command to program command
         # pattern in this case represents 32b int data word 1
-        if mem_id == PROG_MEM_ID:
+        if mem_id == prog_mem_id:
             return _prog(cmd_args, mem_id)
 
     raise SPSDKError(f"Unsupported LOAD command args: {cmd_args}")
@@ -157,7 +168,13 @@ def _erase_cmd_handler(cmd_args: dict) -> CmdErase:
     address = cmd_args["address"]
     length = cmd_args.get("length", 0)
     flags = cmd_args.get("flags", 0)
-    return CmdErase(address=address, length=length, flags=flags)
+
+    mem_opt = cmd_args.get("mem_opt")
+    mem_id = 0
+    if mem_opt:
+        mem_id = get_mem_id(mem_opt)
+
+    return CmdErase(address=address, length=length, flags=flags, mem_id=mem_id)
 
 
 def _enable(cmd_args: dict) -> CmdMemEnable:
@@ -168,8 +185,11 @@ def _enable(cmd_args: dict) -> CmdMemEnable:
     """
     address = cmd_args["address"]
     size = cmd_args.get("size", 4)
-    mem_type = cmd_args["mem_opt"]
-    return CmdMemEnable(address=address, size=size, mem_type=mem_type)
+    mem_opt = cmd_args.get("mem_opt")
+    mem_id = 0
+    if mem_opt:
+        mem_id = get_mem_id(mem_opt)
+    return CmdMemEnable(address=address, size=size, mem_id=mem_id)
 
 
 def _encrypt(cmd_args: dict) -> CmdLoad:
@@ -351,6 +371,30 @@ def _validate_keyblob(keyblobs: List, keyblob_id: Number) -> Optional[Dict]:
     return None
 
 
+def _jump(cmd_args: dict) -> CmdJump:
+    """Returns a CmdJump object initialized with memory type and address.
+
+    The "jump" command produces the ROM_JUMP_CMD.
+    See the boot image format design document for specific details about these commands,
+    such as the function prototypes they expect.
+
+    section (0) {
+        # jump to the entrypoint
+        jump mySRecFile;
+        # jump to a fixed address
+        jump 0xffff0000;
+    }
+
+    :param cmd_args: dictionary holding the argument and address.
+    :return: CmdJump object.
+    """
+    argument = cmd_args.get("argument", 0)
+    address = cmd_args["address"]
+    spreg = cmd_args.get("spreg")
+
+    return CmdJump(address, argument, spreg)
+
+
 cmds = {
     "load": _load,
     "fill": _fill_memory,
@@ -361,4 +405,5 @@ cmds = {
     "keystore_to_nv": _keystore_to_nv,
     "keystore_from_nv": _keystore_from_nv,
     "version_check": _version_check,
+    "jump": _jump,
 }

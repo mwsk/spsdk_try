@@ -112,9 +112,9 @@ class DependenciesList(List[DependencyInfo]):
         """
         packages_info: List[str] = []
         try:
-            output = subprocess.check_output(f"pip show {' '.join(packages)}".split()).decode(
-                "utf-8"
-            )
+            output = subprocess.check_output(
+                f"pip show {' '.join(packages)}".split(), stderr=subprocess.DEVNULL
+            ).decode("utf-8")
             if "WARNING: Package(s) not found:" in output:
                 raise ValueError(f"Some package(s) not found: \n{output}")
 
@@ -152,7 +152,7 @@ class DependenciesList(List[DependencyInfo]):
         return actual_list
 
 
-def parse_inputs(input_args: List[str] = None) -> dict:
+def parse_inputs(input_args: Optional[List[str]] = None) -> dict:
     """Parse user input parameters."""
     parser = argparse.ArgumentParser(
         description="Utility for checking licenses of all dependencies",

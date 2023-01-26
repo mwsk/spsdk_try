@@ -9,7 +9,7 @@
 """Misc."""
 import io
 from io import SEEK_CUR
-from typing import Union
+from typing import Optional, Union
 
 from spsdk import SPSDKError
 from spsdk.utils.registers import value_to_int
@@ -47,7 +47,7 @@ def modulus_fmt(modulus: bytes, tab: int = 4, length: int = 15, sep: str = ":") 
 def read_raw_data(
     stream: Union[io.BufferedReader, io.BytesIO],
     length: int,
-    index: int = None,
+    index: Optional[int] = None,
     no_seek: bool = False,
 ) -> bytes:
     """Read raw data."""
@@ -77,7 +77,7 @@ def read_raw_data(
 
 
 def read_raw_segment(
-    buffer: Union[io.BufferedReader, io.BytesIO], segment_tag: int, index: int = None
+    buffer: Union[io.BufferedReader, io.BytesIO], segment_tag: int, index: Optional[int] = None
 ) -> bytes:
     """Read raw segment."""
     hrdata = read_raw_data(buffer, Header.SIZE, index)

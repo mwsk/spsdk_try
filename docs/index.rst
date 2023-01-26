@@ -28,6 +28,7 @@ Secure Provisioning SDK (SPSDK)
 
     apps/blhost
     apps/elftosb
+    apps/ifr
     apps/nxpcertgen
     apps/nxpcrypto
     apps/nxpdebugmbox
@@ -64,6 +65,7 @@ Secure Provisioning SDK (SPSDK)
     examples/jupyter
     examples/lpc55sxx_secure_boot
     examples/lpc55sxx_secure_fw_update
+    examples/kw45xx
 
 Indices and tables
 ==================

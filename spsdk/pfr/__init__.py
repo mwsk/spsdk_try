@@ -20,6 +20,6 @@ from .exceptions import (
     SPSDKPfrError,
     SPSDKPfrRotkhIsNotPresent,
 )
-from .pfr import CFPA, CMPA, PfrConfiguration
+from .pfr import CFPA, CMPA, ROMCFG, PfrConfiguration
 from .processor import Processor
 from .translator import Translator

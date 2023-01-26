@@ -195,7 +195,7 @@ class Header2(Header):
         return pack(self.FORMAT, self.param, self.length, self.tag)
 
     @classmethod
-    def parse(cls, data: bytes, offset: int = 0, required_tag: int = None) -> "Header":
+    def parse(cls, data: bytes, offset: int = 0, required_tag: Optional[int] = None) -> "Header":
         """Parse header.
 
         :param data: Raw data as bytes or bytearray

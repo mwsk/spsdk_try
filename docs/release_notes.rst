@@ -9,13 +9,71 @@ Release Notes
 =============
 
 -------------------------
-1.7.2 (11-November-2022)
+1.9.0 (13-January-2023)
 -------------------------
+
+**New features**
+
+* :ref:`nxpimage`:
+    - XMCD support
+    - signed messages support for RT1180
+    - add bootable image for RT10xx, RT1180, RT1170, LPC55S3x
+    - implement IEE encryption
+    - support Memory ID for erase in sb21
+    - support Memory ID for enable and load in sb21
+    - implement JUMP and JUMP_SP commands in BD file  for SB2.1
+* :ref:`tphost`/:ref:`tpconfig`:
+    - create command for loading ProvFW
+    - add command for retrieving TP_RESPONSE without models or smart card
+    - smart card reader name hash identification
+* debug authentication improvements
+* unify memory access cross all debuggers
+* replace json file with yml file for TZ
+* support for k32w1xx, kw45xx
+* improve format of debugging logger
+
 
 **Bugfixes**
 
 * :ref:`nxpimage`:
-    - fix LPC55S3x MBI image XiP in external memory
+    - fix non working 384/521 ECC keys for signature in AHAB container
+    - fix CRC mode in external flash for lpc55s3x
+    - failure on start due to boot_image hook definition
+* :ref:`pfr`:
+    - command line parameter '-t' is duplicated
+* :ref:`tphost`/:ref:`tpconfig`:
+    - TPhost load-tpfw requires TP device definition
+    - OEM ProvFW boot-check incorrectly fails with non-verbose flavor
+
+-------------------------
+1.8.0 (21-October-2022)
+-------------------------
+
+**New features**
+
+* :ref:`nxpimage`:
+    - add support for BEE
+    - enable OTFAD on RT1180
+* :ref:`pfr`:
+    - move the functionality of pfrc tool into PFR tool
+* :ref:`tphost`/:ref:`tpconfig`:
+    - implement USB re-enumeration in TPHost after OEM ProvFW is started
+    - create command for checking the Chain of Trust used in TP
+    - investigate TP performance loss during device reset after TP is completed
+    - add possibility to select TP SmartCard via card reader's name
+* unify option for getting template across tools
+* add API for parsing XMCD
+* support cryptography >= 37.0.0
+* support bincopy 17.14
+
+**Bugfixes**
+
+* :ref:`nxpdevscan`:
+    - fix hanging up for serial communication
+* :ref:`tphost`/:ref:`tpconfig`:
+    - blhost_port should not be mandatory in TP target settings
+    - fix disabling timeout in TP is ignored
+* fix documentation regarding SB31 programFuses
 
 -------------------------
 1.7.1 (16-September-2022)
@@ -38,6 +96,20 @@ Release Notes
 * :ref:`nxpimage`:
     - fix sb21 command line argument in documentation
 * fix the use of pyyaml's load in tests (use safe_load())
+
+-----------------------------------
+1.7.1 KW45 EAR (12-September-2022)
+-----------------------------------
+
+Preliminary version of basic support for KW45 device (blhost, elftosb/nxpimage)
+Basic smoke test for blhost and elftosb/nxpimage commands was done.
+
+------------------------------
+1.7.0 KW45 EAR (29-July-2022)
+------------------------------
+
+Preliminary version of basic support for KW45 device (blhost, elftosb/nxpimage)
+Basic smoke test for blhost and elftosb/nxpimage commands was done.
 
 --------------------
 1.7.0 (29-July-2022)
@@ -228,7 +300,7 @@ Release Notes
 
   * fix problem in registers class with another size of register than 32 bits
 
-* :ref:`pfrc`:
+* pfrc:
 
   * displays false brick conditions
   * wrong validation of CMPA.CC_SOCU_PIN bits
@@ -393,7 +465,7 @@ Release Notes
 
 * support for LPC55S3x devices
 * extend support for LPC55S1x, LPC55S0x
-* :ref:`pfrc` - console script for searching for brick conditions in pfr settings
+* pfrc - console script for searching for brick conditions in pfr settings
 * custom HSM support
 * sdpshost CLI utility using sdpshost communication protocol
 * remote signing for Debug Credential

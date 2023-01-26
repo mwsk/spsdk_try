@@ -90,7 +90,7 @@ class BootSectionV2(BaseClass):
         self.uid = uid
 
     def __str__(self) -> str:
-        pass
+        return f"BootSectionV2: {len(self)} commands."
 
     def __len__(self) -> int:
         return len(self._commands)

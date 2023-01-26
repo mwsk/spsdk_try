@@ -135,6 +135,8 @@ def generate_secure_binary_21(
 def generate_secure_binary_31(container_conf: str) -> None:
     """Generate SecureBinary image from json configuration file.
 
+    RoTKTH/SB3KDK is printed out in verbose mode
+
     :param container_conf: configuration file
     :raises SPSDKError: Raised when there is no signing key
     """

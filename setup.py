@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2019-2022 NXP
+# Copyright 2019-2023 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -49,6 +49,7 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Operating System :: POSIX :: Linux",
         "Operating System :: Microsoft :: Windows",
         "Operating System :: MacOS :: MacOS X",
@@ -63,7 +64,6 @@ setup(
         "console_scripts": [
             "elftosb=spsdk.apps.elftosb:safe_main",
             "pfr=spsdk.apps.pfr:safe_main",
-            "pfrc=spsdk.apps.pfrc:safe_main",
             "blhost=spsdk.apps.blhost:safe_main",
             "sdphost=spsdk.apps.sdphost:safe_main",
             "sdpshost=spsdk.apps.sdpshost:safe_main",
@@ -76,6 +76,7 @@ setup(
             "nxpdevhsm=spsdk.apps.nxpdevhsm:safe_main",
             "nxpimage=spsdk.apps.nxpimage:safe_main",
             "shadowregs=spsdk.apps.shadowregs:safe_main",
+            "ifr=spsdk.apps.ifr:safe_main",
             "tpconfig=spsdk.apps.tpconfig:safe_main",
             "tphost=spsdk.apps.tphost:safe_main",
         ],

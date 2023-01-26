@@ -66,16 +66,6 @@ def test_force_actual_dir(tmpdir):
         assert result.exit_code == 0
 
 
-def test_force_subdir(tmpdir):
-    with use_working_directory(tmpdir):
-        result = CliRunner().invoke(main, "-k rsa2048 tmp/key".split())
-        # should fail due to non-existing subfolder
-        assert result.exit_code == 1
-        result = CliRunner().invoke(main, "-k rsa2048 tmp/key --force".split())
-        assert result.exit_code == 0
-        assert os.path.isfile("tmp/key")
-
-
 @pytest.mark.parametrize(
     "key, valid",
     [

@@ -184,7 +184,7 @@ class CertificateImg(BaseClass):
         """Size of Certificate structure for bootable image."""
         return Header.SIZE + len(self._data)
 
-    def __init__(self, version: int = 0x40, data: bytes = None) -> None:
+    def __init__(self, version: int = 0x40, data: Optional[bytes] = None) -> None:
         """Initialize the certificate structure for bootable image."""
         super().__init__(SegTag.CRT, version)
         self._data = bytearray() if data is None else bytearray(data)
@@ -241,7 +241,7 @@ class Signature(BaseClass):
         """Size of a signature."""
         return Header.SIZE + len(self._data)
 
-    def __init__(self, version: int = 0x40, data: bytes = None) -> None:
+    def __init__(self, version: int = 0x40, data: Optional[bytes] = None) -> None:
         """Initialize the signature."""
         super().__init__(tag=SegTag.SIG, version=version)
         self._data = bytearray() if data is None else bytearray(data)

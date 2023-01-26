@@ -36,6 +36,9 @@ class VirtualDevice(SDPInterface):
     def write(self, packet):
         pass
 
+    def conf(self, config: dict) -> None:
+        pass
+
     def info(self):
         return "VirtualDevice"
 
