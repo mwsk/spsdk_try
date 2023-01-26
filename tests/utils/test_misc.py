@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2020-2022 NXP
+# Copyright 2020-2023 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -11,7 +11,6 @@ import time
 from typing import Union
 
 import pytest
-from bincopy import BinFile
 
 from spsdk import SPSDKError
 from spsdk.exceptions import SPSDKValueError
