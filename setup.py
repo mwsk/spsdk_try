@@ -7,6 +7,7 @@
 
 import os
 
+
 from setuptools import find_packages, setup  # type: ignore
 
 with open("requirements.txt") as req_file:
