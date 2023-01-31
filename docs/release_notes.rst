@@ -9,11 +9,16 @@ Release Notes
 =============
 
 -------------------------
-1.9.0 (13-January-2023)
+1.9.0 (30-January-2023)
 -------------------------
 
 **New features**
 
+* :ref:`nxpdebugmbox`:
+    - add check of root of trust hash in dat authentication
+    - enable debug authentication protocol on RT1180
+* :ref:`nxpdevhsm`:
+    - reset target before and after DevHSM SB3 file creation
 * :ref:`nxpimage`:
     - XMCD support
     - signed messages support for RT1180
@@ -22,6 +27,7 @@ Release Notes
     - support Memory ID for erase in sb21
     - support Memory ID for enable and load in sb21
     - implement JUMP and JUMP_SP commands in BD file  for SB2.1
+    - enable encryption in AHAB container
 * :ref:`tphost`/:ref:`tpconfig`:
     - create command for loading ProvFW
     - add command for retrieving TP_RESPONSE without models or smart card
@@ -35,6 +41,10 @@ Release Notes
 
 **Bugfixes**
 
+* :ref:`nxpdebugmbox`:
+    - remove duplicated option --protocol for gendc command
+* :ref:`nxpdevhsm`:
+    - fix skipping commands from config file
 * :ref:`nxpimage`:
     - fix non working 384/521 ECC keys for signature in AHAB container
     - fix CRC mode in external flash for lpc55s3x
@@ -44,6 +54,13 @@ Release Notes
 * :ref:`tphost`/:ref:`tpconfig`:
     - TPhost load-tpfw requires TP device definition
     - OEM ProvFW boot-check incorrectly fails with non-verbose flavor
+
+**Known issues**
+
+* :ref:`nxpdebugmbox`:
+    - we do not support CMSIS-DAP version 2 (bulk pipes, https://arm-software.github.io/CMSIS_5/DAP/html/group__DAP__ConfigUSB__gr.html)
+      This means sw debuggers such as MCU-Link v3 will not work (nxpdebugmbox will not detect the debugger probe)
+      This issue will be resolved in next version of SPSDK
 
 -------------------------
 1.8.0 (21-October-2022)
@@ -96,20 +113,6 @@ Release Notes
 * :ref:`nxpimage`:
     - fix sb21 command line argument in documentation
 * fix the use of pyyaml's load in tests (use safe_load())
-
------------------------------------
-1.7.1 KW45 EAR (12-September-2022)
------------------------------------
-
-Preliminary version of basic support for KW45 device (blhost, elftosb/nxpimage)
-Basic smoke test for blhost and elftosb/nxpimage commands was done.
-
-------------------------------
-1.7.0 KW45 EAR (29-July-2022)
-------------------------------
-
-Preliminary version of basic support for KW45 device (blhost, elftosb/nxpimage)
-Basic smoke test for blhost and elftosb/nxpimage commands was done.
 
 --------------------
 1.7.0 (29-July-2022)

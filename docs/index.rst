@@ -48,7 +48,16 @@ Secure Provisioning SDK (SPSDK)
     :caption: API Development Guide
     :maxdepth: 1
 
-    api/api
+    api/crypto
+    api/dat
+    api/debuggers
+    api/image
+    api/mboot
+    api/pfr
+    api/sbfile
+    api/sdp
+    api/shadowregs
+    api/utils
 
 .. toctree::
     :caption: Examples
