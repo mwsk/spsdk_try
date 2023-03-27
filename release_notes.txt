@@ -27,7 +27,7 @@ Bugfixes
     - fix handling exception when the root cert index is wrong
 
 - tphost/tpconfig:
-    - Incorrect output in TP PG command in case of an failure
+    - incorrect output in TP PG command in case of an failure
 
 
 Supported devices

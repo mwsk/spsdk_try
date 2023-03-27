@@ -27,7 +27,7 @@ Release Notes
 * :ref:`nxpimage`:
     - fix handling exception when the root cert index is wrong
 * :ref:`tphost`/:ref:`tpconfig`:
-    - Incorrect output in TP PG command in case of an failure
+    - incorrect output in TP PG command in case of an failure
 
 -------------------------
 1.9.0 (30-January-2023)
