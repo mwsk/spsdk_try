@@ -80,10 +80,8 @@ properties:
     type: string
     title: Signed Message container signing key
     description:
-      Private key used for sign the container header. Header can be signed by SRK or
-      by image key that was signed by SRK. If an image key is used, it must be the
-      same algorithm and key size as the SRK. In both cases, the referenced SRK
-      must not have been revoked.
+      Private key used for sign the container header. Header can be signed by SRK.
+      The referenced SRK must not have been revoked.
     format: file
     template_value: my_signing_key.pem
 
