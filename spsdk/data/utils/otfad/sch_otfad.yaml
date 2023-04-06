@@ -27,23 +27,23 @@ otfad_output:
     output_name:
       type: string
       title: Output binary image file name
-      description: File name of the output image containing keyblobs and encrypted data blobs
-      template_value: "encrypted.bin"
-      default: "encrypted.bin"
+      description: Filename of the output image containing keyblobs and encrypted data blob without file extension (.bin will be appended)
+      template_value: "otfad_whole_image"
+      default: "otfad_whole_image"
 
     keyblob_name:
       type: string
       title: Keyblob file name
-      description: File name of the keyblob, output_folder/keyblob_name
-      template_value: "iee_keyblob.bin"
-      default: "iee_keyblob.bin"
+      description: Filename of the keyblob without file extension (.bin will be appended)
+      template_value: "OTFAD_Table"
+      default: "OTFAD_Table"
 
     encrypted_name:
       type: string
       title: Encrypted name
-      description: filename of the encrypted datablobs
-      template_value: encrypted_blob.bin
-      default: encrypted_blob.bin
+      description: filename of the encrypted datablobs without file extension (.bin will be appended)
+      template_value: encrypted_blob
+      default: encrypted_blob
   required: [output_folder]
 
 otfad:
@@ -165,4 +165,3 @@ otfad_scramble:
           description: OTFAD Key scramble mask align (1 byte size)
           format: number
           template_value: "0x72"
-

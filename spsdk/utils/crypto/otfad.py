@@ -694,11 +694,17 @@ class OtfadNxp(Otfad):
 
         return binaries
 
-    def binary_image(self, plain_data: bool = False, data_alignment: int = 16) -> BinaryImage:
+    def binary_image(
+        self,
+        plain_data: bool = False,
+        data_alignment: int = 16,
+        otfad_table_name: str = "OTFAD_Table",
+    ) -> BinaryImage:
         """Get the OTFAD Binary Image representation.
 
         :param plain_data: Binary representation in plain format, defaults to False
         :param data_alignment: Alignment of data part key blobs.
+        :param otfad_table_name: name of the output file that contains OTFAD table
         :return: OTFAD in BinaryImage.
         """
         otfad = BinaryImage("OTFAD", offset=self.table_address)
@@ -715,7 +721,7 @@ class OtfadNxp(Otfad):
         )
         otfad.add_image(
             BinaryImage(
-                "OTFAD_Table",
+                otfad_table_name,
                 size=self.key_blob_rec_size * self.blobs_max_cnt,
                 offset=0,
                 description=f"OTFAD description table for {self.family}",

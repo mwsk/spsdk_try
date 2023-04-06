@@ -64,7 +64,7 @@ devices:
     latest: a0
     attributes:
       reg_fuses: fuses_rt117x.xml
-      keyblob_byte_swap_cnt: 8
+      keyblob_byte_swap_cnt: 0
       sb_21_supported: False
       has_kek_fuses: True
       peripheral_list: ["1", "2"]

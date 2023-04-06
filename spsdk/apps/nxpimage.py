@@ -914,12 +914,14 @@ def otfad_export(alignment: int, config: str, index: Optional[int] = None) -> No
     schemas = OtfadNxp.get_validation_schemas(family)
     check_config(config_data, schemas, search_paths=[config_dir])
     otfad = OtfadNxp.load_from_config(config_data, search_paths=[config_dir])
-    binary_image = otfad.binary_image(data_alignment=alignment)
+    otfad_table_name = config_data.get("keyblob_name", "OTFAD_Table")
+    binary_image = otfad.binary_image(data_alignment=alignment, otfad_table_name=otfad_table_name)
     logger.info(f" The OTFAD image structure:\n{binary_image.draw()}")
 
     output_folder = get_abs_path(config_data["output_folder"], config_dir)
+    output_name = config_data.get("output_name", "otfad_whole_image") + ".bin"
 
-    otfad_all = os.path.join(output_folder, "otfad_whole_image.bin")
+    otfad_all = os.path.join(output_folder, output_name)
     write_file(binary_image.export(), otfad_all, mode="wb")
     logger.info(f"Created OTFAD Image:\n{otfad_all}")
     sb21_supported = otfad.database.get_device_value("sb_21_supported", otfad.family, default=False)
