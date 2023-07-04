@@ -40,7 +40,6 @@ Next version of spsdk (2.0) will introduce breaking changes:
 **Bugfixes**
 
 * :ref:`nxpimage`:
-* nxpimage:
     - fix offset on NAND memory in AHAB image
 * fix plugin error for signature Provider for sb21
 
