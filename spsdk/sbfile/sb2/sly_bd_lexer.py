@@ -78,7 +78,6 @@ class BDLexer(Lexer):
         "else": "ELSE",
         "info": "INFO",
         "error": "ERROR",
-        "qspi": "QSPI",
         "enable": "ENABLE",
         "keywrap": "KEYWRAP",
         "keystore_to_nv": "KEYSTORE_TO_NV",
