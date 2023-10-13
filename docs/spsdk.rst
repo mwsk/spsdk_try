@@ -71,7 +71,7 @@ Supported Devices
 
 - LPC55 `S6x <LPC55S6x_link_>`__ / `S3x <LPC55S3x_link_>`__ / `S2x <LPC55S2x_link_>`__ / `S1x <LPC55S1x_link_>`__ / `S0x <LPC55S0x_link_>`__
 - i.MX RT `600 <RT600_link_>`__ / `500 <RT500_link_>`__
-- i.MX RT `1064 <RT1064_link_>`__ / `1060 <RT1060_link_>`__ / `1050 <RT1050_link_>`__ / `1024 <RT1020_link_>`__ / `1020 <RT1020_link_>`__ / `1015 <RT1015_link_>`__ / `1010 <RT1010_link_>`__
+- i.MX RT `1064 <RT1064_link_>`__ / `1060 <RT1060_link_>`__ / `1050 <RT1050_link_>`__ / `1024 <RT1024_link_>`__ / `1020 <RT1020_link_>`__ / `1015 <RT1015_link_>`__ / `1010 <RT1010_link_>`__
 - i.Mx RT `1180 <RT1180_link_>`__ / `1170 <RT1170_link_>`__ / `1160 <RT1160_link_>`__ (blhost)
 - `KW45 <KW45_link_>`__
 - `K32W1 <K32W1_link_>`__

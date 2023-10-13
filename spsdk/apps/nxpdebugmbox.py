@@ -970,7 +970,9 @@ def gendc(
             config_data = load_configuration(rot_config, search_paths=[rot_config_dir])
             if "certBlock" in config_data:
                 try:
-                    config_data = load_configuration(config_data["certBlock"])
+                    config_data = load_configuration(
+                        config_data["certBlock"], search_paths=[rot_config_dir]
+                    )
                 except SPSDKError as e:
                     raise SPSDKAppError("certBlock must be provided as YAML configuration") from e
 
