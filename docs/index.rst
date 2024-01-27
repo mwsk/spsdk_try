@@ -11,7 +11,7 @@ Secure Provisioning SDK (SPSDK)
     :caption: Project overview
     :maxdepth: 1
 
-    spsdk.rst
+    .. mdinclude:: ../../README.md
     release_notes.rst
     migration_guide.rst
 
