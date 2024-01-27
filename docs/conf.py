@@ -40,7 +40,7 @@ master_doc = "index"
 #     ".rst": "restructuredtext",
 #     ".md": "markdown",
 # }
-source_suffix = ['.rst', '.md']
+# source_suffix = ['.rst', '.md']
 
 autoclass_content = "both"
 suppress_warnings = ["autosectionlabel.*"]
@@ -68,7 +68,7 @@ extensions = [
     "nbsphinx",
     # "nbsphinx_link",
     "myst_nb",
-    'myst_parser',
+    # 'myst_parser',
 ]
 
 
