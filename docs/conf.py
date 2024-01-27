@@ -40,7 +40,7 @@ master_doc = "index"
 #     ".rst": "restructuredtext",
 #     ".md": "markdown",
 # }
-source_suffix = ['.rst', './md']
+source_suffix = ['.rst', '.md']
 
 autoclass_content = "both"
 suppress_warnings = ["autosectionlabel.*"]
