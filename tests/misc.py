@@ -23,3 +23,15 @@ def compare_bin_files(path: str, bin_data: bytes) -> None:
         with open(path + ".generated", "wb") as f:
             f.write(bin_data)
         assert expected == bin_data, f'file does not match: "{path}"'
+
+
+class GetPassMock:
+    """Mocks the get_pass functionality."""
+
+    PASSWORD = "test"
+
+    @classmethod
+    def get_pass(cls, prompt=None, stream=None):
+        return cls.PASSWORD
+
+    getpass = get_pass

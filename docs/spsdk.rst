@@ -111,3 +111,9 @@ CLI/API stability notice
 * Patch release will not break backward compatibility (any occurrence is treated as a bug)
 
 New features might be implemented in both patch and minor releases.
+
+==========
+Disclaimer
+==========
+
+All products, including those with advanced security features, may be subject to unidentified vulnerabilities. Customers are responsible for the design and operation of their applications and products to reduce the effect of these vulnerabilities on the customer's applications and products.  NXP accepts no liability for any security vulnerability.  Customers are responsible for the design and operation of their applications and products and are responsible to implement appropriate design and operating safeguards to minimize the risk of potential security vulnerabilities associated with their applications and products.

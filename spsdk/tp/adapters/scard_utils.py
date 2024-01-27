@@ -11,8 +11,8 @@ from typing import List, NamedTuple, Optional, Tuple
 
 from spsdk.apps.utils.utils import format_raw_data
 from spsdk.exceptions import SPSDKError
-from spsdk.utils.easy_enum import Enum
 from spsdk.utils.misc import get_hash
+from spsdk.utils.spsdk_enum import SpsdkEnum
 
 try:
     from smartcard.CardConnectionDecorator import CardConnection
@@ -33,7 +33,7 @@ from . import scard_commands
 logger = logging.getLogger(__name__)
 
 
-class ProvItem(Enum):
+class ProvItem(SpsdkEnum):
     """Provisioning item indexes."""
 
     OEM_CERT_COUNT = (0x1001, "oem_id_count")

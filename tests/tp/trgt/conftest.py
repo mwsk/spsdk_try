@@ -14,7 +14,14 @@ from tests.mboot.mboot_fixtures import *
 
 @pytest.fixture
 def trgt_blhost(device) -> TpTargetBlHost:
-    tblh_descr = TpBlHostIntfDescription("Virtual BLHOST", "Virtual BLHOST device for testing", {})
+    tblh_descr = TpBlHostIntfDescription(
+        "Virtual BLHOST",
+        "Virtual BLHOST device for testing",
+        {
+            "buffer_address": 1024,
+            "buffer_size": 0x1000,
+        },
+    )
     tblh_descr.interface = device
     tblh = TpTargetBlHost(tblh_descr, "N/A")
     return tblh

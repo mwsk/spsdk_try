@@ -16,7 +16,6 @@ import spsdk.apps.nxpimage as nxpimage
 from spsdk.exceptions import SPSDKError
 from spsdk.sbfile.sb2.images import BootImageV21
 from spsdk.utils.misc import load_configuration, use_working_directory
-from spsdk.utils.schema_validator import ValidationSchemas
 from tests.cli_runner import CliRunner
 
 SB21_TEST_CONFIGURATIONS = [

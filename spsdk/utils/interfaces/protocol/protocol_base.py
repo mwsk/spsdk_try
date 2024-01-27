@@ -114,7 +114,7 @@ class ProtocolBase(ABC):
     def _load_plugins() -> Dict[str, ModuleType]:
         """Load all installed interface plugins."""
         plugins_manager = PluginsManager()
-        plugins_manager.load_from_entrypoints(PluginType.name(PluginType.DEVICE_INTERFACE))
+        plugins_manager.load_from_entrypoints(PluginType.DEVICE_INTERFACE.label)
         return plugins_manager.plugins
 
     @classmethod

@@ -10,6 +10,7 @@ import pytest
 
 from spsdk.exceptions import SPSDKError
 from spsdk.image.commands import CmdInitialize, CmdNop, EnumEngine
+from spsdk.utils.spsdk_enum import SpsdkEnum
 
 
 def test_init_cmd():
@@ -95,11 +96,14 @@ def test_init_cmd_equality():
 
 
 def test_init_cmd_invalid():
+    class TestEnumEngine(SpsdkEnum):
+        TEST = (55, "TEST", "Test")
+
     cmd = CmdInitialize()
     with pytest.raises(SPSDKError):
-        cmd.engine = 55
+        cmd.engine = TestEnumEngine.TEST
     with pytest.raises(SPSDKError):
-        CmdInitialize(engine=55)
+        CmdInitialize(engine=TestEnumEngine.TEST)
     with pytest.raises(SPSDKError):
         cmd.append(value=0xFFFFFFFF)
     with pytest.raises(SPSDKError):

@@ -5,7 +5,7 @@
 # NXP lpc55s3x PFR CMPA configuration
 description:  # The CMPA configuration description.
   device: lpc55s3x  # The NXP device name.
-  revision: 0a # The NXP device revision.
+  revision: a0 # The NXP device revision.
   type: CMPA # The PFR type (CMPA, CFPA) or IFR type.
   version: 1.9.1 # The SPSDK tool version.
   author: NXP # The author of the configuration.

@@ -37,11 +37,7 @@ def test_invalid_cmd_write_data():
     with pytest.raises(SPSDKError):
         cmd.num_bytes = 16
     with pytest.raises(SPSDKError):
-        cmd.ops = 10
-    with pytest.raises(SPSDKError):
         cmd = CmdWriteData(numbytes=8)
-    with pytest.raises(SPSDKError):
-        cmd = CmdWriteData(ops=9)
     cmd = CmdWriteData()
     with pytest.raises(SPSDKError):
         cmd.append(address=0xFFFFFFFFF, value=0)

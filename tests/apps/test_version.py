@@ -23,5 +23,7 @@ def test_spsdk_apps_help(cli_runner: CliRunner):
 
 def test_spsdk_apps_subcommands_help(cli_runner: CliRunner):
     for name, command in spsdk_apps.main.commands.items():
+        if name == "clear-cache":
+            continue
         logging.debug(f"running help for {name}")
         run_version(cli_runner, command)

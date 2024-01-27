@@ -65,6 +65,7 @@ def test_export_has_plugin():
         "nxpimage otfad export",
         "nxpimage tz export",
         "nxpcrypto rot export",
+        "nxpmemcfg export",
     ]
 
     def export_has_plugin(group: click.Command, command_name: str) -> bool:

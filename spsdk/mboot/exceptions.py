@@ -37,7 +37,11 @@ class McuBootCommandError(McuBootError):
         super().__init__()
         self.cmd_name = cmd
         self.error_value = value
-        self.description = StatusCode.desc(value, f"Unknown Error 0x{value:08X}")
+        self.description = (
+            StatusCode.get_description(value)
+            if value in StatusCode.tags()
+            else f"Unknown Error 0x{value:08X}"
+        )
 
     def __str__(self) -> str:
         return self.fmt.format(cmd_name=self.cmd_name, description=self.description)

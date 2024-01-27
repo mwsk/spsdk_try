@@ -88,3 +88,7 @@ class SPSDKAttributeError(SPSDKError, AttributeError):
 
 class SPSDKConnectionError(SPSDKError, ConnectionError):
     """SPSDK standard connection error."""
+
+
+class SPSDKIndexError(SPSDKError, IndexError):
+    """SPSDK standard index error."""

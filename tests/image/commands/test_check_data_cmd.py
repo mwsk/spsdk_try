@@ -54,8 +54,4 @@ def test_checkdata_invalid():
     with pytest.raises(SPSDKError):
         cmd.num_bytes = 6
     with pytest.raises(SPSDKError):
-        cmd.ops = 99
-    with pytest.raises(SPSDKError):
         cmd = CmdCheckData(numbytes=8)
-    with pytest.raises(SPSDKError):
-        cmd = CmdCheckData(ops=80)

@@ -13,6 +13,7 @@ import pytest
 from spsdk.crypto.hash import EnumHashAlgorithm
 from spsdk.crypto.hmac import hmac
 from spsdk.exceptions import SPSDKError
+from spsdk.utils.spsdk_enum import SpsdkEnum
 
 
 def test_hmac():
@@ -24,5 +25,8 @@ def test_hmac():
 
 
 def test_hmac_invalid():
+    class TestEnumHashAlgorithm(SpsdkEnum):
+        SHA256b = (0, "SHA256b", "SHA256b")
+
     with pytest.raises(SPSDKError):
-        hmac(key=b"1", data=b"t", algorithm="sha256b")
+        hmac(key=b"1", data=b"t", algorithm=TestEnumHashAlgorithm.SHA256b)

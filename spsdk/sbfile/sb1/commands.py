@@ -49,7 +49,7 @@ def parse_v1_command(data: bytes) -> CmdBaseClass:
     :return: parsed command object
     :raises SPSDKError: Raised when there is unsupported command
     """
-    header_tag = EnumCmdTag.from_int(data[1])
+    header_tag = EnumCmdTag.from_tag(data[1])
     if header_tag not in _CMDV1_TO_CLASS:
-        raise SPSDKError(f"Unsupported command: {EnumCmdTag.name(header_tag)}")
+        raise SPSDKError(f"Unsupported command: {header_tag.label}")
     return _CMDV1_TO_CLASS[header_tag].parse(data)

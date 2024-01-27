@@ -6,11 +6,3 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 """This module contains AHAB related code."""
-import os
-
-from spsdk import SPSDK_DATA_FOLDER
-
-AHAB_DATA_FOLDER: str = os.path.join(SPSDK_DATA_FOLDER, "ahab")
-AHAB_SCH_FILE: str = os.path.join(AHAB_DATA_FOLDER, "sch_ahab.yaml")
-AHAB_DATABASE_FILE: str = os.path.join(AHAB_DATA_FOLDER, "database.yaml")
-SIGNED_MSG_SCH_FILE: str = os.path.join(AHAB_DATA_FOLDER, "sch_signed_msg.yaml")

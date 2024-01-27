@@ -5,8 +5,3 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 """Module for crypto operations (certificate and key management)."""
-import os
-
-from spsdk import SPSDK_DATA_FOLDER
-
-CRYPTO_DATA_FOLDER: str = os.path.join(SPSDK_DATA_FOLDER, "crypto")

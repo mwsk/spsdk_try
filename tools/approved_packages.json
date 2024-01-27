@@ -260,6 +260,12 @@
             "is_manual": false
         },
         {
+            "name": "platformdirs",
+            "license": "MIT",
+            "home_page": "https://github.com/platformdirs/platformdirs",
+            "is_manual": true
+        },
+        {
             "name": "prettytable",
             "license": "BSD (3 clause)",
             "home_page": "https://github.com/jazzband/prettytable",
