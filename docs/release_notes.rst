@@ -10,6 +10,68 @@
 Release Notes
 =============
 
+------------------------
+2.1.0 (2-February-2024)
+------------------------
+
+**New features**
+
+* :ref:`nxpcrypto`:
+    - add signing commands (create, verify)
+* :ref:`nxpdebugmbox`:
+    - add subcommands for Fault Analysis Mode (export, parse, get-templates)
+    - add printing the result of auth command
+    - add dedicated plugin system
+* :ref:`nxpele`:
+    - U-BOOT interface
+    - add commit command
+    - add commands related to release-container
+* :ref:`nxpimage`:
+    - enable IEE encryption for RT1180
+    - add key exchange signed message
+    - add signature provider for RT1xxx
+* support mcxn23x
+* deployment of new database
+* EL2GO mockup for S32K WPC
+* introduce memory configuration tool
+
+**Bugfixes**
+
+* :ref:`nxpele`:
+    - fix get-trng state command
+* :ref:`nxpimage`:
+    - fix cmpa template
+    - fix parsing ahab image for i.MX95
+    - fix xmcd export command
+    - fix certificate block as binary file
+    - fix sb21 get-template command
+* :ref:`nxpmemcfg`:
+    - fix export command
+* `pfr`_:
+    - fix pfr generate command
+* :ref:`shadowregs`:
+    - fix default family parameter
+
+------------------------
+2.0.1 (15-December-2023)
+------------------------
+
+**Bugfixes**
+
+* :ref:`nxpele`:
+    - remove temporary file
+* :ref:`nxpdebugmbox`:
+    - fix test memory AP address
+* :ref:`nxpimage`:
+    - fix detection of input file for FCB in bootable image
+    - fix IEE encryption for RT1180
+    - fix signed MBI for Anguilla Nano
+    - fix SB21 export with yaml config
+* :ref:`shadowregs`:
+    - fix behavior of the RKTH registers
+    - fix invalid names of CRC field in database
+* fix setting a register value as raw value when loading from configuration
+
 -----------------------
 2.0.0 (13-October-2023)
 -----------------------

@@ -24,12 +24,14 @@ Following NXP devices are supported:
 - [MCXN9xx](https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/general-purpose-mcus/mcx-arm-cortex-m/mcx-n-series/mcx-n94x-and-n54x-mcus-with-dual-core-arm-cortex-m33-edgelock-secure-subsystem-and-neural-processing-unit:MCX-N94X-N54X)
 - [RW610](https://www.nxp.com/products/wireless/wi-fi-plus-bluetooth-plus-802-15-4/wireless-mcu-with-integrated-tri-radiobr1x1-wi-fi-6-plus-bluetooth-low-energy-5-3-802-15-4:RW612)
 - [NHS52Sxx](https://www.nxp.com/products/wireless-connectivity/bluetooth-low-energy/nhs52sx4-ultra-low-power-bluetooth-low-energy-solution-with-arm-cortex-m33-trustzone-for-medical-iot:NHS52Sx4)
+- [MCXA1xx] (https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/general-purpose-mcus/mcx-arm-cortex-m:MCX-MCUS)
+- [MCXN23x] (https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/general-purpose-mcus/mcx-arm-cortex-m:MCX-MCUS)
 
 ## Supported environments
 
-- Windows 10 and 11, 64bit
-- Ubuntu 18.04 or above, 64bit
-- Mac OS 10.15 or above, x64, ARM64
+Windows 10 and 11, 64bit
+Ubuntu 22.04.1 LTS
+Mac OS Sonoma 14
 
 ## Usage
 

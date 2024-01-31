@@ -340,7 +340,7 @@ def write(
         cfg = load_configuration(yaml_config)
         description = cfg.get("description")
         cfg_area: str = cfg.get("type", description["type"] if description else "Invalid")
-        if area != cfg_area:
+        if area != cfg_area.lower():
             raise SPSDKAppError(
                 "Configuration area doesn't match CLI value and configuration value."
             )
