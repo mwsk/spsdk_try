@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2020-2023 NXP
+# Copyright 2020-2024 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 """Module to handle registers descriptions with support for XML files."""
@@ -751,9 +751,11 @@ class RegsRegister:
             )
             value = value.from_bytes(
                 val_bytes,
-                Endianness.BIG.value
-                if self.base_endianness == Endianness.LITTLE
-                else Endianness.LITTLE.value,
+                (
+                    Endianness.BIG.value
+                    if self.base_endianness == Endianness.LITTLE
+                    else Endianness.LITTLE.value
+                ),
             )
 
         return value

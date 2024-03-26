@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2022-2023 NXP
+# Copyright 2022-2024 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -275,14 +275,14 @@ class XMCD(SegmentBase):
         revisions = DatabaseManager().db.devices.get(family).revisions.revision_names(True)
         sch_cfg["xmcd_family_rev"]["properties"]["revision"]["enum"] = revisions
         sch_cfg["xmcd_family_rev"]["properties"]["revision"]["template_value"] = revision
-        sch_cfg["xmcd_family_rev"]["properties"]["mem_type"][
-            "enum"
-        ] = XMCD.get_supported_memory_types(family, revision)
+        sch_cfg["xmcd_family_rev"]["properties"]["mem_type"]["enum"] = (
+            XMCD.get_supported_memory_types(family, revision)
+        )
         sch_cfg["xmcd_family_rev"]["properties"]["revision"]["template_value"] = revision
         sch_cfg["xmcd_family_rev"]["properties"]["mem_type"]["template_value"] = mem_type.label
-        sch_cfg["xmcd_family_rev"]["properties"]["config_type"][
-            "enum"
-        ] = XMCD.get_supported_configuration_types(family, mem_type, revision)
+        sch_cfg["xmcd_family_rev"]["properties"]["config_type"]["enum"] = (
+            XMCD.get_supported_configuration_types(family, mem_type, revision)
+        )
         sch_cfg["xmcd_family_rev"]["properties"]["config_type"][
             "template_value"
         ] = config_type.label

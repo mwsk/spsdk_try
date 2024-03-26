@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2022-2023 NXP
+# Copyright 2022-2024 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 """DK6 Communication protocol."""
@@ -84,7 +84,7 @@ class DK6Protocol:
         """
         data = struct.pack(
             f"<B{len(key)}B",
-            mode,
+            mode.tag,
             *key,
         )
         packet = CmdPacket(data)
@@ -235,11 +235,10 @@ class DK6Protocol:
 
         return response
 
-    def set_baud_rate(self, baudrate: int) -> GenericResponse:
+    def set_baud_rate(self, baudrate: int) -> None:
         """Sets baudrate.
 
         :param baudrate: int value of baudrate to be set
-        :return: GenericResponse
         """
         data = struct.pack(
             "<BI",
@@ -248,13 +247,7 @@ class DK6Protocol:
         )
         packet = CmdPacket(data)
         self.uart.write(CommandTag.SET_BAUD, packet)
-        response = self.uart.read()
         time.sleep(0.1)
-        # self.uart.baudrate = baudrate
-        # TODO fix baudrate change
-        logger.debug(response.info())
-
-        return response
 
     def reset(self) -> GenericResponse:
         """Resets device.

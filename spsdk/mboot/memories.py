@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 #
 # Copyright 2016-2018 Martin Olejar
-# Copyright 2019-2023 NXP
+# Copyright 2019-2024 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -211,6 +211,8 @@ class ExtMemRegion(MemoryRegion):
         return ExtMemId.get_label(self.mem_id)
 
     def __repr__(self) -> str:
+        if not self.value:
+            return "Not Configured"
         return f"EXT Memory region, name: {self.name}, start: {hex(self.start)}"
 
     def __str__(self) -> str:

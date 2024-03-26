@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2022-2023 NXP
+# Copyright 2022-2024 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -39,6 +39,12 @@ SB21_TEST_CONFIGURATIONS = [
     (
         "sb_sources/BD_files/real_example3.bd",
         "sb_sources/SB_files/legacy_real_example3.sb",
+        [],
+        "rt5xx",
+    ),
+    (
+        "sb_sources/BD_files/real_example3_test_options.bd",
+        "sb_sources/SB_files/legacy_real_example3_test_options.sb",
         [],
         "rt5xx",
     ),
@@ -657,7 +663,7 @@ def test_nxpimage_sb21_hex_values(bd_file, legacy_sb, external, nxpimage_data_di
         sb2.export()
 
 
-@pytest.mark.parametrize("conf", ["conf1", "conf2", "conf3", "conf4", "conf5"])
+@pytest.mark.parametrize("conf", ["conf1", "conf2", "conf3", "conf4", "conf5", "conf6"])
 def test_nxpimage_sb21_yaml(cli_runner: CliRunner, conf, nxpimage_data_dir, tmpdir):
     KEK_PATH = os.path.join(nxpimage_data_dir, "sb_sources/keys/SBkek_PUF.txt")
     with use_working_directory(nxpimage_data_dir):
