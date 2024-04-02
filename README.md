@@ -2,8 +2,7 @@
 
 **Secure Provisioning SDK (SPSDK)** enables connection and communication with target devices for purposes of secure provisioning and programming. Delivered as python library with command-line applications for direct utilization.
 
-<img src="docs/_static/images/spsdk-architecture.png" alt="drawing" width="600"/>
-
+![](https://github.com/NXPmicro/spsdk/raw/master/docs/_static/images/spsdk-architecture.png)
 ## Links
 
 * [GitHub](https://github.com/NXPmicro/spsdk)
@@ -36,13 +35,13 @@ Mac OS Sonoma 14
 ## Usage
 
 - See [installation](https://spsdk.readthedocs.io/en/latest/usage/installation.html) guide
-- See [examples](examples) directory
-- See [application](spsdk/apps) directory
+- See [examples](https://github.com/nxp-mcuxpresso/spsdk/tree/master/examples) directory
+- See [application](https://github.com/nxp-mcuxpresso/spsdk/tree/master/spsdk/apps) directory
 
 ---
 
 ## Dependencies
 
-The core dependencies are included in [requirements.txt](requirements.txt).
+The core dependencies are included in [requirements.txt](https://github.com/nxp-mcuxpresso/spsdk/blob/master/requirements.txt).
 
-The dependencies for the development and testing are included in [requirements-develop.txt](requirements-develop.txt).
+The dependencies for the development and testing are included in [requirements-develop.txt](https://github.com/nxp-mcuxpresso/spsdk/blob/master/requirements-develop.txt).
