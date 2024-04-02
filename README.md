@@ -45,3 +45,4 @@ Mac OS Sonoma 14
 The core dependencies are included in [requirements.txt](https://github.com/nxp-mcuxpresso/spsdk/blob/master/requirements.txt).
 
 The dependencies for the development and testing are included in [requirements-develop.txt](https://github.com/nxp-mcuxpresso/spsdk/blob/master/requirements-develop.txt).
+
