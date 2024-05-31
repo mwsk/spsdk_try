@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2021-2023 NXP
+# Copyright 2021-2024 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 """Module implementing the TrustProvisioning Data Container."""
@@ -13,12 +13,16 @@ from typing import Any, List, Mapping, Type
 import hexdump
 from typing_extensions import Self
 
+from spsdk.tp.data_container.data_container_auth import (
+    AuthenticationType,
+    get_auth_data_len,
+    sign,
+    validate,
+)
+from spsdk.tp.data_container.payload_types import PayloadType
+from spsdk.tp.exceptions import SPSDKTpError
 from spsdk.utils.misc import align, align_block
 from spsdk.utils.spsdk_enum import SpsdkEnum
-
-from ..exceptions import SPSDKTpError
-from .data_container_auth import AuthenticationType, get_auth_data_len, sign, validate
-from .payload_types import PayloadType
 
 ALIGNMENT = 8
 

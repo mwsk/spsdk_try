@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2021-2023 NXP
+# Copyright 2021-2024 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 """Module containing helper functions for nxpimage."""
@@ -299,9 +299,11 @@ class SB21Helper:
 
         if cmd_args.get("file"):
             data = load_binary(cmd_args["file"], self.search_paths)
-        if cmd_args.get("values"):
+        elif cmd_args.get("values"):
             values = [int(s, 16) for s in cmd_args["values"].split(",")]
             data = struct.pack(f"<{len(values)}L", *values)
+        else:
+            raise SPSDKError("Neither 'file', neither 'values' is missing in config to get data.")
 
         try:
             valid_keyblob = self._validate_keyblob(keyblobs, keyblob_id)

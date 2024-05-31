@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2020-2023 NXP
+# Copyright 2020-2024 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -84,8 +84,8 @@ def test_nxpimage_get_template_tz(cli_runner: CliRunner, tmpdir, device, revisio
         ("k32w1xx"),
         ("mcxn9xx"),
         ("nhs52sxx"),
-        ("mc56f81xxx"),
-        ("mwct20d2x"),
+        ("mc56f818xx"),
+        ("mwct2xd2"),
         ("rw61x"),
     ],
 )

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2020-2023 NXP
+# Copyright 2020-2024 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -10,8 +10,7 @@
 from typing import Mapping, Type
 
 from spsdk.exceptions import SPSDKError
-
-from ..sb2.commands import (
+from spsdk.sbfile.sb2.commands import (
     CmdBaseClass,
     CmdCall,
     CmdErase,

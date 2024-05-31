@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2021-2023 NXP
+# Copyright 2021-2024 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 """Common parts used by both Device and Target SW models."""
@@ -15,9 +15,8 @@ import yaml
 from spsdk.crypto.cmac import cmac, cmac_validate
 from spsdk.crypto.keys import EccCurve, PrivateKeyEcc, PublicKeyEcc
 from spsdk.crypto.symmetric import aes_ctr_decrypt, aes_ctr_encrypt, aes_key_unwrap, aes_key_wrap
+from spsdk.tp.tp_intf import TpIntfDescription
 from spsdk.utils.misc import Endianness, load_file, write_file
-
-from ..tp_intf import TpIntfDescription
 
 logger = logging.getLogger(__name__)
 

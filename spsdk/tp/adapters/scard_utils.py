@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2021-2023 NXP
+# Copyright 2021-2024 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 """Utilities used in SmartCard."""
@@ -28,7 +28,7 @@ except ImportError as import_error:
     ) from import_error
 
 
-from . import scard_commands
+from spsdk.tp.adapters import scard_commands
 
 logger = logging.getLogger(__name__)
 

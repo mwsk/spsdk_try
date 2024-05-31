@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2019-2023 NXP
+# Copyright 2019-2024 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -10,14 +10,19 @@
 from struct import unpack_from
 from typing import Iterator, List, Optional
 
-from spsdk.crypto.hmac import hmac
+from spsdk.crypto.spsdk_hmac import hmac
 from spsdk.crypto.symmetric import Counter, aes_ctr_decrypt, aes_ctr_encrypt
 from spsdk.exceptions import SPSDKError
 from spsdk.sbfile.misc import SecBootBlckSize
+from spsdk.sbfile.sb2.commands import (
+    CmdBaseClass,
+    CmdHeader,
+    EnumCmdTag,
+    EnumSectionFlag,
+    parse_command,
+)
 from spsdk.utils.abstract import BaseClass
 from spsdk.utils.crypto.cert_blocks import CertBlockV1
-
-from .commands import CmdBaseClass, CmdHeader, EnumCmdTag, EnumSectionFlag, parse_command
 
 ########################################################################################################################
 # Boot Image Sections

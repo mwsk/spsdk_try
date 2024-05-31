@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2022-2023 NXP
+# Copyright 2022-2024 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 """DK6 UART communication interface."""
@@ -11,11 +11,10 @@ from typing import Any, Union
 
 from crcmod.predefined import mkPredefinedCrcFun
 
+from spsdk.dk6.commands import CmdPacket, CommandTag, parse_cmd_response
+from spsdk.dk6.serial_device import SerialDevice
 from spsdk.exceptions import SPSDKError
 from spsdk.utils.misc import Endianness
-
-from .commands import CmdPacket, CommandTag, parse_cmd_response
-from .serial_device import SerialDevice
 
 logger = logging.getLogger(__name__)
 

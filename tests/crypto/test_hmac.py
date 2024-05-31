@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2019-2023 NXP
+# Copyright 2019-2024 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -11,7 +11,7 @@ from binascii import unhexlify
 import pytest
 
 from spsdk.crypto.hash import EnumHashAlgorithm
-from spsdk.crypto.hmac import hmac
+from spsdk.crypto.spsdk_hmac import hmac
 from spsdk.exceptions import SPSDKError
 from spsdk.utils.spsdk_enum import SpsdkEnum
 

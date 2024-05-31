@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2019-2023 NXP
+# Copyright 2019-2024 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -11,9 +11,9 @@ from binascii import unhexlify
 import pytest
 
 from spsdk.crypto.hash import EnumHashAlgorithm, get_hash
-from spsdk.crypto.hmac import hmac
 from spsdk.crypto.keys import PrivateKeyEcc, PrivateKeyRsa, PublicKeyEcc
 from spsdk.crypto.rng import random_bytes
+from spsdk.crypto.spsdk_hmac import hmac
 from spsdk.crypto.symmetric import aes_ctr_decrypt, aes_ctr_encrypt, aes_key_unwrap, aes_key_wrap
 from spsdk.exceptions import SPSDKError
 from spsdk.utils.spsdk_enum import SpsdkEnum

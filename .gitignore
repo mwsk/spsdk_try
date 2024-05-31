@@ -29,7 +29,6 @@ MANIFEST
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
-*.spec
 generated
 
 # Installer logs
@@ -80,6 +79,7 @@ instance/
 docs/_build/
 docs/_prebuild/
 docs/examples/**
+docs/html_schemas/**
 # docs examples are copied from spsdk/examples
 
 # PyBuilder
@@ -87,7 +87,7 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
-workspace
+examples/**/workspace
 
 # pyenv
 .python-version
@@ -145,3 +145,5 @@ logging.yaml
 # Git merge-conflict files
 *.orig
 
+# setuptools_scm version file
+spsdk/__version__.py

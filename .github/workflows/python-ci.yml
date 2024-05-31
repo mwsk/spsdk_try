@@ -17,7 +17,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.8", "3.11"]
+        python-version: ["3.9", "3.12"]
 
     name: Python ${{ matrix.python-version }} on ${{ matrix.os }}
     steps:
@@ -52,7 +52,8 @@ jobs:
  
       - name: Run Codecheck
         run: |
-          python codecheck.py -s --output reports_codecheck --info-check gitcov  --info-check MYPY_TOOLS --info-check MYPY
+          : # Ignoring the 'COPYRIGHT' check as the year of merge to Github may differ from the actual year when the file was updated 
+          python codecheck.py -s --output reports_codecheck --info-check gitcov  --info-check COPYRIGHT
 
       - name: Archive Results
         uses: actions/upload-artifact@v3

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2021-2023 NXP
+# Copyright 2021-2024 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 """Commands used in SmartCard."""
@@ -22,7 +22,7 @@ except ImportError as e:
     ) from e
 
 
-from ..exceptions import SPSDKTpError
+from spsdk.tp.exceptions import SPSDKTpError
 
 logger = logging.getLogger(__name__)
 

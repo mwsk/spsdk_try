@@ -1,17 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2021-2023 NXP
+# Copyright 2021-2024 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 """Trust Provisioning utilities."""
 from typing import List, Optional, Type
 
 from spsdk.exceptions import SPSDKError
+from spsdk.tp.adapters import TP_DEVICES, TP_TARGETS
+from spsdk.tp.tp_intf import TpDevInterface, TpIntfDescription, TpTargetInterface
 from spsdk.utils.database import DatabaseManager, get_families
-
-from .adapters import TP_DEVICES, TP_TARGETS
-from .tp_intf import TpDevInterface, TpIntfDescription, TpTargetInterface
 
 
 def single_tp_device_adapter() -> bool:

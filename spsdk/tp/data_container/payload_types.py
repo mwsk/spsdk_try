@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2021-2023 NXP
+# Copyright 2021-2024 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 """Module holding all supported Payload types."""
@@ -47,3 +47,4 @@ class PayloadType(SpsdkEnum):
     NXP_DIE_RFC4122v4_ID_UUID   = (0x9696, "NXP_DIE_RFC4122v4_ID_UUID", "NXP_DIE_RFC4122v4_ID_UUID")
 
     WPC_DIE_ID_AUTH_PUK         = (0xABAB, "WPC_DIE_ID_PUK", "Public key for WPC Qi Authentication")
+    WPC_RSID                    = (0x9797, "WPC_RSID", "RSID for WPC Qi Certificate identification")

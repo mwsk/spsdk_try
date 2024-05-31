@@ -16,17 +16,17 @@ from typing_extensions import Self
 
 from spsdk.crypto.certificate import Certificate
 from spsdk.crypto.hash import EnumHashAlgorithm, get_hash
-from spsdk.crypto.hmac import hmac
 from spsdk.crypto.rng import random_bytes
-from spsdk.crypto.signature_provider import (
-    SignatureProvider,
-    get_signature_provider,
-    try_to_verify_public_key,
-)
+from spsdk.crypto.signature_provider import SignatureProvider, get_signature_provider
+from spsdk.crypto.spsdk_hmac import hmac
 from spsdk.crypto.symmetric import Counter, aes_key_unwrap, aes_key_wrap
 from spsdk.exceptions import SPSDKError
 from spsdk.sbfile.misc import SecBootBlckSize
+from spsdk.sbfile.sb2 import sly_bd_parser as bd_parser
+from spsdk.sbfile.sb2.commands import CmdHeader
+from spsdk.sbfile.sb2.headers import ImageHeaderV2
 from spsdk.sbfile.sb2.sb_21_helper import SB21Helper
+from spsdk.sbfile.sb2.sections import BootSectionV2, CertSectionV2
 from spsdk.utils.abstract import BaseClass
 from spsdk.utils.crypto.cert_blocks import CertBlockV1
 from spsdk.utils.database import DatabaseManager, get_db, get_families, get_schema_file
@@ -35,16 +35,12 @@ from spsdk.utils.misc import (
     load_configuration,
     load_hex_string,
     load_text,
+    value_to_bool,
     value_to_bytes,
     value_to_int,
     write_file,
 )
 from spsdk.utils.schema_validator import CommentedConfig, check_config
-
-from . import sly_bd_parser as bd_parser
-from .commands import CmdHeader
-from .headers import ImageHeaderV2
-from .sections import BootSectionV2, CertSectionV2
 
 logger = logging.getLogger(__name__)
 
@@ -404,7 +400,7 @@ class BootImageV20(BaseClass):
                 raise SPSDKError("Certificate block is not assigned.")
 
             public_key = self.cert_block.certificates[-1].get_public_key()
-            try_to_verify_public_key(self.signature_provider, public_key.export())
+            self.signature_provider.try_to_verify_public_key(public_key)
             data += self.signature_provider.get_signature(data)
 
         if len(data) != self.raw_size:
@@ -971,7 +967,7 @@ class BootImageV21(BaseClass):
         mac = value_to_bytes("0x" + mac, byte_cnt=32) if mac else None
         nonce = config.get("nonce")
         nonce = value_to_bytes("0x" + nonce, byte_cnt=16) if nonce else None
-        zero_padding = bytes(8) if config.get("zeroPadding") else None
+        zero_padding = bytes(8) if value_to_bool(config.get("zeroPadding", False)) else None
         advanced_params = SBV2xAdvancedParams(dek, mac, nonce, timestamp, zero_padding)
         logger.debug(f"Loading advanced parameters for SB 2.1 {str(advanced_params)}")
         return advanced_params
@@ -1084,3 +1080,12 @@ class BootImageV21(BaseClass):
         write_file(secure_binary.cert_block.rkth, rkth_out_path, mode="wb")
 
         return secure_binary
+
+    @staticmethod
+    def validate_header(binary: bytes) -> None:
+        """Validate SB2.1 header in binary data.
+
+        :param binary: Binary data to be validate
+        :raises SPSDKError: Invalid header of SB2.1 data
+        """
+        ImageHeaderV2.parse(binary)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2020-2023 NXP
+# Copyright 2020-2024 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -16,12 +16,16 @@ from typing_extensions import Self
 from spsdk.crypto.hash import EnumHashAlgorithm, get_hash
 from spsdk.crypto.rng import random_bytes
 from spsdk.exceptions import SPSDKError
-from spsdk.sbfile.misc import pack_timestamp, unpack_timestamp
+from spsdk.sbfile.misc import (
+    BcdVersion3,
+    BcdVersion3Format,
+    SecBootBlckSize,
+    pack_timestamp,
+    unpack_timestamp,
+)
+from spsdk.sbfile.sb2.commands import BaseClass, CmdHeader, CmdTag
 from spsdk.utils.misc import swap16
 from spsdk.utils.spsdk_enum import SpsdkEnum
-
-from ..misc import BcdVersion3, BcdVersion3Format, SecBootBlckSize
-from ..sb2.commands import BaseClass, CmdHeader, CmdTag
 
 
 class SecureBootFlagsV1(SpsdkEnum):
