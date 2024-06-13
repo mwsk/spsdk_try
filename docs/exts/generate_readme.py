@@ -15,7 +15,7 @@ def main():
     # Specify the paths of the README.md file and the devices_table.inc file
     # readme_path = os.path.join(ROOT_DIR, "README.md")
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    readme_path = os.path.join(current_dir, "..", "..", "..", "README.md")
+    readme_path = os.path.join(current_dir, "..", "..", "README.md")
     devices_table_path = DEVICES_TABLE_FILE
 
     # Read the content of the devices_table.inc file
