@@ -8,7 +8,7 @@
 import itertools
 import os
 from typing import Dict, List
-from git import Optional
+from typing import Optional
 
 from pytablewriter import RstGridTableWriter, MarkdownTableWriter
 
