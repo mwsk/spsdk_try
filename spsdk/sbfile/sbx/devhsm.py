@@ -170,7 +170,7 @@ class DevHsmSBx(DevHsm):
 
         # 8: Final reset to ensure followup operations (e.g. receive-sb-file) work correctly
         if self.final_reset:
-            self.info_print(" 8: Resetting the target device")
+            self.info_print(" 8: Resetting the target device - device will be in ISP mode.")
             self.mboot.reset(timeout=self.RESET_TIMEOUT, reopen=True)
         else:
             self.info_print(" 8: Final target reset disabled")

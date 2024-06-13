@@ -199,9 +199,13 @@ All products, including those with advanced security features, may be subject to
     examples/mc56/mc56_devhsm
     examples/rw61x/shadowregs/rw61x_shadowregs
     examples/rw61x/debug_auth/rw61x_debug_auth
+    examples/rw61x/bootable_image/rw61x_bootable_image
     examples/mcxn9xx_debug_auth/mcxn9xx_debug_auth
     examples/imx93/imx93_ahab_uboot
     examples/imx93/imx93_signed_ahab_uboot
+    examples/rt118x/rt118x_debug_authentication
+    examples/rt118x/rt118x_secure_boot
+
 
 .. Indices and tables
 .. ==================

@@ -78,14 +78,23 @@ class BootSectionV2(BaseClass):
             size += 16 - (size % 16)
         return size
 
-    def __init__(self, uid: int, *commands: CmdBaseClass, hmac_count: int = 1) -> None:
+    def __init__(
+        self,
+        uid: int,
+        *commands: CmdBaseClass,
+        hmac_count: int = 1,
+        zero_filling: bool = False,
+    ) -> None:
         """Initialize BootSectionV2.
 
         :param uid: section unique identification
         :param commands: List of commands
         :param hmac_count: The number of HMAC entries
+        :param zero_filling: If true, the section is zero-filled
         """
-        self._header = CmdHeader(EnumCmdTag.TAG.tag, EnumSectionFlag.BOOTABLE.tag)
+        self._header = CmdHeader(
+            EnumCmdTag.TAG.tag, EnumSectionFlag.BOOTABLE.tag, zero_filling=zero_filling
+        )
         self._commands: List[CmdBaseClass] = []
         self._hmac_count = hmac_count
         for cmd in commands:

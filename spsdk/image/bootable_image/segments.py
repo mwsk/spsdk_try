@@ -95,7 +95,7 @@ class Segment(BaseClass):
     ) -> None:
         """Segment initialization, at least raw data are stored.
 
-        :param offset: Offset of Segment in whole bootable image.
+        :param offset: Offset of Segment in the full bootable image.
         :param family: Chip family.
         :param mem_type: Used memory type.
         :param revision: Chip silicon revision.
@@ -106,8 +106,12 @@ class Segment(BaseClass):
         self.mem_type = mem_type
         self.revision = revision
         self.raw_block = raw_block
+        self.excluded = False
 
-        self.used = True
+    @property
+    def is_present(self) -> bool:
+        """Returns true if the segment is present in the image."""
+        return not (self.excluded) and bool(self.export())
 
     def clear(self) -> None:
         """Clear the segment to init state."""
@@ -123,19 +127,19 @@ class Segment(BaseClass):
 
     def __len__(self) -> int:
         """Segment length."""
-        return len(self.raw_block) if self.raw_block else 0
+        return len(self.export())
 
     @property
-    def offset(self) -> int:
-        """Offset of the segment within the bootable image."""
+    def full_image_offset(self) -> int:
+        """Offset of the segment within the full bootable image."""
         if self._offset is None:
             raise SPSDKValueError("Segment offset is not defined.")
         if self._offset < 0:
             return self._offset
         return align(self._offset, self.OFFSET_ALIGNMENT)
 
-    @offset.setter
-    def offset(self, offset: int) -> None:
+    @full_image_offset.setter
+    def full_image_offset(self, offset: int) -> None:
         self._offset = offset
 
     def export(self) -> bytes:
@@ -145,7 +149,6 @@ class Segment(BaseClass):
         """
         if self.raw_block:
             return self.raw_block
-
         return b""
 
     def image_info(self) -> BinaryImage:
@@ -157,7 +160,7 @@ class Segment(BaseClass):
         return BinaryImage(
             name=self.NAME.label,
             size=len(export_binary),
-            offset=self.offset,
+            offset=self.full_image_offset,
             binary=export_binary,
         )
 
@@ -208,6 +211,8 @@ class Segment(BaseClass):
         :param output_dir: Path where the information should be stored
         :returns: Value of segment to configuration file
         """
+        if not self.is_present:
+            return ""
         ret = f"segment_{self.NAME.label}.bin"
         write_file(self.export(), os.path.join(output_dir, ret), mode="wb")
         return ret
@@ -374,8 +379,9 @@ class SegmentImageVersion(Segment):
         :param output_dir: Path where the information should be stored
         :returns: Value of segment to configuration file
         """
-        if not self.raw_block:
-            raise SPSDKError("No data for Image version segment.")
+        if not self.is_present:
+            return 0
+        assert self.raw_block is not None
         return int.from_bytes(self.raw_block[:4], Endianness.LITTLE.value)
 
     def load_config(self, config: Dict[str, Any], search_paths: Optional[List[str]] = None) -> None:
@@ -406,8 +412,9 @@ class SegmentImageVersionAntiPole(Segment):
         :param output_dir: Path where the information should be stored
         :returns: Value of segment to configuration file
         """
-        if not self.raw_block:
-            raise SPSDKError("No data for Image version segment.")
+        if not self.is_present:
+            return 0
+        assert self.raw_block is not None
         return int.from_bytes(self.raw_block[:2], Endianness.LITTLE.value)
 
     def load_config(self, config: Dict[str, Any], search_paths: Optional[List[str]] = None) -> None:
@@ -594,7 +601,7 @@ class SegmentMbi(Segment):
             return super().image_info()
 
         image = self.mbi.export_image()
-        image.offset = self.offset
+        image.offset = self.full_image_offset
         image.name = self.NAME.label
         return image
 
@@ -701,7 +708,7 @@ class SegmentHab(Segment):
             return super().image_info()
 
         image = self.hab.image_info()
-        image.offset = self.offset
+        image.offset = self.full_image_offset
         image.name = self.NAME.label
         return image
 
@@ -786,7 +793,7 @@ class SegmentAhab(Segment):
             return super().image_info()
 
         image = self.ahab.image_info()
-        image.offset = self.offset
+        image.offset = self.full_image_offset
         image.name = self.NAME.label
         return image
 

@@ -25,7 +25,8 @@ from tests.cli_runner import CliRunner
     [
         ("flexspi_nor", "rt5xx", "xip_crc", "config.yaml"),
         ("flexspi_nor", "rt5xx", "xip_plain", "config.yaml"),
-        ("flexspi_nor", "rt6xx", None, "config.yaml"),
+        ("flexspi_nor", "rt6xx", "xip", "config.yaml"),
+        ("flexspi_nor", "rt6xx", "load_to_ram", "config.yaml"),
         ("flexspi_nor", "lpc55s3x", None, "config.yaml"),
         ("flexspi_nor", "lpc55s3x", None, "config_yaml.yaml"),
         ("internal", "lpc55s3x", None, "config.yaml"),
@@ -73,7 +74,8 @@ def test_nxpimage_bimg_merge(
     [
         ("rt5xx", "flexspi_nor", "xip_crc", ["fcb", "keyblob", "keystore", "mbi"]),
         ("rt5xx", "flexspi_nor", "xip_plain", ["fcb", "mbi"]),
-        ("rt6xx", "flexspi_nor", None, ["fcb", "keyblob", "keystore", "mbi"]),
+        ("rt6xx", "flexspi_nor", "xip", ["fcb", "keyblob", "keystore", "mbi"]),
+        ("rt6xx", "flexspi_nor", "load_to_ram", ["mbi"]),
         ("lpc55s3x", "flexspi_nor", None, ["fcb", "mbi"]),
         ("lpc55s3x", "internal", None, ["mbi"]),
         ("rt1010", "flexspi_nor", None, ["fcb", "keyblob", "hab_container"]),
@@ -171,7 +173,7 @@ def test_nxpimage_bimg_parse_cli(
     "family,configs",
     [
         ("rt5xx", [("flexspi_nor", "xip_crc")]),
-        ("rt6xx", ["flexspi_nor"]),
+        ("rt6xx", [("flexspi_nor", "xip")]),
         ("lpc55s3x", ["flexspi_nor", "internal"]),
         ("rt1010", ["flexspi_nor"]),
         ("rt1015", ["flexspi_nor"]),
@@ -291,7 +293,7 @@ def test_get_segment(data_dir):
         BootableImageSegment.MBI: 4096,
     }
     for segment in segments:
-        assert bimg.get_segment(segment).offset == segments[segment]
+        assert bimg.get_segment(segment).full_image_offset == segments[segment]
 
 
 def test_image_info(data_dir):
@@ -312,15 +314,15 @@ def test_image_info(data_dir):
 
 
 @pytest.mark.parametrize(
-    "family,mem_type,configuration,init_offset",
+    "family,mem_type,configuration,init_offset,segments_count",
     [
-        ("mcxn9xx", "flexspi_nor", "full", 0x0),
-        ("mcxn9xx", "flexspi_nor", "starting_fcb", 0x400),
-        ("mcxn9xx", "flexspi_nor", "starting_mbi", 0x1000),
+        ("mcxn9xx", "flexspi_nor", "full", 0x0, 3),
+        ("mcxn9xx", "flexspi_nor", "starting_fcb", 0x400, 3),
+        ("mcxn9xx", "flexspi_nor", "starting_mbi", 0x1000, 1),
     ],
 )
 def test_nxpimage_bimg_parse_image_adjustement(
-    data_dir, family, mem_type, configuration, init_offset
+    data_dir, family, mem_type, configuration, init_offset, segments_count
 ):
     input_binary_path = os.path.join(
         data_dir, "bootable_image", family, mem_type, configuration, "merged_image.bin"
@@ -328,6 +330,7 @@ def test_nxpimage_bimg_parse_image_adjustement(
     input_binary = load_binary(input_binary_path)
     bimg = BootableImage.parse(input_binary, family, mem_type)
     assert bimg.init_offset == init_offset
+    assert len(bimg.segments) == segments_count
 
 
 def test_nxpimage_bimg_default_init_offset():

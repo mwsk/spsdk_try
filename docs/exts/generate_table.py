@@ -59,6 +59,7 @@ OTHER_FEATURES_MAPPING = {
     "ele": "nxpele",
     "memcfg": "nxpmemcfg",
     "wpc": "nxpwpc",
+    "el2go_tp": "el2go",
 }
 ALL_FEATURES_MAPPING = {**NXPIMAGE_FEATURES_MAPPING, **OTHER_FEATURES_MAPPING}
 SUPPORTED_CHAR = "\u2705"

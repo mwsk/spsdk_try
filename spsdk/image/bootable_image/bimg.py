@@ -50,10 +50,10 @@ class BootableImage(BaseClass):
         self.family = family
         self.mem_type = mem_type
         self.revision = revision
-        self.bimg_descr: Dict[str, Any] = self.get_memory_type_config(family, mem_type, revision)
-        self.image_pattern = self.bimg_descr.get("image_pattern", "zeros")
+        _bimg_descr: Dict[str, Any] = self.get_memory_type_config(family, mem_type, revision)
+        self.image_pattern = _bimg_descr.get("image_pattern", "zeros")
         self._segments: List[Segment] = []
-        for segment_name, segment_offset in self.bimg_descr["segments"].items():
+        for segment_name, segment_offset in _bimg_descr["segments"].items():
             self._segments.append(
                 get_segment_class(BootableImageSegment.from_label(segment_name))(
                     offset=segment_offset, family=family, mem_type=mem_type, revision=revision
@@ -66,13 +66,17 @@ class BootableImage(BaseClass):
     @property
     def segments(self) -> List[Segment]:
         """List of used segments."""
-        return [seg for seg in self._segments if seg.used]
+        return [seg for seg in self._segments if seg.is_present]
 
     def set_init_offset(self, init_offset: Union[BootableImageSegment, int]) -> None:
         """Set init offset by name of segment or length."""
-        self.init_offset = (
-            init_offset if isinstance(init_offset, int) else self.get_segment(init_offset).offset
-        )
+        if isinstance(init_offset, int):
+            self.init_offset = init_offset
+        else:
+            segment = next((seg for seg in self._segments if seg.NAME == init_offset), None)
+            if segment is None:
+                raise SPSDKError(f"Segment with name {init_offset.label} does not exist.")
+            self.init_offset = segment.full_image_offset
 
     def get_segment(self, segment: Union[str, BootableImageSegment]) -> Segment:
         """Get bootable segment by its name or Enum class.
@@ -84,7 +88,9 @@ class BootableImage(BaseClass):
         for seg in self.segments:
             if seg.NAME == name:
                 return seg
-        raise SPSDKError(f"The segment {segment} is not used in this Bootable image: {str(self)}")
+        raise SPSDKError(
+            f"The segment {segment} is not present in this Bootable image: {str(self)}"
+        )
 
     @property
     def init_offset(self) -> int:
@@ -102,7 +108,9 @@ class BootableImage(BaseClass):
         else:
             # Find the closest upper offset
             upper_offsets = [
-                seg.offset for seg in self._segments if seg.offset >= offset or seg.offset < 0
+                seg.full_image_offset
+                for seg in self._segments
+                if seg.full_image_offset >= offset or seg.full_image_offset < 0
             ]
             if not upper_offsets:
                 raise SPSDKValueError(
@@ -114,9 +122,9 @@ class BootableImage(BaseClass):
     def _update_segments(self) -> None:
         """Update segment indexes."""
         for segment in self._segments:
-            full_offset = segment.offset
+            full_offset = segment.full_image_offset
             new_offset = full_offset - self.init_offset
-            segment.used = not new_offset < 0 < full_offset
+            segment.excluded = new_offset < 0 <= full_offset
 
     def get_segment_offset(self, segment: Segment) -> int:
         """Get segment offset.
@@ -126,8 +134,8 @@ class BootableImage(BaseClass):
         """
 
         def _get_segment_offset(segments: List[Segment], segment: Segment) -> int:
-            if segment.offset >= 0:
-                return segment.offset
+            if segment.full_image_offset >= 0:
+                return segment.full_image_offset
 
             # It should be dynamically computed
             prev_seg: Optional[Segment] = None
@@ -146,11 +154,15 @@ class BootableImage(BaseClass):
                 prev_seg = seg
             raise SPSDKError("Cannot get dynamically offset of segment.")
 
+        if segment.excluded:
+            raise SPSDKError(
+                f"The segment '{segment.NAME}' is not present in this Bootable image: {str(self)}."
+            )
         return _get_segment_offset(self._segments, segment) - self._init_offset
 
     def __len__(self) -> int:
         """Length of output binary."""
-        last_segment = self._segments[-1]
+        last_segment = self.segments[-1]
         return self.get_segment_offset(last_segment) + len(last_segment)
 
     @property
@@ -177,10 +189,10 @@ class BootableImage(BaseClass):
     def _parse(self, binary: bytes) -> None:
         try:
             prev_offset = prev_size = 0
-            for segment in self.segments:
+            for segment in [seg for seg in self._segments if not seg.excluded]:
                 offset = self.get_segment_offset(segment)
                 # cover the case with variable offset
-                if segment.offset < 0:
+                if segment.full_image_offset < 0:
                     start_offset = align(prev_offset + prev_size, segment.OFFSET_ALIGNMENT)
                     if start_offset >= len(binary):
                         continue
@@ -193,10 +205,8 @@ class BootableImage(BaseClass):
                 except SPSDKSegmentNotPresent:
                     segment.clear()
                     continue
-
                 prev_offset = offset
                 prev_size = len(segment)
-
             return
         except SPSDKError as e:
             logger.debug(f"Parsing of the segment '{segment.NAME}' failed: {e}")
@@ -239,9 +249,7 @@ class BootableImage(BaseClass):
             logger.debug("The exact match has not been found")
             for memory_type in mem_types:
                 bimg = cls(family, memory_type, revision)
-                init_offsets = [
-                    bimg.get_segment_offset(seg) for seg in bimg.segments if seg.INIT_SEGMENT
-                ]
+                init_offsets = [seg.full_image_offset for seg in bimg._segments if seg.INIT_SEGMENT]
                 for init_offset in init_offsets:
                     logger.debug(
                         f"Parsing the image for memory type '{memory_type}' with init offset 0x{init_offset:08X}"
@@ -301,7 +309,7 @@ class BootableImage(BaseClass):
         sch_cfg["family_rev"]["properties"]["revision"]["template_value"] = revision
         sch_cfg["family_rev"]["properties"]["memory_type"]["template_value"] = mem_type
         schemas = [sch_cfg["family_rev"], sch_cfg["init_offset"]]
-        for segment in bimg.segments:
+        for segment in bimg._segments:
             schemas.append(sch_cfg[segment.NAME.label])
         return schemas
 
@@ -317,10 +325,7 @@ class BootableImage(BaseClass):
         config["memory_type"] = self.mem_type
         config["init_offset"] = self.init_offset
         for segment in self._segments:
-            if not segment.used:
-                config[segment.cfg_key()] = "Not used in image"
-            else:
-                config[segment.cfg_key()] = segment.create_config(output)
+            config[segment.cfg_key()] = segment.create_config(output)
 
         yaml = CommentedConfig(
             f"Bootable Image Configuration for {self.family}.", schemas
@@ -354,11 +359,10 @@ class BootableImage(BaseClass):
         schemas = bimg.get_validation_schemas(family, mem_type, revision)
         check_config(config, schemas, search_paths=search_paths)
 
-        for segment in bimg.segments:
+        for segment in bimg._segments:
             try:
                 segment.load_config(config, search_paths)
             except SPSDKSegmentNotPresent:
-                # segment not present
                 segment.clear()
                 continue
 
@@ -382,16 +386,13 @@ class BootableImage(BaseClass):
         if self.init_offset:
             logger.info(f"The image is not complete. Staring from offset {self.init_offset}")
         for segment in self.segments:
-            seg_offset = segment.offset
-            if segment.offset < 0:
+            seg_offset = segment.full_image_offset
+            if segment.full_image_offset < 0:
                 seg_offset = align(prev_offset + prev_size, segment.OFFSET_ALIGNMENT)
-            seg_size = len(segment.export())
-
-            if seg_size:
-                img_info = segment.image_info()
-                img_info.offset = self.get_segment_offset(segment)
-                bin_image.add_image(img_info)
-            prev_size = seg_size
+            img_info = segment.image_info()
+            img_info.offset = self.get_segment_offset(segment)
+            bin_image.add_image(img_info)
+            prev_size = len(segment)
             prev_offset = seg_offset
         return bin_image
 

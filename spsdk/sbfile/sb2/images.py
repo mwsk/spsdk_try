@@ -125,6 +125,11 @@ class SBV2xAdvancedParams:
         """Return padding."""
         return self._padding
 
+    @property
+    def zero_padding(self) -> bool:
+        """Return True if padding is zero, False otherwise."""
+        return self._padding == b"\x00" * 8
+
 
 ########################################################################################################################
 # Secure Boot Image Class (Version 2.0)
@@ -1029,7 +1034,10 @@ class BootImageV21(BaseClass):
         # validate keyblobs and perform appropriate actions
         keyblobs = config.get("keyblobs", [])
 
-        sb21_helper = SB21Helper(search_paths)
+        # get advanced params
+        advanced_params = cls.get_advanced_params(config["options"])
+
+        sb21_helper = SB21Helper(search_paths, zero_filling=advanced_params.zero_padding)
         sb_sections = []
         sections = config["sections"]
         for section_id, section in enumerate(sections):
@@ -1046,7 +1054,9 @@ class BootImageV21(BaseClass):
                     cmd = cmd_fce(value)
                     commands.append(cmd)
 
-            sb_sections.append(BootSectionV2(section_id, *commands))
+            sb_sections.append(
+                BootSectionV2(section_id, *commands, zero_filling=advanced_params.zero_padding)
+            )
 
         # We have a list of sections and their respective commands, lets create
         # a boot image v2.1 object
@@ -1057,7 +1067,7 @@ class BootImageV21(BaseClass):
             component_version=component_version,
             build_number=cert_block.header.build_number,
             flags=flags,
-            advanced_params=cls.get_advanced_params(config["options"]),
+            advanced_params=advanced_params,
         )
 
         # We have our secure binary, now we attach to it the certificate block and

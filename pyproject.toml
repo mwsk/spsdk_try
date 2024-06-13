@@ -206,7 +206,7 @@ info_only = false
 dependencies = ["BLACK_NB"]
 inherit_failure = false
 fixer = "fix_isort_nb"
-jyputer_notebook_checker = true
+jyputer_notebook_checker = true 
 [[tool.nxp_codecheck.checkers]]
 name = "JUPYTER"
 method = "check_jupyter_outputs"
@@ -215,3 +215,7 @@ info_only = false
 dependencies = ["BLACK_NB", "ISORT_NB"]
 inherit_failure = false
 jyputer_notebook_checker = true
+
+[tool.clr]
+check_directories = ["spsdk", "tests", "tools", "examples"]
+excluded_files = ["spsdk/__version__.py"]

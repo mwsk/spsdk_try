@@ -23,7 +23,9 @@ from spsdk import (
     SPSDK_CACHE_DISABLED,
     SPSDK_DATA_FOLDER,
     SPSDK_RESTRICTED_DATA_FOLDER,
+    version,
 )
+from spsdk.apps.utils import spsdk_logger
 from spsdk.crypto.hash import EnumHashAlgorithm, Hash, get_hash
 from spsdk.exceptions import SPSDKError, SPSDKValueError
 from spsdk.utils.misc import (
@@ -895,17 +897,45 @@ class DatabaseManager:
             return
         shutil.rmtree(path)
 
+    @staticmethod
+    def get_restricted_data() -> Optional[str]:
+        """Get restricted data folder, if applicable.
+
+        :return: Optional restricted data folder.
+        """
+        if SPSDK_RESTRICTED_DATA_FOLDER is None:
+            return None
+
+        try:
+            rd_version: str = load_configuration(
+                os.path.join(SPSDK_RESTRICTED_DATA_FOLDER, "metadata.yaml")
+            )["version"]
+        except SPSDKError:
+            logger.error("The Restricted data has invalid folder of METADATA")
+            return None
+        major, minor = rd_version.split(".", maxsplit=2)
+        if int(major) != version.major or int(minor) != version.minor:
+            logger.error(
+                f"The restricted data version is no equal to SPSDK current version: {rd_version} != {str(version)}"
+            )
+            return None
+        database_path = os.path.join(SPSDK_RESTRICTED_DATA_FOLDER, "data")
+        if not os.path.exists(database_path):
+            logger.error(f"The restricted data doesn't contains data folder: {database_path}")
+            return None
+        return database_path
+
     @classmethod
     def _get_database(cls) -> Database:
         """Get database and count with cache."""
+        restricted_data = DatabaseManager.get_restricted_data()
+
         if SPSDK_CACHE_DISABLED:
             DatabaseManager.clear_cache()
-            return Database(
-                SPSDK_DATA_FOLDER, SPSDK_RESTRICTED_DATA_FOLDER, SPSDK_ADDONS_DATA_FOLDER
-            )
+            return Database(SPSDK_DATA_FOLDER, restricted_data, SPSDK_ADDONS_DATA_FOLDER)
 
         db_hash = DatabaseManager.get_db_hash(
-            [SPSDK_DATA_FOLDER, SPSDK_RESTRICTED_DATA_FOLDER, SPSDK_ADDONS_DATA_FOLDER]
+            [SPSDK_DATA_FOLDER, restricted_data, SPSDK_ADDONS_DATA_FOLDER]
         )
         logger.debug(f"Current database finger print hash: {db_hash.hex()}")
         if os.path.exists(cls._db_cache_file_name):
@@ -924,7 +954,7 @@ class DatabaseManager:
             except Exception as exc:
                 logger.debug(f"Cannot load database cache: {str(exc)}")
 
-        db = Database(SPSDK_DATA_FOLDER, SPSDK_RESTRICTED_DATA_FOLDER, SPSDK_ADDONS_DATA_FOLDER)
+        db = Database(SPSDK_DATA_FOLDER, restricted_data, SPSDK_ADDONS_DATA_FOLDER)
         db.db_hash = db_hash
         try:
             os.makedirs(cls._db_cache_folder_name, exist_ok=True)
@@ -942,6 +972,7 @@ class DatabaseManager:
         """
         if cls._instance:
             return cls._instance
+        spsdk_logger.install()
         cls._instance = super(DatabaseManager, cls).__new__(cls)
         cls._db_cache_folder_name, cls._db_cache_file_name = DatabaseManager.get_cache_filename()
         cls._db = cls._instance._get_database()

@@ -88,7 +88,8 @@ def close_device(
     By using EdgeLock 2GO Secure Object's stored
     in Flash memory:
 
-    1. Device's Lifecycle will be advanced.
+    1. Device's lifecycle will be advanced to In-field/Closed or In-field Locked/Closed/Locked based on the lifecycle
+    state associated with the Secure Objects downloaded from the EdgeLock 2GO server.
 
     2. Device will be moved to Secure state.
 
@@ -96,7 +97,9 @@ def close_device(
 
     4. OEM FW Decryption Key will be provisioned.
 
-    5. Desired OTP fuses will be provisioned.
+    5. Desired OTP fuses will be provisioned using OTP Configuration Data.
+
+    ADDRESS is the FLASH memory address where Secure Objects are stored.
 
     When -d/--dry-run flag is used, the device will not be provisioned
     and remain in the same status as before. Only, EdgeLock 2GO Secure Object's
@@ -124,6 +127,14 @@ def get_secure_objects(interface: MbootProtocolBase, config: str, output: str) -
 
     To generate a template of the configuration file required as input,
     get-template command can be used.
+
+    Inside configuration file the values below should be defined:
+
+    - EdgeLock 2GO API key
+
+    - Device Group id
+
+    - Hardware's 12NC code
     """
     config_data = load_configuration(path=config)
     search_path = os.path.dirname(config)

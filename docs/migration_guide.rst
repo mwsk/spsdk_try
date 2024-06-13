@@ -14,6 +14,8 @@ CLI changes
 API changes
 ------------
 
+* Dropped support for Python 3.8
+
 * AHAB container module (ahab/ahab_container.py) was refactored. Concept of parent classes was removed and the module was split into several smaller modules containing classes for each AHAB subimage type.
 
 * AHAB extended image array entries were introduced. This helps with creating specific AHAB images like U-Boot. See the examples for more information.
