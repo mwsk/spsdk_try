@@ -51,7 +51,7 @@ jobs:
  
       - name: Run Codecheck
         run: |
-          : # Ignoring the 'COPYRIGHT' check as the year of merge to Github may differ from the actual year when the file was updated 
+          # Ignoring the 'COPYRIGHT' check as the year of merge to Github may differ from the actual year when the file was updated 
           codecheck -s --output reports_codecheck --info-check gitcov  --info-check COPYRIGHT
 
       - name: Archive Results
