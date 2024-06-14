@@ -7,13 +7,11 @@
 # Script for updating README.md file with the content of devices_table.inc file
 import os
 from generate_table import DEVICES_TABLE_FILE
-# from spsdk import ROOT_DIR
 
 
 def main():
     print("Updating README.md file")
     # Specify the paths of the README.md file and the devices_table.inc file
-    # readme_path = os.path.join(ROOT_DIR, "README.md")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     readme_path = os.path.join(current_dir, "..", "..", "README.md")
     devices_table_path = DEVICES_TABLE_FILE
