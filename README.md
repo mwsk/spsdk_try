@@ -9,7 +9,7 @@
 * [GitHub](https://github.com/NXPmicro/spsdk)
 * [PyPi](https://pypi.org/project/spsdk/)
 * [Documentation](https://spsdk.readthedocs.io)
-* [Project page](https://www.nxp.com/design/software/development-software/secure-provisioning-sdk-spsdk:SPSDK)
+* [Project page](https://www.nxp.com/design/design-center/software/development-software/secure-provisioning-sdk-spsdk:SPSDK)
 
 ## Supported Devices
 
