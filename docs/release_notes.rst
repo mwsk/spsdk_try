@@ -36,7 +36,7 @@ Current version introduces breaking changes, which are described in details in `
 
 * :ref:`blhost`:
     - add can interface
-* :ref:`EL2GO`:
+* :ref:`el2go-host`:
     - support for mwct2x12, mwct2xd2
 * :ref:`ifr`:
     - add option to configure sector 2
@@ -738,7 +738,7 @@ Next version of spsdk (2.0) will introduce breaking changes:
 * :ref:`nxpdebugmbox` - fix Retry of AP register reads after Chip reset
 * :ref:`nxpdebugmbox` - add timeout to never ending loops in spin_read/write methods in Debug mailbox
 * :ref:`blhost` - flash-erase-region command doesn't accept the memory_id argument in hex form
-* :ref:`elftosb` - using kdkAccessRigths = 0 in SB31 is throwing an error in KeyDerivator
+* :ref:`elftosb` - using kdkAccessRights = 0 in SB31 is throwing an error in KeyDerivator
 
 --------------------
 1.4.0 (25-June-2021)
@@ -759,7 +759,7 @@ Next version of spsdk (2.0) will introduce breaking changes:
     * fuse-program
     * flash-image
     * program-aeskey
-* :ref:`blhost` - memoryId calmp-down for mapped external memories added
+* :ref:`blhost` - memoryId clamp-down for mapped external memories added
 * :ref:`elftosb` - support for SB 2.1 added
 * :ref:`elftosb` - basic support for BD configuration file added
 * :ref:`nxpdebugmbox` - debug port enabled check added
