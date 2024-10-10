@@ -10,6 +10,83 @@
 Release Notes
 =============
 
+------------------------
+2.3.0 (11-October-2024)
+------------------------
+
+**ANNOUNCEMENT**
+
+Current version introduces breaking changes, which are described in details in `migration guide`_.
+
+**New features**
+
+* :ref:`blhost`:
+    - support nIRQ pin feature
+* :ref:`el2go-host`:
+    - unify subcommands for RW61x
+    - add get-otp-binary command
+    - addd UUID harvesting
+    - add default handler to unknown errors while assigning device to a group
+    - add checker for max amount of Secure Objects and their size
+    - add Remote Database for Secure Objects for Azurewave
+    - add close_device to blhost; display response of RW TPFW responses
+    - implement database storage for UUIDs harvesting
+    - erase CMPA in EdgeLock2GO indirect flow
+* :ref:`lpcprog`:
+    - add programmer for LPC8xx parts
+* :ref:`nxpcrypto`:
+    - add subcommand for creating PKI tree
+* :ref:`nxpdebugmbox`:
+    - support for MX95 revision A0/A1/B0 (PQC support)
+* :ref:`nxpdevhsm`:
+    - add execute command for mcxn9xx
+    - allow SB files without loading the wrapped CUST_MK_SK
+    - implement oem duk certificate provisioning
+* :ref:`nxpdice`:
+    - add nxpdice application
+* :ref:`nxpele`:
+    - support nxpele over fastboot
+* :ref:`nxpimage`:
+    - support AHAB version 2
+    - add verificator to bootable image
+    - support linux image in bootable image
+    - add ahab sign command for signing existing AHAB images
+* :ref:`nxpmemcfg`:
+    - add blhost-script option for exporting configuration for secure address
+* :ref:`nxpuuu`:
+    - new tool based on the UUU (Universal Update Utility), add capability to deploy images to i.MX MPU targets
+* :ref:`nxpwpc`:
+    - add special handler when pre-CSR are are empty
+* :ref:`tphost`/:ref:`tpconfig`:
+    - implement lightweight Chain-of-Trust checker for DevCert located in the device
+* support MCXC series (blhost)
+* support RT7xx
+* support MNCXN23x, MCXN9xx, KW45xx EL2Go
+* support MCXW71 and its wariants
+
+**Bugfixes**
+
+* :ref:`el2go-host`:
+    - fix general error when database has no blob
+    - fix revision in configuration
+* :ref:`nxpdebugmbox`:
+    - fix get-crp command for mcxa series
+    - fix template for famode-image
+    - fix dat for RT1180
+    - fix template for RT1180
+* :ref:`nxpele`:
+    - fix get-info details
+* :ref:`nxpimage`:
+    - fix flag in AHAB
+    - fix plain MBI for NHS52sxx
+    - fix trustzone for NHS52Sxx
+    - remove header form XMCD segment
+* `pfr`_:
+    - fix erase-cmpa for mcxa series
+* :ref:`shadowregs`:
+    - fix fuses-script
+    - fix loading shadow registers on RW61x
+
 ---------------------
 2.2.1 (26-July-2024)
 ---------------------

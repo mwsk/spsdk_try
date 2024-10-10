@@ -408,7 +408,7 @@ Latest revision: a0
 
 All supported chip revisions: a0
 
-Weblink: `mcxa143 <https://www.nxp.com>`_
+Weblink: `mcxa143 <https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/general-purpose-mcus/mcx-arm-cortex-m/mcx-a-series-microcontrollers:MCX-A-SERIES>`_
 
 .. table::
 
@@ -434,13 +434,15 @@ Latest revision: a0
 
 All supported chip revisions: a0
 
-Weblink: `mcxa144 <https://www.nxp.com>`_
+Weblink: `mcxa144 <https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/general-purpose-mcus/mcx-arm-cortex-m/mcx-a-series-microcontrollers/mcx-a13x-14x-15x-mcus-with-arm-cortex-m33-scalable-device-options-low-power-and-intelligent-peripherals:MCX-A13X-A14X-A15X>`_
 
 .. table::
 
     +------------------------------+-------+
     |           Feature            |Support|
     +==============================+=======+
+    |:ref:`nxpdebugmbox`           |✅     |
+    +------------------------------+-------+
     |:ref:`Master Boot Image (MBI)`|✅     |
     +------------------------------+-------+
     |:ref:`Bootable image`         |✅     |
@@ -456,13 +458,15 @@ Latest revision: a0
 
 All supported chip revisions: a0
 
-Weblink: `mcxa145 <https://www.nxp.com>`_
+Weblink: `mcxa145 <https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/general-purpose-mcus/mcx-arm-cortex-m/mcx-a-series-microcontrollers/mcx-a13x-14x-15x-mcus-with-arm-cortex-m33-scalable-device-options-low-power-and-intelligent-peripherals:MCX-A13X-A14X-A15X>`_
 
 .. table::
 
     +------------------------------+-------+
     |           Feature            |Support|
     +==============================+=======+
+    |:ref:`nxpdebugmbox`           |✅     |
+    +------------------------------+-------+
     |:ref:`Master Boot Image (MBI)`|✅     |
     +------------------------------+-------+
     |:ref:`Bootable image`         |✅     |
@@ -478,13 +482,15 @@ Latest revision: a0
 
 All supported chip revisions: a0
 
-Weblink: `mcxa146 <https://www.nxp.com>`_
+Weblink: `mcxa146 <https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/general-purpose-mcus/mcx-arm-cortex-m/mcx-a-series-microcontrollers/mcx-a13x-14x-15x-mcus-with-arm-cortex-m33-scalable-device-options-low-power-and-intelligent-peripherals:MCX-A13X-A14X-A15X>`_
 
 .. table::
 
     +------------------------------+-------+
     |           Feature            |Support|
     +==============================+=======+
+    |:ref:`nxpdebugmbox`           |✅     |
+    +------------------------------+-------+
     |:ref:`Master Boot Image (MBI)`|✅     |
     +------------------------------+-------+
     |:ref:`Bootable image`         |✅     |
@@ -500,7 +506,7 @@ Latest revision: a0
 
 All supported chip revisions: a0
 
-Weblink: `mcxa152 <https://www.nxp.com>`_
+Weblink: `mcxa152 <https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/general-purpose-mcus/mcx-arm-cortex-m/mcx-a-series-microcontrollers:MCX-A-SERIES>`_
 
 .. table::
 
@@ -552,13 +558,15 @@ Latest revision: a0
 
 All supported chip revisions: a0
 
-Weblink: `mcxa154 <https://www.nxp.com>`_
+Weblink: `mcxa154 <https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/general-purpose-mcus/mcx-arm-cortex-m/mcx-a-series-microcontrollers/mcx-a13x-14x-15x-mcus-with-arm-cortex-m33-scalable-device-options-low-power-and-intelligent-peripherals:MCX-A13X-A14X-A15X>`_
 
 .. table::
 
     +------------------------------+-------+
     |           Feature            |Support|
     +==============================+=======+
+    |:ref:`nxpdebugmbox`           |✅     |
+    +------------------------------+-------+
     |:ref:`Master Boot Image (MBI)`|✅     |
     +------------------------------+-------+
     |:ref:`Bootable image`         |✅     |
@@ -574,13 +582,15 @@ Latest revision: a0
 
 All supported chip revisions: a0
 
-Weblink: `mcxa155 <https://www.nxp.com>`_
+Weblink: `mcxa155 <https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/general-purpose-mcus/mcx-arm-cortex-m/mcx-a-series-microcontrollers/mcx-a13x-14x-15x-mcus-with-arm-cortex-m33-scalable-device-options-low-power-and-intelligent-peripherals:MCX-A13X-A14X-A15X>`_
 
 .. table::
 
     +------------------------------+-------+
     |           Feature            |Support|
     +==============================+=======+
+    |:ref:`nxpdebugmbox`           |✅     |
+    +------------------------------+-------+
     |:ref:`Master Boot Image (MBI)`|✅     |
     +------------------------------+-------+
     |:ref:`Bootable image`         |✅     |
@@ -596,13 +606,15 @@ Latest revision: a0
 
 All supported chip revisions: a0
 
-Weblink: `mcxa156 <https://www.nxp.com>`_
+Weblink: `mcxa156 <https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/general-purpose-mcus/mcx-arm-cortex-m/mcx-a-series-microcontrollers/mcx-a13x-14x-15x-mcus-with-arm-cortex-m33-scalable-device-options-low-power-and-intelligent-peripherals:MCX-A13X-A14X-A15X>`_
 
 .. table::
 
     +------------------------------+-------+
     |           Feature            |Support|
     +==============================+=======+
+    |:ref:`nxpdebugmbox`           |✅     |
+    +------------------------------+-------+
     |:ref:`Master Boot Image (MBI)`|✅     |
     +------------------------------+-------+
     |:ref:`Bootable image`         |✅     |
@@ -1342,14 +1354,48 @@ Weblink: `kw45b41z8 <https://www.nxp.com/products/wireless/bluetooth-low-energy/
     +------------------------------+-------+
 
 
-mcxw716
+mcxw716a
 --------------------------
 
 Latest revision: a2
 
 All supported chip revisions: a0, a1, a2
 
-Weblink: `mcxw716 <https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/general-purpose-mcus/mcx-arm-cortex-m/mcx-w-series-microcontrollers/mcx-w71x-secure-and-ultra-low-power-mcus-for-matter-thread-zigbee-and-bluetooth-le:MCX-W71X>`_
+Weblink: `mcxw716a <https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/general-purpose-mcus/mcx-arm-cortex-m/mcx-w-series-microcontrollers/mcx-w71x-secure-and-ultra-low-power-mcus-for-matter-thread-zigbee-and-bluetooth-le:MCX-W71X>`_
+
+.. table::
+
+    +------------------------------+-------+
+    |           Feature            |Support|
+    +==============================+=======+
+    |:ref:`RoT`                    |v2.1   |
+    +------------------------------+-------+
+    |:ref:`blhost`                 |✅     |
+    +------------------------------+-------+
+    |:ref:`nxpdebugmbox`           |✅     |
+    +------------------------------+-------+
+    |:ref:`Master Boot Image (MBI)`|✅     |
+    +------------------------------+-------+
+    |:ref:`ifr`                    |✅     |
+    +------------------------------+-------+
+    |:ref:`Secure Binary 3.1`      |✅     |
+    +------------------------------+-------+
+    |:ref:`tz`                     |✅     |
+    +------------------------------+-------+
+    |:ref:`el2go-host`             |✅     |
+    +------------------------------+-------+
+    |:ref:`Bootable image`         |✅     |
+    +------------------------------+-------+
+
+
+mcxw716c
+--------------------------
+
+Latest revision: a2
+
+All supported chip revisions: a0, a1, a2
+
+Weblink: `mcxw716c <https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/general-purpose-mcus/mcx-arm-cortex-m/mcx-w-series-microcontrollers/mcx-w71x-secure-and-ultra-low-power-mcus-for-matter-thread-zigbee-and-bluetooth-le:MCX-W71X>`_
 
 .. table::
 

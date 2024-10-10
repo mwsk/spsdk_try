@@ -22,6 +22,8 @@ CLI changes
 
 * Refactored device database to make it compatible across the whole MCUXpresso ecosystem (SDK, IDE, SEC tool, Config Tools, etc.). New family (device) names was introduced for example mx93 -> mimx9352.
 
+* Renamed el2go application to el2go-host
+
 API changes
 ------------
 

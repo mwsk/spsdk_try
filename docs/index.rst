@@ -212,7 +212,11 @@ All products, including those with advanced security features, may be subject to
     examples/rt118x/rt118x_external_memory_config
     examples/lpcprog/lpcprog
     examples/lpc55s3x/dice/lpc55s3x_dice
-
+    examples/signature_provider/mcxn946/mcxn946_mbimg
+    examples/signature_provider/mimxrt595s/mimxrt595s_mbimg
+    examples/signature_provider/mimxrt595s/mimxrt595s_dat
+    examples/signature_provider/common/signature_provider
+    examples/signature_provider/common/sahsm
 
 .. Indices and tables
 .. ==================
