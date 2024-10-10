@@ -37,7 +37,7 @@ certBlock: ../inputs/cert_block_kw45.yaml
 # ======================================================================================================================
 # ----------------------------------------===== Part Common Key [Optional] =====----------------------------------------
 # Description: Path to PCK/NPK 256 or 128 bit key in plain hex string format or path to binary file or hex string.
-containerKeyBlobEncryptionKey: ../EVK_KEYS/sb3kdk.txt
+containerKeyBlobEncryptionKey: ../EVK_keys/sb3kdk.txt
 # ----------------------------------===== Enable NXP Container format [Optional] =====----------------------------------
 # Description: Internal usage only, used for generating SB files with NXP content e.g. provisioning firmware, etc...
 isNxpContainer: false
