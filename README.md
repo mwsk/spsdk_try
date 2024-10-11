@@ -1,5 +1,6 @@
 # NXP Secure Provisioning SDK
 
+
 **Secure Provisioning SDK (SPSDK)** enables connection and communication with target devices for purposes of secure provisioning and programming. Delivered as python library with command-line applications for direct utilization.
 
 ![](https://github.com/NXPmicro/spsdk/raw/master/docs/_static/images/spsdk-architecture.png)
