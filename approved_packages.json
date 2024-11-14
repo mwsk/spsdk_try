@@ -439,7 +439,7 @@
       "name": "deepmerge",
       "package": {
         "name": "deepmerge",
-        "license": "MIT License"
+        "license": ""
       },
       "github": {
         "project_name": "toumorokoshi/deepmerge",
@@ -500,6 +500,18 @@
         "license": "BSD-3-Clause"
       }
     },
+    {
+        "home_page": "https://github.com/tox-dev/filelock",
+        "name": "filelock",
+        "package": {
+          "name": "filelock",
+          "license": "The Unlicense"
+        },
+        "github": {
+          "project_name": "tox-dev/filelock",
+          "license": "The Unlicense"
+        }
+      },
     {
       "home_page": "",
       "name": "Flask",
