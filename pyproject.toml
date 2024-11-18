@@ -114,7 +114,7 @@ root_package = "spsdk"
 "LGPL-2.0" = ["GPL-2.0-or-later"]
 "LGPL-2.1" = ["LGPL-2.1-or-later"]
 "ISC" = ["ISC license"]
-"Unlincense" = ["The Unlicense"]
+"Unlincense" = ["The Unlicense", "The Unlicense (Unlicense)"]
 
 [tool.nxp_codecheck]
 # Reports output directory
