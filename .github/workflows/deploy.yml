@@ -24,23 +24,23 @@ jobs:
         with:
           attest-build-provenance-github: 'true'
 
-  deploy:
-    name: Upload Release To PyPI
-    needs: [package]
-    runs-on: ubuntu-latest
-    environment:
-      name: pypi
-      url: https://pypi.org/project/spsdk/
-    permissions:
-      id-token: write
-    steps:
-    - uses: actions/checkout@v4
+  # deploy:
+  #   name: Upload Release To PyPI
+  #   needs: [package]
+  #   runs-on: ubuntu-latest
+  #   environment:
+  #     name: pypi
+  #     url: https://pypi.org/project/spsdk/
+  #   permissions:
+  #     id-token: write
+  #   steps:
+  #   - uses: actions/checkout@v4
 
-    - name: Download Package
-      uses: actions/download-artifact@v4
-      with:
-        name: Packages
-        path: dist
+  #   - name: Download Package
+  #     uses: actions/download-artifact@v4
+  #     with:
+  #       name: Packages
+  #       path: dist
 
-    - name: Publish package to PyPI
-      uses: pypa/gh-action-pypi-publish@v1.9.0 # The authentication is provided by OpenID Connect: https://docs.pypi.org/trusted-publishers/adding-a-publisher/
+  #   - name: Publish package to PyPI
+  #     uses: pypa/gh-action-pypi-publish@v1.9.0 # The authentication is provided by OpenID Connect: https://docs.pypi.org/trusted-publishers/adding-a-publisher/
