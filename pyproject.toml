@@ -256,3 +256,7 @@ PROTEX_TEMPLATE = "t_reportwithobligations_7215"
 
 [tool.check-wheel-contents]
 ignore = "W002" # Wheel contains duplicate files
+
+[project.readme]
+file = "README.md"
+content-type = "text/x-rst"
