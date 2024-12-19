@@ -39,7 +39,7 @@ jobs:
             brew install pcsc-lite swig cmake
           fi
           if [ "$RUNNER_OS" == "Windows" ]; then
-            pip install cvxpy
+            conda install cvxpy
           fi
         shell: bash
 
