@@ -33,10 +33,10 @@ jobs:
       - name:  Install OS Dependencies
         run:   |
           if [ "$RUNNER_OS" == "Linux" ]; then
-            sudo apt-get update && sudo apt install -y libpcsclite-dev swig
+            sudo apt-get update && sudo apt install -y libpcsclite-dev swig cmake
           fi
           if [ "$RUNNER_OS" == "macOS" ]; then
-            brew install pcsc-lite swig
+            brew install pcsc-lite swig cmake
           fi
         shell: bash
 
