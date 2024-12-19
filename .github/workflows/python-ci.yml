@@ -38,9 +38,6 @@ jobs:
           if [ "$RUNNER_OS" == "macOS" ]; then
             brew install pcsc-lite swig cmake
           fi
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            conda install cvxpy
-          fi
         shell: bash
 
       - name: Install SPSDK
