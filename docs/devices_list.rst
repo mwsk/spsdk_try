@@ -412,28 +412,6 @@ Similar examples for lpcprog
 * `LPC 8xx Programming Tool <examples\lpcprog\lpcprog.ipynb>`__
 
 
-lpc864
---------------------------
-
-Latest revision: a0
-
-All supported chip revisions: a0
-
-Weblink: `lpc864 <https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/general-purpose-mcus/lpc800-arm-cortex-m0-plus-/lpc860-32-bit-arm-cortex-m0-plus-based-low-cost-mcu-with-i3c-interface:LPC86X>`_
-
-.. table::
-
-    +--------------+-------+
-    |   Feature    |Support|
-    +==============+=======+
-    |:ref:`lpcprog`|✅     |
-    +--------------+-------+
-
-Similar examples for lpcprog
-
-* `LPC 8xx Programming Tool <examples\lpcprog\lpcprog.ipynb>`__
-
-
 lpc865
 --------------------------
 
@@ -1560,116 +1538,6 @@ Weblink: `mcxc444 <https://www.nxp.com/products/processors-and-microcontrollers/
 Similar examples for blhost
 
 * `Blhost (MBoot) <examples\blhost\blhost.ipynb>`__
-
-
-mcxw727c
---------------------------
-
-Latest revision: a0
-
-All supported chip revisions: a0, a1
-
-Weblink: `mcxw727c <https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/general-purpose-mcus/mcx-arm-cortex-m/mcx-w-series-microcontrollers/mcx-w72x-secure-and-ultra-low-power-mcus-for-matter-thread-zigbee-and-bluetooth-le:MCX-W72X\>`_
-
-.. table::
-
-    +------------------------------+-------+
-    |           Feature            |Support|
-    +==============================+=======+
-    |:ref:`RoT`                    |v2.1   |
-    +------------------------------+-------+
-    |:ref:`blhost`                 |✅     |
-    +------------------------------+-------+
-    |:ref:`nxpdebugmbox`           |✅     |
-    +------------------------------+-------+
-    |:ref:`Master Boot Image (MBI)`|✅     |
-    +------------------------------+-------+
-    |:ref:`ifr`                    |✅     |
-    +------------------------------+-------+
-    |:ref:`Secure Binary 3.1`      |✅     |
-    +------------------------------+-------+
-    |:ref:`tz`                     |✅     |
-    +------------------------------+-------+
-    |:ref:`Bootable image`         |✅     |
-    +------------------------------+-------+
-
-Similar examples for blhost
-
-* `Blhost (MBoot) <examples\blhost\blhost.ipynb>`__
-
-
-Similar examples for dat
-
-* `Debug authentication on MCXN9XX <examples\dat\mcxn9xx\mcxn9xx_debug_auth.ipynb>`__
-* `i.MXRT118x Debug Authentication example <examples\dat\mimxrt1189\rt118x_debug_authentication.ipynb>`__
-* `Debug authentication on RW612/RW610 <examples\dat\rw612\rw61x_debug_auth.ipynb>`__
-
-
-Similar examples for mbi
-
-* `KW45xx and K32W1xx Secure Boot <examples\mbi\kw45xx_k32w1xx\kw45xx_k32w1xx_secure_boot.ipynb>`__
-* `LPC55Sxx Secure Boot <examples\mbi\lpc55sxx_secure_boot\lpc55sxx_secure_boot.ipynb>`__
-* `LPC55Sxx Secure Firmware Update <examples\mbi\lpc55sxx_secure_boot\lpc55sxx_secure_fw_update.ipynb>`__
-
-
-Similar examples for bootable_image
-
-* `RW61x Bootable Image <examples\bootable_image\rw61x\rw61x_bootable_image.ipynb>`__
-
-
-mcxw727d
---------------------------
-
-Latest revision: a0
-
-All supported chip revisions: a0, a1
-
-Weblink: `mcxw727d <https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/general-purpose-mcus/mcx-arm-cortex-m/mcx-w-series-microcontrollers/mcx-w72x-secure-and-ultra-low-power-mcus-for-matter-thread-zigbee-and-bluetooth-le:MCX-W72X>`_
-
-.. table::
-
-    +------------------------------+-------+
-    |           Feature            |Support|
-    +==============================+=======+
-    |:ref:`RoT`                    |v2.1   |
-    +------------------------------+-------+
-    |:ref:`blhost`                 |✅     |
-    +------------------------------+-------+
-    |:ref:`nxpdebugmbox`           |✅     |
-    +------------------------------+-------+
-    |:ref:`Master Boot Image (MBI)`|✅     |
-    +------------------------------+-------+
-    |:ref:`ifr`                    |✅     |
-    +------------------------------+-------+
-    |:ref:`Secure Binary 3.1`      |✅     |
-    +------------------------------+-------+
-    |:ref:`tz`                     |✅     |
-    +------------------------------+-------+
-    |:ref:`Bootable image`         |✅     |
-    +------------------------------+-------+
-
-Similar examples for blhost
-
-* `Blhost (MBoot) <examples\blhost\blhost.ipynb>`__
-
-
-Similar examples for dat
-
-* `Debug authentication on MCXN9XX <examples\dat\mcxn9xx\mcxn9xx_debug_auth.ipynb>`__
-* `i.MXRT118x Debug Authentication example <examples\dat\mimxrt1189\rt118x_debug_authentication.ipynb>`__
-* `Debug authentication on RW612/RW610 <examples\dat\rw612\rw61x_debug_auth.ipynb>`__
-
-
-Similar examples for mbi
-
-* `KW45xx and K32W1xx Secure Boot <examples\mbi\kw45xx_k32w1xx\kw45xx_k32w1xx_secure_boot.ipynb>`__
-* `LPC55Sxx Secure Boot <examples\mbi\lpc55sxx_secure_boot\lpc55sxx_secure_boot.ipynb>`__
-* `LPC55Sxx Secure Firmware Update <examples\mbi\lpc55sxx_secure_boot\lpc55sxx_secure_fw_update.ipynb>`__
-
-
-Similar examples for bootable_image
-
-* `RW61x Bootable Image <examples\bootable_image\rw61x\rw61x_bootable_image.ipynb>`__
 
 
 ========================================================
@@ -3967,7 +3835,117 @@ Latest revision: a0
 
 All supported chip revisions: a0, a1
 
-Weblink: `mcxw727a <https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/general-purpose-mcus/mcx-arm-cortex-m/mcx-w-series-microcontrollers/mcx-w72x-secure-and-ultra-low-power-mcus-for-matter-thread-zigbee-and-bluetooth-le:MCX-W72X>`_
+Weblink: `mcxw727a <https://www.nxp.com/products/MCX-W72X>`_
+
+.. table::
+
+    +------------------------------+-------+
+    |           Feature            |Support|
+    +==============================+=======+
+    |:ref:`RoT`                    |v2.1   |
+    +------------------------------+-------+
+    |:ref:`blhost`                 |✅     |
+    +------------------------------+-------+
+    |:ref:`nxpdebugmbox`           |✅     |
+    +------------------------------+-------+
+    |:ref:`Master Boot Image (MBI)`|✅     |
+    +------------------------------+-------+
+    |:ref:`ifr`                    |✅     |
+    +------------------------------+-------+
+    |:ref:`Secure Binary 3.1`      |✅     |
+    +------------------------------+-------+
+    |:ref:`tz`                     |✅     |
+    +------------------------------+-------+
+    |:ref:`Bootable image`         |✅     |
+    +------------------------------+-------+
+
+Similar examples for blhost
+
+* `Blhost (MBoot) <examples\blhost\blhost.ipynb>`__
+
+
+Similar examples for dat
+
+* `Debug authentication on MCXN9XX <examples\dat\mcxn9xx\mcxn9xx_debug_auth.ipynb>`__
+* `i.MXRT118x Debug Authentication example <examples\dat\mimxrt1189\rt118x_debug_authentication.ipynb>`__
+* `Debug authentication on RW612/RW610 <examples\dat\rw612\rw61x_debug_auth.ipynb>`__
+
+
+Similar examples for mbi
+
+* `KW45xx and K32W1xx Secure Boot <examples\mbi\kw45xx_k32w1xx\kw45xx_k32w1xx_secure_boot.ipynb>`__
+* `LPC55Sxx Secure Boot <examples\mbi\lpc55sxx_secure_boot\lpc55sxx_secure_boot.ipynb>`__
+* `LPC55Sxx Secure Firmware Update <examples\mbi\lpc55sxx_secure_boot\lpc55sxx_secure_fw_update.ipynb>`__
+
+
+Similar examples for bootable_image
+
+* `RW61x Bootable Image <examples\bootable_image\rw61x\rw61x_bootable_image.ipynb>`__
+
+
+mcxw727c
+--------------------------
+
+Latest revision: a0
+
+All supported chip revisions: a0, a1
+
+Weblink: `mcxw727c <https://www.nxp.com/products/MCX-W72X>`_
+
+.. table::
+
+    +------------------------------+-------+
+    |           Feature            |Support|
+    +==============================+=======+
+    |:ref:`RoT`                    |v2.1   |
+    +------------------------------+-------+
+    |:ref:`blhost`                 |✅     |
+    +------------------------------+-------+
+    |:ref:`nxpdebugmbox`           |✅     |
+    +------------------------------+-------+
+    |:ref:`Master Boot Image (MBI)`|✅     |
+    +------------------------------+-------+
+    |:ref:`ifr`                    |✅     |
+    +------------------------------+-------+
+    |:ref:`Secure Binary 3.1`      |✅     |
+    +------------------------------+-------+
+    |:ref:`tz`                     |✅     |
+    +------------------------------+-------+
+    |:ref:`Bootable image`         |✅     |
+    +------------------------------+-------+
+
+Similar examples for blhost
+
+* `Blhost (MBoot) <examples\blhost\blhost.ipynb>`__
+
+
+Similar examples for dat
+
+* `Debug authentication on MCXN9XX <examples\dat\mcxn9xx\mcxn9xx_debug_auth.ipynb>`__
+* `i.MXRT118x Debug Authentication example <examples\dat\mimxrt1189\rt118x_debug_authentication.ipynb>`__
+* `Debug authentication on RW612/RW610 <examples\dat\rw612\rw61x_debug_auth.ipynb>`__
+
+
+Similar examples for mbi
+
+* `KW45xx and K32W1xx Secure Boot <examples\mbi\kw45xx_k32w1xx\kw45xx_k32w1xx_secure_boot.ipynb>`__
+* `LPC55Sxx Secure Boot <examples\mbi\lpc55sxx_secure_boot\lpc55sxx_secure_boot.ipynb>`__
+* `LPC55Sxx Secure Firmware Update <examples\mbi\lpc55sxx_secure_boot\lpc55sxx_secure_fw_update.ipynb>`__
+
+
+Similar examples for bootable_image
+
+* `RW61x Bootable Image <examples\bootable_image\rw61x\rw61x_bootable_image.ipynb>`__
+
+
+mcxw727d
+--------------------------
+
+Latest revision: a0
+
+All supported chip revisions: a0, a1
+
+Weblink: `mcxw727d <https://www.nxp.com/products/MCX-W72X>`_
 
 .. table::
 
@@ -4441,11 +4419,11 @@ i.MX 8 Applications Processors
 mimx8ulp
 --------------------------
 
-Latest revision: a0
+Latest revision: a2
 
-All supported chip revisions: a0
+All supported chip revisions: a0, a1, a2
 
-Weblink: `mimx8ulp <https://www.nxp.com>`_
+Weblink: `mimx8ulp <https://www.nxp.com/products/processors-and-microcontrollers/arm-processors/i-mx-applications-processors/i-mx-8-applications-processors/i-mx-8ulp-applications-processor-family:i.MX8ULP>`_
 
 .. table::
 
@@ -4465,6 +4443,11 @@ Weblink: `mimx8ulp <https://www.nxp.com>`_
     |:ref:`nxpuuu`        |✅      |
     +---------------------+--------+
 
+Examples for mimx8ulp
+
+* `i.MX 8ULP AHAB with U-BOOT <examples/ahab/imx8ulp/imx8ulp_ahab_uboot.ipynb>`__
+
+
 Similar examples for dat
 
 * `Debug authentication on MCXN9XX <examples\dat\mcxn9xx\mcxn9xx_debug_auth.ipynb>`__
@@ -4474,6 +4457,7 @@ Similar examples for dat
 
 Similar examples for ahab
 
+* `i.MX 8ULP AHAB with U-BOOT <examples\ahab\imx8ulp\imx8ulp_ahab_uboot.ipynb>`__
 * `i.MX 93 AHAB with U-BOOT <examples\ahab\imx93\imx93_ahab_uboot.ipynb>`__
 * `i.MX 93 signed and encrypted AHAB image <examples\ahab\imx93\imx93_signed_ahab_uboot.ipynb>`__
 * `i.MX 95 AHAB Load M7 Application to TCM <examples\ahab\imx95\imx95_ahab_load_tcm.ipynb>`__
@@ -4521,6 +4505,7 @@ Weblink: `mimx9131 <https://www.nxp.com/products/processors-and-microcontrollers
 
 Similar examples for ahab
 
+* `i.MX 8ULP AHAB with U-BOOT <examples\ahab\imx8ulp\imx8ulp_ahab_uboot.ipynb>`__
 * `i.MX 93 AHAB with U-BOOT <examples\ahab\imx93\imx93_ahab_uboot.ipynb>`__
 * `i.MX 93 signed and encrypted AHAB image <examples\ahab\imx93\imx93_signed_ahab_uboot.ipynb>`__
 * `i.MX 95 AHAB Load M7 Application to TCM <examples\ahab\imx95\imx95_ahab_load_tcm.ipynb>`__
@@ -4589,6 +4574,7 @@ Similar examples for dat
 
 Similar examples for ahab
 
+* `i.MX 8ULP AHAB with U-BOOT <examples\ahab\imx8ulp\imx8ulp_ahab_uboot.ipynb>`__
 * `i.MX 93 AHAB with U-BOOT <examples\ahab\imx93\imx93_ahab_uboot.ipynb>`__
 * `i.MX 93 signed and encrypted AHAB image <examples\ahab\imx93\imx93_signed_ahab_uboot.ipynb>`__
 * `i.MX 95 AHAB Load M7 Application to TCM <examples\ahab\imx95\imx95_ahab_load_tcm.ipynb>`__
@@ -5477,6 +5463,7 @@ Similar examples for dat
 
 Similar examples for ahab
 
+* `i.MX 8ULP AHAB with U-BOOT <examples\ahab\imx8ulp\imx8ulp_ahab_uboot.ipynb>`__
 * `i.MX 93 AHAB with U-BOOT <examples\ahab\imx93\imx93_ahab_uboot.ipynb>`__
 * `i.MX 93 signed and encrypted AHAB image <examples\ahab\imx93\imx93_signed_ahab_uboot.ipynb>`__
 * `i.MX 95 AHAB Load M7 Application to TCM <examples\ahab\imx95\imx95_ahab_load_tcm.ipynb>`__
@@ -5553,6 +5540,7 @@ Similar examples for dat
 
 Similar examples for ahab
 
+* `i.MX 8ULP AHAB with U-BOOT <examples\ahab\imx8ulp\imx8ulp_ahab_uboot.ipynb>`__
 * `i.MX 93 AHAB with U-BOOT <examples\ahab\imx93\imx93_ahab_uboot.ipynb>`__
 * `i.MX 93 signed and encrypted AHAB image <examples\ahab\imx93\imx93_signed_ahab_uboot.ipynb>`__
 * `i.MX 95 AHAB Load M7 Application to TCM <examples\ahab\imx95\imx95_ahab_load_tcm.ipynb>`__
@@ -5629,6 +5617,7 @@ Similar examples for dat
 
 Similar examples for ahab
 
+* `i.MX 8ULP AHAB with U-BOOT <examples\ahab\imx8ulp\imx8ulp_ahab_uboot.ipynb>`__
 * `i.MX 93 AHAB with U-BOOT <examples\ahab\imx93\imx93_ahab_uboot.ipynb>`__
 * `i.MX 93 signed and encrypted AHAB image <examples\ahab\imx93\imx93_signed_ahab_uboot.ipynb>`__
 * `i.MX 95 AHAB Load M7 Application to TCM <examples\ahab\imx95\imx95_ahab_load_tcm.ipynb>`__
@@ -5705,6 +5694,7 @@ Similar examples for dat
 
 Similar examples for ahab
 
+* `i.MX 8ULP AHAB with U-BOOT <examples\ahab\imx8ulp\imx8ulp_ahab_uboot.ipynb>`__
 * `i.MX 93 AHAB with U-BOOT <examples\ahab\imx93\imx93_ahab_uboot.ipynb>`__
 * `i.MX 93 signed and encrypted AHAB image <examples\ahab\imx93\imx93_signed_ahab_uboot.ipynb>`__
 * `i.MX 95 AHAB Load M7 Application to TCM <examples\ahab\imx95\imx95_ahab_load_tcm.ipynb>`__

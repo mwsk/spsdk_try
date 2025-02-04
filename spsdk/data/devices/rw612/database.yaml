@@ -1,4 +1,4 @@
-# Copyright 2023-2024 NXP
+# Copyright 2023-2025 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -70,7 +70,6 @@ features:
             fuse114,
             fuse115,
           ]
-        otp_index: 104
 
   # ======== Communication buffer section ========
   comm_buffer:
@@ -243,5 +242,4 @@ features:
     el2go_name: RW6
     prov_method: dispatch_fw
     fw_load_address: 0x08001000
-    ignored_otp: [104]
-    ignored_otp_ranges: [92, 103]
+    ignored_otp_ranges: [92, 103, 104, 115]
