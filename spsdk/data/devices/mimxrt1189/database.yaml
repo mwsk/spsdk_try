@@ -12,7 +12,7 @@ info:
   purpose: i.MX RT Crossover MCUs
   spsdk_predecessor_name: rt118x
   # Web page of MCU representative
-  web: https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/i-mx-rt-crossover-mcus/i-mx-rt1180-crossover-mcu-dual-core-arm-cortex-m7-and-cortex-m33-with-tsn-switch:i.MX-RT1180
+  web: https://www.nxp.com/products/i.MX-RT1180
   memory_map:
     code-tcm:
       start_int: 0x0FFE0000

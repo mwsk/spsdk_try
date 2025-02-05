@@ -558,9 +558,7 @@ class EL2GOTPClient(EL2GOClient):
         raise SPSDKUnsupportedOperation(f"Unsupported cleanup method {self.clean_method}")
 
     @classmethod
-    # type: ignore[override]
-    # pylint: disable=arguments-differ
-    def get_validation_schema(cls, family: str, revision: str = "latest") -> dict:
+    def get_validation_schema(cls, family: str, revision: str = "latest") -> dict:  # type: ignore[override]  # pylint: disable=arguments-differ
         """Get JSON schema for validating configuration data."""
         schema_file = get_schema_file(DatabaseManager.EL2GO_TP)
         schema = schema_file["el2go_tp"]
@@ -596,9 +594,7 @@ class EL2GOTPClient(EL2GOClient):
         return get_families(DatabaseManager.EL2GO_TP)
 
     @classmethod
-    # type: ignore[override]
-    # pylint: disable=arguments-differ
-    def generate_config_template(cls, family: str, revision: str = "latest") -> str:
+    def generate_config_template(cls, family: str, revision: str = "latest") -> str:  # type: ignore[override]  # pylint: disable=arguments-differ
         """Generate configuration YAML template for given family."""
         schema = cls.get_validation_schema(family=family, revision=revision)
         schema["properties"]["family"]["template_value"] = family

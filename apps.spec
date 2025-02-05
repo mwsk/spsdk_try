@@ -61,7 +61,7 @@ for pkg in excluded_imports:
         datas.append((mod_path, os.path.basename(mod_path)))
 
 
-hidden_imports = {"pkg_resources"}
+hidden_imports = {"pkg_resources", "spsdk_pyocd", "spsdk_lauterbach", "pyocd.rtos.threadx"}
 
 
 # List of packages that should have there Distutils entrypoints included.
@@ -99,7 +99,7 @@ def create_runtime_hook_entry_points(
 
 
 entries = create_runtime_hook_entry_points(
-    ["pyocd.probe", "pyocd_pemicro", "pyocd", "pyocd_pemicro"],
+    [],
     template_path="tools/pyinstaller/pyinst_pkg_hook.j2",
 )
 # take from entry items the package name - line is in form "package:class"
