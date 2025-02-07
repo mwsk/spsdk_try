@@ -18,7 +18,6 @@ Release Notes
 
 * BD file support for HAB will be dropped. Only the yaml configuration files will be supported. The conversion from BD file to yaml will be available
 * The obscure way of determination of private key file path from certificate in HAB path will be dropped. The public key will need to be specified explicitly
-* The family and revision will be mandatory in HAB configuration
 * The family will be mandatory for most tools in SPSDK
 * The family option will be moved in most tools to sub-commands
 * Complete redesign handling of configuration files through all SPSDK
@@ -26,7 +25,7 @@ Release Notes
 * The definition of signing local key and signature provider definition in configuration will be implemented into one configuration record
 * All data in database will be unified under one style (utility/registers.py)
 * The configuration option on CLI will be extended by new -oc/--override-config to override any configuration in CLI
-
+* SmartCard Trust Provisioning has been discontinued. Associated aplications (tphost, tpconfig) will be removed.
 
 ------------------------
 2.6.0 (7-February-2025)
