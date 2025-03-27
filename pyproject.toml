@@ -259,6 +259,7 @@ PROTEX_TEMPLATE = "t_reportwithobligations_7215"
 
 [tool.release-tools.blackduck_sca]
 project_name = "spsdk"
+include_detector_types = ["pip"]
 
 [tool.check-wheel-contents]
 ignore = "W002" # Wheel contains duplicate files
