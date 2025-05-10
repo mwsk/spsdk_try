@@ -15,10 +15,11 @@ from typing_extensions import Self
 
 from spsdk.__version__ import version
 from spsdk.crypto.hash import EnumHashAlgorithm, get_hash
-from spsdk.exceptions import SPSDKError, SPSDKValueError
+from spsdk.exceptions import SPSDKError
 from spsdk.image.ahab.ahab_abstract_interfaces import Container, HeaderContainerData
 from spsdk.image.ahab.ahab_data import (
     BINARY_IMAGE_ALIGNMENTS,
+    INT32,
     RESERVED,
     UINT32,
     UINT64,
@@ -30,7 +31,9 @@ from spsdk.image.ahab.ahab_data import (
     AhabTargetMemory,
     load_images_types,
 )
-from spsdk.utils.database import DatabaseManager, Features, get_db
+from spsdk.utils.config import Config
+from spsdk.utils.database import DatabaseManager, Features
+from spsdk.utils.family import FamilyRevision, get_db
 from spsdk.utils.misc import (
     align,
     align_block,
@@ -249,11 +252,15 @@ class ImageArrayEntry(Container):
         self.encrypted_image = input_image if self.already_encrypted_image else b""
 
     @classmethod
-    def format(cls) -> str:
-        """Format of binary representation."""
+    def format(cls, signed_offset: bool = False) -> str:
+        """Format of binary representation.
+
+        :param signed_offset: The Image has signed offset
+        """
+        offset_format = INT32 if signed_offset else UINT32
         return (
             super().format()  # endianness from base class
-            + UINT32  # Image Offset
+            + offset_format  # Image Offset
             + UINT32  # Image Size
             + UINT64  # Load Address
             + UINT64  # Entry Point
@@ -318,10 +325,10 @@ class ImageArrayEntry(Container):
         return flags_data
 
     def get_hash_from_flags(self, flags: int) -> EnumHashAlgorithm:
-        """Get Hash algorithm name from flags.
+        """Get Hash algorithm from flags.
 
         :param flags: Value of flags.
-        :return: Hash name.
+        :return: Hash algorithm.
         """
         hash_val = (flags >> self.FLAGS_HASH_OFFSET) & ((1 << self.FLAGS_HASH_SIZE) - 1)
         return EnumHashAlgorithm.from_label(
@@ -430,7 +437,7 @@ class ImageArrayEntry(Container):
         )
 
     def export(self) -> bytes:
-        """Serializes container object into bytes in little endian.
+        """Export container object into bytes in little endian.
 
         The hash and IV are kept in big endian form.
 
@@ -441,7 +448,7 @@ class ImageArrayEntry(Container):
         # hash is left aligned and padded with zeros due to the '64s' formatter.
         # iv: fixed at 256 bits.
         data = pack(
-            self.format(),
+            self.format(self.chip_config.base.iae_has_signed_offsets),
             self._image_offset,
             self.image_size,
             self.load_address,
@@ -565,7 +572,7 @@ class ImageArrayEntry(Container):
             image_meta_data,
             image_hash,
             image_iv,
-        ) = unpack(cls.format(), data[: cls.fixed_length()])
+        ) = unpack(cls.format(chip_config.base.iae_has_signed_offsets), data[: cls.fixed_length()])
 
         iae = cls(
             chip_config=chip_config,
@@ -595,7 +602,7 @@ class ImageArrayEntry(Container):
         return iae
 
     @classmethod
-    def load_from_config(cls, chip_config: AhabChipContainerConfig, config: dict[str, Any]) -> Self:
+    def load_from_config(cls, chip_config: AhabChipContainerConfig, config: Config) -> Self:
         """Converts the configuration option into an AHAB image array entry object.
 
         "config" content of container configurations.
@@ -604,40 +611,40 @@ class ImageArrayEntry(Container):
         :param config: Configuration of ImageArray.
         :return: Container Header Image Array Entry object.
         """
-        image_path = config.get("image_path")
         image_size_alignment = config.get("image_size_alignment")
-        search_paths = chip_config.base.search_paths
         is_encrypted = config.get("is_encrypted", False)
         meta_data = cls.create_meta(
-            value_to_int(config.get("meta_data_start_cpu_id", 0)),
-            value_to_int(config.get("meta_data_mu_cpu_id", 0)),
-            value_to_int(config.get("meta_data_start_partition_id", 0)),
+            config.get_int("meta_data_start_cpu_id", 0),
+            config.get_int("meta_data_mu_cpu_id", 0),
+            config.get_int("meta_data_start_partition_id", 0),
         )
-        image_data = load_binary(image_path, search_paths=search_paths) if image_path else b""
-        core_id = chip_config.base.core_ids.from_label(config.get("core_id", "Unknown")).tag
+        image_data = (
+            load_binary(config.get_input_file_name("image_path")) if "image_path" in config else b""
+        )
+        core_id = chip_config.base.core_ids.from_label(config.get_str("core_id", "Unknown")).tag
         flags = cls.create_flags(
             image_type=cls.get_image_types(chip_config, core_id)
-            .from_label(config.get("image_type", "executable"))
+            .from_label(config.get_str("image_type", "executable"))
             .tag,
             core_id=core_id,
             hash_type=cls.FLAGS_HASH_ALGORITHM_TYPE.from_label(config.get("hash_type", "sha256")),
             is_encrypted=is_encrypted,
-            boot_flags=value_to_int(config.get("boot_flags", 0)),
+            boot_flags=config.get_int("boot_flags", 0),
         )
 
         if chip_config.base.target_memory == AhabTargetMemory.TARGET_MEMORY_SERIAL_DOWNLOADER:
             image_offset = 0
         else:
-            image_offset = value_to_int(config.get("image_offset", 0))
+            image_offset = config.get_int("image_offset", 0)
 
-        gap_after_image = value_to_int(config.get("gap_after_image", 0))
+        gap_after_image = config.get_int("gap_after_image", 0)
 
         return cls(
             chip_config=chip_config,
             image=image_data,
             image_offset=image_offset,
-            load_address=value_to_int(config.get("load_address", 0)),
-            entry_point=value_to_int(config.get("entry_point", 0)),
+            load_address=config.get_int("load_address", 0),
+            entry_point=config.get_int("entry_point", 0),
             flags=flags,
             image_meta_data=meta_data,
             image_iv=None,  # IV data are updated by UpdateFields function
@@ -645,7 +652,7 @@ class ImageArrayEntry(Container):
             image_size_alignment=image_size_alignment,
         )
 
-    def create_config(self, index: int, image_index: int, data_path: str) -> dict[str, Any]:
+    def get_config(self, index: int, image_index: int, data_path: str) -> Config:
         """Create configuration of the AHAB Image data blob.
 
         :param index: Container index.
@@ -653,7 +660,7 @@ class ImageArrayEntry(Container):
         :param data_path: Path to store the data files of configuration.
         :return: Configuration dictionary.
         """
-        ret_cfg: dict[str, Union[str, int, bool]] = {}
+        ret_cfg = Config()
         image_name = None
         if self.plain_image:
             image_name = clean_up_file_name(
@@ -813,7 +820,7 @@ class ImageArrayEntryTemplates:
         iae_cls: IAE_TYPE,
         binary: bytes,
         chip_config: AhabChipContainerConfig,
-        config: dict[str, Any],
+        config: Config,
     ) -> Union[ImageArrayEntry, ImageArrayEntryV2]:
         """Create Image array entry from config and database information.
 
@@ -883,7 +890,7 @@ class ImageArrayEntryTemplates:
         )
 
     @classmethod
-    def get_default_setting_description(cls, family: str) -> str:
+    def get_default_setting_description(cls, family: FamilyRevision) -> str:
         """Get default settings text description.
 
         :param family: Family name of device
@@ -949,7 +956,7 @@ class ImageArrayEntryTemplates:
         cls,
         iae_cls: IAE_TYPE,
         chip_config: AhabChipContainerConfig,
-        config: dict[str, Any],
+        config: Config,
     ) -> list[Union[ImageArrayEntry, ImageArrayEntryV2]]:
         """Create Image array entry from config and database information.
 
@@ -961,7 +968,7 @@ class ImageArrayEntryTemplates:
         return [
             cls._create_image_array_entry(
                 iae_cls,
-                binary=load_binary(config[cls.KEY], search_paths=chip_config.base.search_paths),
+                binary=load_binary(config.get_input_file_name(cls.KEY)),
                 chip_config=chip_config,
                 config=config,
             )
@@ -972,7 +979,7 @@ class ImageArrayEntryTemplates:
         cls,
         iae_cls: IAE_TYPE,
         chip_config: AhabChipContainerConfig,
-        config: list[dict[str, Any]],
+        config: list[Config],
     ) -> list[Union[ImageArrayEntry, ImageArrayEntryV2]]:
         """Create Image array entry list of records.
 
@@ -1016,7 +1023,7 @@ class IaeDoubleAuthentication(ImageArrayEntryTemplates):
         cls,
         iae_cls: Type[ImageArrayEntry],
         chip_config: AhabChipContainerConfig,
-        config: dict[str, Any],
+        config: Config,
     ) -> list[Union[ImageArrayEntry, ImageArrayEntryV2]]:
         """Create Image array entry from config and database information.
 
@@ -1026,10 +1033,9 @@ class IaeDoubleAuthentication(ImageArrayEntryTemplates):
         :return: Image array entry
         """
         ret = []
-        search_paths = chip_config.base.search_paths
         # load lpddr binary files
         logger.info("Adding Double Authentication NXP firmware image")
-        nxp_image = load_binary(config[cls.KEY], search_paths)
+        nxp_image = load_binary(config.get_input_file_name(cls.KEY))
 
         # Try to get ELE FW
         header = HeaderContainerData.parse(nxp_image)
@@ -1086,7 +1092,7 @@ class IaeSPLDDR(ImageArrayEntryTemplates):
         cls,
         iae_cls: Type[ImageArrayEntry],
         chip_config: AhabChipContainerConfig,
-        config: dict[str, Any],
+        config: Config,
     ) -> list[Union[ImageArrayEntry, ImageArrayEntryV2]]:
         """Create Image array entry from config and database information.
 
@@ -1096,16 +1102,15 @@ class IaeSPLDDR(ImageArrayEntryTemplates):
         :return: Image array entry
         """
         family = chip_config.base.family
-        search_paths = chip_config.base.search_paths
         # get DB for family
         database = get_db(family)
         ddr_binary = b""
         # load lpddr binary files
         logger.info("Adding DDR memory areas into SPL image")
-        lpddr_imem_1d = load_binary(config["lpddr_imem_1d"], search_paths)
-        lpddr_dmem_1d = load_binary(config["lpddr_dmem_1d"], search_paths)
-        lpddr_imem_2d = load_binary(config["lpddr_imem_2d"], search_paths)
-        lpddr_dmem_2d = load_binary(config["lpddr_dmem_2d"], search_paths)
+        lpddr_imem_1d = load_binary(config.get_input_file_name("lpddr_imem_1d"))
+        lpddr_dmem_1d = load_binary(config.get_input_file_name("lpddr_dmem_1d"))
+        lpddr_imem_2d = load_binary(config.get_input_file_name("lpddr_imem_2d"))
+        lpddr_dmem_2d = load_binary(config.get_input_file_name("lpddr_dmem_2d"))
 
         ddr_binaries = [lpddr_imem_1d, lpddr_dmem_1d, lpddr_imem_2d, lpddr_dmem_2d]
         alignments = database.get_list(DatabaseManager.AHAB, "ddr_alignments")
@@ -1119,7 +1124,7 @@ class IaeSPLDDR(ImageArrayEntryTemplates):
         ddr_binary = b"".join(ddr_binaries)
 
         # load ddr fw binary
-        ddr_fw = load_binary(config["spl_ddr"], search_paths)
+        ddr_fw = load_binary(config.get_input_file_name("spl_ddr"))
         ddr_fw_alignment = database.get_value(DatabaseManager.AHAB, "ddr_fw_alignment")
 
         # merge to final binary
@@ -1158,13 +1163,14 @@ class IaeOEIDDR(ImageArrayEntryTemplates):
 
     IMAGE_NAME: str = "OEI DDR"
     KEY: str = "oei_ddr"
+    QB_DATA_SIZE = 64 * 1024
 
     @classmethod
     def create_image_array_entry(
         cls,
         iae_cls: Type[ImageArrayEntry],
         chip_config: AhabChipContainerConfig,
-        config: dict[str, Any],
+        config: Config,
     ) -> list[Union[ImageArrayEntry, ImageArrayEntryV2]]:
         """Create Image array entry from config and database information.
 
@@ -1177,17 +1183,16 @@ class IaeOEIDDR(ImageArrayEntryTemplates):
         def create_fw_header(imem: bytes, dmem: bytes) -> bytes:
             return len(imem).to_bytes(4, "little") + len(dmem).to_bytes(4, "little")
 
-        search_paths = chip_config.base.search_paths
         # load lpddr binary files
-        lpddr_imem = load_binary(config["lpddr_imem"], search_paths)
-        lpddr_dmem = load_binary(config["lpddr_dmem"], search_paths)
+        lpddr_imem = load_binary(config.get_input_file_name("lpddr_imem"))
+        lpddr_dmem = load_binary(config.get_input_file_name("lpddr_dmem"))
+
         quick_boot = config.get("lpddr_imem_qb") and config.get("lpddr_dmem_qb")
-
         if quick_boot:
-            lpddr_imem_qb = load_binary(config["lpddr_imem_qb"], search_paths)
-            lpddr_dmem_qb = load_binary(config["lpddr_dmem_qb"], search_paths)
+            lpddr_imem_qb = load_binary(config.get_input_file_name("lpddr_imem_qb"))
+            lpddr_dmem_qb = load_binary(config.get_input_file_name("lpddr_dmem_qb"))
 
-        binary_image = align_block(load_binary(config["oei_ddr"], search_paths), 4)
+        binary_image = align_block(load_binary(config.get_input_file_name("oei_ddr")), 4)
         # add ddr fw header
         binary_image += create_fw_header(lpddr_imem, lpddr_dmem)
         binary_image += lpddr_imem
@@ -1205,17 +1210,22 @@ class IaeOEIDDR(ImageArrayEntryTemplates):
         ]
 
         if quick_boot:
-            db = get_db(chip_config.base.family, chip_config.base.revision)
+            db = get_db(chip_config.base.family)
+            qb_data_binary = None
             qb_data_mandatory = db.get_bool(
                 DatabaseManager.AHAB, f"{cls.KEY}_qb_data_mandatory", False
             )
             qb_data = config.get("qb_data")
             if qb_data_mandatory and qb_data is None:
-                raise SPSDKValueError("The 'qb_data' is mandatory in this configuration.")
+                logger.debug(
+                    "Quick boot data are mandatory, but not provided, using 64k blank data"
+                )
+                # In case QB data are not provided add 64k blank data
+                qb_data_binary = bytes(cls.QB_DATA_SIZE)
+            elif qb_data:
+                qb_data_binary = load_binary(qb_data, config.search_paths)
 
-            if qb_data:
-                qb_data_binary = load_binary(qb_data, search_paths)
-
+            if qb_data_binary:
                 meta_data = iae_cls.create_meta()
                 image_type = chip_config.base.image_types["application"].from_attr("oei_ddr").tag
 
@@ -1293,7 +1303,7 @@ class IaeUBoot(ImageArrayEntryTemplates):
         cls,
         iae_cls: Type[ImageArrayEntry],
         chip_config: AhabChipContainerConfig,
-        config: dict[str, Any],
+        config: Config,
     ) -> list[Union[ImageArrayEntry, ImageArrayEntryV2]]:
         """Create Image array entry from config and database information.
 
@@ -1302,8 +1312,7 @@ class IaeUBoot(ImageArrayEntryTemplates):
         :param config: Configuration dictionary
         :return: Image array entry
         """
-        search_paths = chip_config.base.search_paths
-        binary_image = load_binary(config[cls.KEY], search_paths)
+        binary_image = load_binary(config.get_input_file_name(cls.KEY))
         spsdk_signature = "SPSDK " + version
         return [
             cls._create_image_array_entry(
@@ -1333,7 +1342,7 @@ class IaeV2XDummy(ImageArrayEntryTemplates):
         cls,
         iae_cls: Type[ImageArrayEntry],
         chip_config: AhabChipContainerConfig,
-        config: dict[str, Any],
+        config: Config,
     ) -> list[Union[ImageArrayEntry, ImageArrayEntryV2]]:
         """Create Image array entry from config and database information.
 

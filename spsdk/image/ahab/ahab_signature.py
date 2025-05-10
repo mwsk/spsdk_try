@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2021-2024 NXP
+# Copyright 2021-2025 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 """Implementation of AHAB container signature support."""
@@ -9,7 +9,7 @@
 
 import logging
 from struct import pack, unpack
-from typing import Any, Optional
+from typing import Optional
 
 from typing_extensions import Self
 
@@ -19,6 +19,7 @@ from spsdk.exceptions import SPSDKError, SPSDKValueError
 from spsdk.image.ahab.ahab_abstract_interfaces import HeaderContainer, HeaderContainerData
 from spsdk.image.ahab.ahab_data import RESERVED, UINT32, AHABTags
 from spsdk.image.ahab.ahab_srk import SRKTable
+from spsdk.utils.config import Config
 from spsdk.utils.misc import BinaryPattern, bytes_to_print
 from spsdk.utils.verifier import Verifier, VerifierResult
 
@@ -201,24 +202,21 @@ class ContainerSignature(HeaderContainer):
         """
         return BinaryPattern("inc").get_block(size)
 
-    @staticmethod
+    @classmethod
     def load_from_config(
-        config: dict[str, Any],
-        search_paths: Optional[list[str]] = None,
+        cls,
+        config: Config,
         srk_table: Optional[SRKTable] = None,
-    ) -> "ContainerSignature":
+    ) -> Self:
         """Converts the configuration option into an AHAB image object.
 
         "config" content of container configurations.
 
         :param config: array of AHAB containers configuration dictionaries.
-        :param search_paths: List of paths where to search for the file, defaults to None
         :param srk_table: SRK table, it is used to determine length of
             the signature if the signature_provider or private key is not used.
         :return: Container signature object.
         """
-        sp_cfg = config.get("signature_provider")
-        pk_cfg = config.get("signing_key")
         signature_provider = None
         signature_data = None
         hash_alg = (
@@ -226,29 +224,19 @@ class ContainerSignature(HeaderContainer):
             if srk_table
             else None
         )
-        if sp_cfg or pk_cfg:
-            signature_provider = get_signature_provider(
-                sp_cfg=sp_cfg,
-                local_file_key=pk_cfg,
-                search_paths=search_paths,
-                pss_padding=True,
-                hash_alg=hash_alg,
-            )
+        if "signer" in config:
+            signature_provider = get_signature_provider(config, pss_padding=True, hash_alg=hash_alg)
         else:
             if not srk_table:
                 raise SPSDKValueError(
                     "In case that private key neither signature provider is used, "
                     "the srk table must be defined to recognize the length of signature."
                 )
-            signature_data = ContainerSignature.get_dummy_signature(
-                srk_table.get_source_keys()[0].signature_size
-            )
+            signature_data = cls.get_dummy_signature(srk_table.get_source_keys()[0].signature_size)
             logger.warning(
                 "The AHAB configuration has not defined signing resources. "
                 "Instead of signature, the place holder will be used. "
                 "The AHAB has to be signed later by re-sign command."
             )
 
-        return ContainerSignature(
-            signature_data=signature_data, signature_provider=signature_provider
-        )
+        return cls(signature_data=signature_data, signature_provider=signature_provider)

@@ -52,6 +52,7 @@ from spsdk.image.ahab.ahab_data import (
     AHABSignHashAlgorithmV2,
     AHABTags,
 )
+from spsdk.utils.config import Config
 from spsdk.utils.misc import (
     Endianness,
     bytes_to_print,
@@ -1009,7 +1010,7 @@ class SRKData(HeaderContainer):
 
             return cls(src_key=public_key, srk_id=srk_id, data=data)
 
-        if isinstance(public_key, PublicKeyDilithium):
+        if isinstance(public_key, (PublicKeyDilithium, PublicKeyMLDSA)):
             data = public_key.public_numbers
             return cls(src_key=public_key, srk_id=srk_id, data=data)
 
@@ -1162,9 +1163,9 @@ class SRKTable(HeaderContainerInverted):
         return ret
 
     def export(self) -> bytes:
-        """Serializes container object into bytes in little endian.
+        """Export SRK table data as bytes.
 
-        :return: bytes representing container content.
+        :return: Bytes representation of SRK table.
         """
         data = pack(self.format(), self.tag, self.length, self.version)
 
@@ -1268,14 +1269,14 @@ class SRKTable(HeaderContainerInverted):
             srk_rec_offset += srk_rec_size
         return ret
 
-    def create_config(self, index: int, data_path: str) -> dict[str, Any]:
+    def get_config(self, data_path: str, index: int) -> Config:
         """Create configuration of the AHAB Image SRK Table.
 
-        :param index: Container Index.
         :param data_path: Path to store the data files of configuration.
+        :param index: Container Index.
         :return: Configuration dictionary.
         """
-        ret_cfg: dict[str, Union[list, bool]] = {}
+        ret_cfg = Config()
         cfg_srk_records = []
 
         ret_cfg["flag_ca"] = bool(self.srk_records[0].srk_flags & self.SRK_RECORD.FLAGS_CA_MASK)
@@ -1294,28 +1295,24 @@ class SRKTable(HeaderContainerInverted):
         return ret_cfg
 
     @classmethod
-    def load_from_config(
-        cls, config: dict[str, Any], search_paths: Optional[list[str]] = None
-    ) -> "SRKTable":
+    def load_from_config(cls, config: Config) -> Self:
         """Converts the configuration option into an AHAB image object.
 
         "config" content of container configurations.
 
         :param config: array of AHAB containers configuration dictionaries.
-        :param search_paths: List of paths where to search for the file, defaults to None
         :return: SRK Table object.
         """
-        srk_table = SRKTable()
+        srk_table = cls()
         flags = 0
         # Allow user to provide flag_ca in configuration
         flag_ca = config.get("flag_ca", False)
         if flag_ca:
             flags |= cls.SRK_RECORD.FLAGS_CA_MASK
-        srk_list = config.get("srk_array")
-        assert isinstance(srk_list, list)
+        srk_list = config.get_list("srk_array")
         for srk_key in srk_list:
             assert isinstance(srk_key, str)
-            srk_key_path = find_file(srk_key, search_paths=search_paths)
+            srk_key_path = find_file(srk_key, search_paths=config.search_paths)
             pub_key = extract_public_key(srk_key_path)
             if hasattr(pub_key, "ca"):
                 flags |= cls.SRK_RECORD.FLAGS_CA_MASK
@@ -1352,15 +1349,12 @@ class SRKTableV2(SRKTable):
     SRK_HASH_ALGORITHM = EnumHashAlgorithm.SHA512
 
     @classmethod
-    def load_from_config(
-        cls, config: dict[str, Any], search_paths: Optional[list[str]] = None
-    ) -> Self:
+    def load_from_config(cls, config: Config) -> Self:
         """Converts the configuration option into an AHAB image object.
 
         "config" content of container configurations.
 
         :param config: array of AHAB containers configuration dictionaries.
-        :param search_paths: List of paths where to search for the file, defaults to None
         :return: SRK Table object.
         """
         srk_table = cls()
@@ -1368,11 +1362,10 @@ class SRKTableV2(SRKTable):
         flag_ca = config.get("flag_ca", False)
         if flag_ca:
             flags |= cls.SRK_RECORD.FLAGS_CA_MASK
-        srk_list = config.get("srk_array")
-        assert isinstance(srk_list, list)
+        srk_list = config.get_list("srk_array")
         for ix, srk_key in enumerate(srk_list):
             assert isinstance(srk_key, str)
-            srk_key_path = find_file(srk_key, search_paths=search_paths)
+            srk_key_path = find_file(srk_key, search_paths=config.search_paths)
             pub_key = extract_public_key(srk_key_path)
             if hasattr(pub_key, "ca"):
                 flags |= cls.SRK_RECORD.FLAGS_CA_MASK
@@ -1382,15 +1375,15 @@ class SRKTableV2(SRKTable):
             )
         return srk_table
 
-    def create_config(self, index: int, data_path: str, srk_table_index: int = 0) -> dict[str, Any]:
+    def get_config(self, data_path: str, index: int, srk_table_index: int = 0) -> Config:
         """Create configuration of the AHAB Image SRK Table.
 
-        :param index: Container Index.
         :param data_path: Path to store the data files of configuration.
+        :param index: Container Index.
         :param srk_table_index: SRK table index, default is 0.
         :return: Configuration dictionary.
         """
-        ret_cfg: dict[str, Union[list, bool]] = {}
+        ret_cfg = Config()
         cfg_srk_records = []
 
         ret_cfg["flag_ca"] = bool(self.srk_records[0].srk_flags & self.SRK_RECORD.FLAGS_CA_MASK)
@@ -1519,15 +1512,15 @@ class SRKTableArray(HeaderContainer):
         :param srk_id: ID of SRK table in case of using multiple Signatures, default is 0.
         :return: SHA512 computed over SRK table.
         """
-        if srk_id > len(self._srk_tables):
+        if srk_id >= len(self._srk_tables):
             raise SPSDKValueError(f"The SRK ID({srk_id}) is out of range.")
         data = self._srk_tables[srk_id].export()
         return get_hash(data=data, algorithm=EnumHashAlgorithm.SHA512)
 
     def export(self) -> bytes:
-        """Serializes container object into bytes in little endian.
+        """Export SRK table array to bytes.
 
-        :return: bytes representing container content.
+        :return: Bytes representation of SRK table array
         """
         data = pack(
             self.format(),
@@ -1628,43 +1621,35 @@ class SRKTableArray(HeaderContainer):
 
         return ret
 
-    def create_config(self, index: int, data_path: str) -> dict[str, Any]:
+    def get_config(self, data_path: str, index: int) -> Config:
         """Create configuration of the AHAB Image SRK Table.
 
-        :param index: Container Index.
         :param data_path: Path to store the data files of configuration.
+        :param index: Container Index.
         :return: Configuration dictionary.
         """
-        ret_cfg: dict[str, Any] = {}
+        ret_cfg = Config()
 
         if len(self._srk_tables) > 0:
-            ret_cfg = self._srk_tables[0].create_config(index, data_path, 0)
+            ret_cfg = self._srk_tables[0].get_config(data_path, index, 0)
         if len(self._srk_tables) > 1:
-            ret_cfg["srk_table_#2"] = self._srk_tables[1].create_config(index, data_path, 1)
+            ret_cfg["srk_table_#2"] = self._srk_tables[1].get_config(data_path, index, 1)
 
         return ret_cfg
 
     @classmethod
-    def load_from_config(
-        cls,
-        config: dict[str, Any],
-        chip_config: AhabChipContainerConfig,
-        search_paths: Optional[list[str]] = None,
-    ) -> Self:
+    def load_from_config(cls, config: Config, chip_config: AhabChipContainerConfig) -> Self:
         """Converts the configuration option into an AHAB image object.
 
         "config" content of container configurations.
 
         :param config: array of AHAB containers configuration dictionaries.
         :param chip_config: AHAB container chip configuration.
-        :param search_paths: List of paths where to search for the file, defaults to None
         :return: SRK Table array object.
         """
         srk_table_array: list[SRKTableV2] = []
-        srk_table_array.append(SRKTableV2.load_from_config(config, search_paths))
+        srk_table_array.append(SRKTableV2.load_from_config(config))
         if "srk_table_#2" in config:
-            srk_table_array.append(
-                SRKTableV2.load_from_config(config["srk_table_#2"], search_paths)
-            )
+            srk_table_array.append(SRKTableV2.load_from_config(config.get_config("srk_table_#2")))
 
         return cls(chip_config=chip_config, srk_tables=srk_table_array)

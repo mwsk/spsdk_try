@@ -47,12 +47,21 @@ class Container(BaseClass):
         raise NotImplementedError("__str__() is not implemented in base AHAB container class")
 
     def export(self) -> bytes:
-        """Serialize object into bytes array."""
+        """Export the container to bytes.
+
+        return: Bytes representation of the container
+        :raises NotImplementedError: If export is not implemented in derived class
+        """
         raise NotImplementedError("export() is not implemented in base AHAB container class")
 
     @classmethod
     def parse(cls, data: bytes) -> Self:
-        """Deserialize object from bytes array."""
+        """Parse binary data into a container object.
+
+        :param data: Binary input data to parse
+        :return: Parsed container object
+        :raises SPSDKParsingError: If parsing fails
+        """
         raise NotImplementedError("parse() is not implemented in base AHAB container class")
 
     @classmethod
@@ -201,11 +210,17 @@ class HeaderContainer(Container):
         ver_length = Verifier("Length")
         ver_length.add_record_bit_range("Range", length, 16, False)
         if object_length is not None:
-            if object_length != length:
+            if object_length > length:
                 ver_length.add_record(
                     "Computed length",
                     VerifierResult.ERROR,
-                    f"The length should be {object_length} and is {length}",
+                    f"The length must be at least {object_length} and is {length}",
+                )
+            elif object_length < length:
+                ver_length.add_record(
+                    "Computed length",
+                    VerifierResult.WARNING,
+                    f"The length of object {object_length} is smaller than container size {length}",
                 )
             else:
                 ver_length.add_record("Computed length", VerifierResult.SUCCEEDED, object_length)

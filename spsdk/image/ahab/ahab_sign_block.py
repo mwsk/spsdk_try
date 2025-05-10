@@ -29,8 +29,8 @@ from spsdk.image.ahab.ahab_data import (
 )
 from spsdk.image.ahab.ahab_signature import ContainerSignature
 from spsdk.image.ahab.ahab_srk import SRKRecordV2, SRKTable, SRKTableArray
-from spsdk.utils.misc import align, bytes_to_print, load_binary, load_configuration, write_file
-from spsdk.utils.schema_validator import CommentedConfig, check_config
+from spsdk.utils.config import Config
+from spsdk.utils.misc import align, bytes_to_print, load_binary, write_file
 from spsdk.utils.verifier import Verifier, VerifierResult
 
 logger = logging.getLogger(__name__)
@@ -457,7 +457,9 @@ class SignatureBlock(HeaderContainer):
             signature_block.srk_assets = None
         try:
             signature_block.certificate = (
-                AhabCertificate.parse(data[certificate_offset:]) if certificate_offset else None
+                AhabCertificate.parse(data[certificate_offset:], chip_config.base.family)
+                if certificate_offset
+                else None
             )
         except SPSDKParsingError:
             signature_block.certificate = None
@@ -548,95 +550,81 @@ class SignatureBlock(HeaderContainer):
         return ret
 
     @classmethod
-    def load_from_config(
-        cls,
-        config: dict[str, Any],
-        chip_config: AhabChipContainerConfig,
-        search_paths: Optional[list[str]] = None,
-    ) -> "SignatureBlock":
+    def load_from_config(cls, config: Config, chip_config: AhabChipContainerConfig) -> Self:
         """Converts the configuration option into an AHAB Signature block object.
 
         "config" content of container configurations.
 
         :param config: array of AHAB signature block configuration dictionaries.
         :param chip_config: AHAB container chip configuration.
-        :param search_paths: List of paths where to search for the file, defaults to None
         :return: AHAB Signature block object.
         """
         signature_block = cls(chip_config=chip_config)
         # SRK Table
-        srk_assets_cfg = config.get("srk_table")
         signature_block.srk_assets = (
-            SRKTable.load_from_config(srk_assets_cfg, search_paths) if srk_assets_cfg else None
+            SRKTable.load_from_config(config.get_config("srk_table"))
+            if "srk_table" in config
+            else None
         )
 
         # Container Signature
-        srk_set = config.get("srk_set", "none")
+        srk_set = config.get_str("srk_set", "none")
         signature_block.signature = (
-            ContainerSignature.load_from_config(config, search_paths, signature_block.srk_assets)
+            ContainerSignature.load_from_config(config, signature_block.srk_assets)
             if srk_set != "none"
             else None
         )
 
         # Certificate Block
         signature_block.certificate = None
-        certificate_cfg = config.get("certificate")
 
-        if certificate_cfg:
+        if "certificate" in config:
             try:
-                cert_cfg = load_configuration(certificate_cfg)
-                check_config(
-                    cert_cfg,
-                    AhabCertificate.get_validation_schemas(
-                        family=chip_config.base.family, revision=chip_config.base.family
-                    ),
-                    search_paths=search_paths,
+                cert_cfg = config.load_sub_config("certificate")
+                cert_cfg.check(
+                    AhabCertificate.get_validation_schemas(family=chip_config.base.family),
+                    check_unknown_props=True,
                 )
                 signature_block.certificate = AhabCertificate.load_from_config(cert_cfg)
             except SPSDKError:
                 # this could be pre-exported binary certificate :-)
                 signature_block.certificate = AhabCertificate.parse(
-                    load_binary(certificate_cfg, search_paths)
+                    load_binary(config.get_input_file_name("certificate")), chip_config.base.family
                 )
 
         # DEK blob
-        blob_cfg = config.get("blob")
         signature_block.blob = (
-            AhabBlob.load_from_config(blob_cfg, search_paths) if blob_cfg else None
+            AhabBlob.load_from_config(config.get_config("blob")) if "blob" in config else None
         )
 
         return signature_block
 
-    def create_config(self, index: int, data_path: str) -> dict[str, Any]:
+    def get_config(self, index: int, data_path: str) -> Config:
         """Create configuration of the AHAB Image.
 
         :param index: Container index.
         :param data_path: Path to store the data files of configuration.
         :return: Configuration dictionary.
         """
-        cfg: dict[str, Any] = {}
+        cfg = Config()
 
         if self.signature:
-            cfg["signing_key"] = "N/A"
+            cfg["signer"] = "N/A"
 
         if self.srk_assets:
-            cfg["srk_table"] = self.srk_assets.create_config(index, data_path)
+            cfg["srk_table"] = self.srk_assets.get_config(data_path, index)
 
         if self.certificate:
-            cert_cfg = self.certificate.create_config(index, data_path, self.chip_config.srk_set)
             write_file(
-                CommentedConfig(
-                    "Parsed AHAB Certificate",
-                    AhabCertificate.get_validation_schemas(
-                        family=self.chip_config.base.family, revision=self.chip_config.base.revision
-                    ),
-                ).get_config(cert_cfg),
+                self.certificate.get_config_yaml(
+                    data_path, index=index, srk_set=self.chip_config.srk_set
+                ),
                 os.path.join(data_path, "certificate.yaml"),
             )
             cfg["certificate"] = "certificate.yaml"
 
         if self.blob:
-            cfg["blob"] = self.blob.create_config(index, data_path)
+            cfg["blob"] = self.blob.get_config(data_path, index)
 
         return cfg
 
@@ -1118,7 +1106,9 @@ class SignatureBlockV2(HeaderContainer):
 
         try:
             signature_block.certificate = (
-                AhabCertificate.parse(data[certificate_offset:]) if certificate_offset else None
+                AhabCertificate.parse(data[certificate_offset:], chip_config.base.family)
+                if certificate_offset
+                else None
             )
         except SPSDKParsingError:
             signature_block.certificate = None
@@ -1213,34 +1203,25 @@ class SignatureBlockV2(HeaderContainer):
         return ret
 
     @classmethod
-    def load_from_config(
-        cls,
-        config: dict[str, Any],
-        chip_config: AhabChipContainerConfig,
-        search_paths: Optional[list[str]] = None,
-    ) -> Self:
+    def load_from_config(cls, config: Config, chip_config: AhabChipContainerConfig) -> Self:
         """Converts the configuration option into an AHAB Signature block object.
 
         "config" content of container configurations.
 
         :param config: array of AHAB signature block configuration dictionaries.
         :param chip_config: AHAB container chip configuration.
-        :param search_paths: List of paths where to search for the file, defaults to None
         :return: AHAB Signature block object.
         """
         signature_block = cls(chip_config=chip_config)
         # SRK Table Array
-        srk_assets_cfg = config.get("srk_table")
         signature_block.srk_assets = (
-            SRKTableArray.load_from_config(
-                srk_assets_cfg, chip_config=chip_config, search_paths=search_paths
-            )
-            if srk_assets_cfg
+            SRKTableArray.load_from_config(config.get_config("srk_table"), chip_config=chip_config)
+            if "srk_table" in config
             else None
         )
 
         # Container Signature
-        srk_set = config.get("srk_set", "none")
+        srk_set = config.get_str("srk_set", "none")
         signature_block.signature = None
         if srk_set != "none":
             if signature_block.srk_assets is None:
@@ -1249,81 +1230,68 @@ class SignatureBlockV2(HeaderContainer):
                     " when the SRK keys are not defined."
                 )
             signature_block.signature = ContainerSignature.load_from_config(
-                config, search_paths, signature_block.srk_assets._srk_tables[0]
+                config, signature_block.srk_assets._srk_tables[0]
             )
             if len(signature_block.srk_assets._srk_tables) == 2:
-                temp_cfg: dict[str, Any] = {}
-                if "signing_key_#2" in config:
-                    temp_cfg["signing_key"] = config["signing_key_#2"]
-                if "signature_provider_#2" in config:
-                    temp_cfg["signature_provider"] = config["signature_provider_#2"]
+                temp_cfg = Config()
+                temp_cfg.search_paths = config.search_paths
+                if "signer_#2" in config:
+                    temp_cfg["signer"] = config["signer_#2"]
                 signature_block.signature_2 = ContainerSignature.load_from_config(
-                    temp_cfg, search_paths, signature_block.srk_assets._srk_tables[1]
+                    temp_cfg, signature_block.srk_assets._srk_tables[1]
                 )
 
         # Certificate Block
         signature_block.certificate = None
-        certificate_cfg = config.get("certificate")
-
-        if certificate_cfg:
+        if "certificate" in config:
             try:
-                cert_cfg = load_configuration(certificate_cfg, search_paths=search_paths)
-                check_config(
-                    cert_cfg,
-                    AhabCertificate.get_validation_schemas(
-                        family=chip_config.base.family, revision=chip_config.base.revision
-                    ),
-                    search_paths=search_paths,
+                cert_cfg = config.load_sub_config("certificate")
+                cert_cfg.check(
+                    AhabCertificate.get_validation_schemas(family=chip_config.base.family),
+                    check_unknown_props=True,
                 )
-                signature_block.certificate = AhabCertificate.load_from_config(
-                    cert_cfg, search_paths=search_paths
-                )
+                signature_block.certificate = AhabCertificate.load_from_config(cert_cfg)
             except SPSDKError:
                 # this could be pre-exported binary certificate :-)
                 signature_block.certificate = AhabCertificate.parse(
-                    load_binary(certificate_cfg, search_paths)
+                    load_binary(config.get_input_file_name("certificate")), chip_config.base.family
                 )
 
         # DEK blob
-        blob_cfg = config.get("blob")
         signature_block.blob = (
-            AhabBlob.load_from_config(blob_cfg, search_paths) if blob_cfg else None
+            AhabBlob.load_from_config(config.get_config("blob")) if "blob" in config else None
         )
 
         return signature_block
 
-    def create_config(self, index: int, data_path: str) -> dict[str, Any]:
+    def get_config(self, index: int, data_path: str) -> Config:
         """Create configuration of the AHAB Image.
 
         :param index: Container index.
         :param data_path: Path to store the data files of configuration.
         :return: Configuration dictionary.
         """
-        cfg: dict[str, Any] = {}
+        cfg = Config()
 
         if self.signature:
-            cfg["signing_key"] = "N/A"
+            cfg["signer"] = "N/A"
 
         if self.signature_2:
-            cfg["signing_key_#2"] = "N/A"
+            cfg["signer_#2"] = "N/A"
 
         if self.srk_assets:
-            cfg["srk_table"] = self.srk_assets.create_config(index, data_path)
+            cfg["srk_table"] = self.srk_assets.get_config(data_path, index)
 
         if self.certificate:
-            cert_cfg = self.certificate.create_config(index, data_path, self.chip_config.srk_set)
             write_file(
-                CommentedConfig(
-                    "Parsed AHAB Certificate",
-                    AhabCertificate.get_validation_schemas(
-                        family=self.chip_config.base.family, revision=self.chip_config.base.revision
-                    ),
-                ).get_config(cert_cfg),
+                self.certificate.get_config_yaml(
+                    data_path, index=index, srk_set=self.chip_config.srk_set
+                ),
                 os.path.join(data_path, "certificate.yaml"),
             )
             cfg["certificate"] = "certificate.yaml"
 
         if self.blob:
-            cfg["blob"] = self.blob.create_config(index, data_path)
+            cfg["blob"] = self.blob.get_config(data_path, index)
 
         return cfg

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2021-2024 NXP
+# Copyright 2021-2025 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 """Implementation of AHAB container encryption blob support."""
@@ -10,7 +10,7 @@
 import logging
 import os
 from struct import pack, unpack
-from typing import Any, Optional
+from typing import Optional
 
 from typing_extensions import Self
 
@@ -21,10 +21,11 @@ from spsdk.crypto.symmetric import (
     sm4_cbc_encrypt,
 )
 from spsdk.ele.ele_constants import KeyBlobEncryptionAlgorithm
-from spsdk.exceptions import SPSDKError, SPSDKValueError
+from spsdk.exceptions import SPSDKError
 from spsdk.image.ahab.ahab_abstract_interfaces import HeaderContainer, HeaderContainerData
 from spsdk.image.ahab.ahab_data import UINT8, AHABTags
-from spsdk.utils.misc import load_hex_string, value_to_int, write_file
+from spsdk.utils.config import Config
+from spsdk.utils.misc import write_file
 from spsdk.utils.spsdk_enum import SpsdkEnum
 from spsdk.utils.verifier import Verifier, VerifierResult
 
@@ -222,14 +223,14 @@ class AhabBlob(HeaderContainer):
         blob._parsed_header = HeaderContainerData.parse(binary=data)
         return blob
 
-    def create_config(self, index: int, data_path: str) -> dict[str, Any]:
+    def get_config(self, data_path: str = "./", index: int = 0) -> Config:
         """Create configuration of the AHAB Image Blob.
 
         :param index: Container Index.
         :param data_path: Path to store the data files of configuration.
         :return: Configuration dictionary.
         """
-        ret_cfg: dict[str, Any] = {}
+        ret_cfg = Config()
         assert isinstance(self.dek_keyblob, bytes)
         filename = f"container{index}_dek_keyblob.bin"
         write_file(self.export(), os.path.join(data_path, filename), "wb")
@@ -240,34 +241,26 @@ class AhabBlob(HeaderContainer):
 
         return ret_cfg
 
-    @staticmethod
-    def load_from_config(
-        config: dict[str, Any], search_paths: Optional[list[str]] = None
-    ) -> "AhabBlob":
+    @classmethod
+    def load_from_config(cls, config: Config) -> Self:
         """Converts the configuration option into an AHAB image signature block blob object.
 
         "config" content of container configurations.
 
         :param config: Blob configuration
-        :param search_paths: List of paths where to search for the file, defaults to None
         :raises SPSDKValueError: Invalid configuration - Invalid DEK KeyBlob
         :return: Blob object.
         """
-        dek_size = value_to_int(config.get("dek_key_size", 128))
-        dek_input = config.get("dek_key")
-        dek_keyblob_input = config.get("dek_keyblob")
-        key_identifier = config.get("key_identifier", 0)
-        if not dek_input:
-            raise SPSDKValueError("Invalid configuration - Missing DEK key")
+        dek_size = config.get_int("dek_key_size", 128)
+        dek = config.load_symmetric_key("dek_key", expected_size=dek_size // 8)
+        key_identifier = config.get_int("key_identifier", 0)
 
-        dek = load_hex_string(dek_input, dek_size // 8, search_paths)
-
-        if dek_keyblob_input is None:
+        if "dek_keyblob" not in config:
             logger.warning(
                 "The keyblob has not been specified. The empty keyblob placeholder has been used in container."
             )
             # Create empty DEK keyblob as a placeholder
-            return AhabBlob(
+            return cls(
                 size=dek_size,
                 flags=AhabBlob.FLAGS_DEK,
                 dek_keyblob=bytes(48 + dek_size // 8),
@@ -277,13 +270,11 @@ class AhabBlob(HeaderContainer):
                 algorithm=KeyBlobEncryptionAlgorithm.AES_CBC,
             )
 
-        dek_keyblob_value = load_hex_string(
-            dek_keyblob_input, AhabBlob.compute_keyblob_size(dek_size) + 8, search_paths
+        dek_keyblob = config.load_symmetric_key(
+            "dek_keyblob", cls.compute_keyblob_size(dek_size) + 8
         )
-        if not dek_keyblob_value:
-            raise SPSDKValueError("Invalid DEK KeyBlob.")
 
-        keyblob = AhabBlob.parse(dek_keyblob_value)
+        keyblob = cls.parse(dek_keyblob)
         keyblob.dek = dek
         keyblob.key_identifier = key_identifier
 
