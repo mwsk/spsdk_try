@@ -51,10 +51,10 @@ class ContainerSignature(HeaderContainer):
         signature_data: Optional[bytes] = None,
         signature_provider: Optional[SignatureProvider] = None,
     ) -> None:
-        """Class object initializer.
+        """Initialize ContainerSignature object.
 
-        :param signature_data: signature.
-        :param signature_provider: Signature provider use to sign the image.
+        :param signature_data: Signature data.
+        :param signature_provider: Signature provider used to sign the image.
         """
         super().__init__(tag=self.TAG, length=-1, version=self.VERSION)
         self._signature_data = signature_data or b""
@@ -92,7 +92,7 @@ class ContainerSignature(HeaderContainer):
     def signature_data(self) -> bytes:
         """Get the signature data.
 
-        :return: signature data.
+        :return: Signature data.
         """
         return self._signature_data
 
@@ -100,20 +100,23 @@ class ContainerSignature(HeaderContainer):
     def signature_data(self, value: bytes) -> None:
         """Set the signature data.
 
-        :param value: signature data.
+        :param value: Signature data.
         """
         self._signature_data = value
         self.length = len(self)
 
     @classmethod
     def format(cls) -> str:
-        """Format of binary representation."""
+        """Get format of binary representation.
+
+        :return: Format string for struct operations.
+        """
         return super().format() + UINT32  # reserved
 
     def sign(self, data_to_sign: bytes) -> None:
-        """Sign the data_to_sign and store signature into class.
+        """Sign the data and store signature into class.
 
-        :param data_to_sign: Data to be signed by store private key
+        :param data_to_sign: Data to be signed by stored private key.
         :raises SPSDKError: Missing private key or raw signature data.
         """
         if not self.signature_provider and len(self._signature_data) == 0:
@@ -127,7 +130,7 @@ class ContainerSignature(HeaderContainer):
     def export(self) -> bytes:
         """Export signature data that is part of Signature Block.
 
-        :return: bytes representing container signature content.
+        :return: Bytes representing container signature content.
         """
         if len(self) == 0:
             return b""
@@ -146,7 +149,10 @@ class ContainerSignature(HeaderContainer):
         return data
 
     def verify(self) -> Verifier:
-        """Verify container signature data."""
+        """Verify container signature data.
+
+        :return: Verifier object with verification results.
+        """
 
         def verify_data() -> None:
             if self._signature_data is None:
@@ -208,14 +214,13 @@ class ContainerSignature(HeaderContainer):
         config: Config,
         srk_table: Optional[SRKTable] = None,
     ) -> Self:
-        """Converts the configuration option into an AHAB image object.
+        """Convert the configuration options into a ContainerSignature object.
 
-        "config" content of container configurations.
-
-        :param config: array of AHAB containers configuration dictionaries.
-        :param srk_table: SRK table, it is used to determine length of
-            the signature if the signature_provider or private key is not used.
+        :param config: Array of AHAB containers configuration dictionaries.
+        :param srk_table: SRK table, used to determine length of the signature if the
+            signature_provider or private key is not used.
         :return: Container signature object.
+        :raises SPSDKValueError: When srk_table is not defined but needed.
         """
         signature_provider = None
         signature_data = None

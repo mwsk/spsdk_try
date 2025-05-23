@@ -6,11 +6,19 @@
 # SPDX-License-Identifier: BSD-3-Clause
 """Implementation of raw AHAB container support.
 
-This module represents a generic AHAB container implementation. You can set the
-containers values at will. From this perspective, consult with your reference
-manual of your device for allowed values.
-"""
+This module represents a generic AHAB container implementation for NXP's Advanced
+High-Assurance Boot architecture. It provides classes to create, parse, and manipulate
+AHAB containers with customizable parameters.
 
+The implementation supports various container versions and configurations, including:
+- Basic AHAB containers with signature verification
+- Encrypted firmware images
+- Multiple image entries within a container
+- SRK (Super Root Key) management for secure boot chain
+
+Consult with your device reference manual for allowed values and specific requirements
+for your target hardware.
+"""
 
 import logging
 from struct import pack, unpack
@@ -48,9 +56,9 @@ logger = logging.getLogger(__name__)
 
 
 class AHABContainerBase(HeaderContainer):
-    """Class representing AHAB container base class (common for Signed messages and AHAB Image).
+    """Base class representing AHAB container (common for Signed messages and AHAB Image).
 
-    Container header::
+    Container header structure::
 
         +---------------+----------------+----------------+----------------+
         |    Byte 3     |     Byte 2     |      Byte 1    |     Byte 0     |
@@ -68,6 +76,8 @@ class AHABContainerBase(HeaderContainer):
         |                      Signature block                             |
         +------------------------------------------------------------------+
 
+    This class provides the foundation for all AHAB container implementations,
+    handling the common header format, signature verification, and configuration.
     """
 
     SIGNATURE_BLOCK = SignatureBlock

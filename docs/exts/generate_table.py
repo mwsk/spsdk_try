@@ -60,6 +60,7 @@ NXPIMAGE_FEATURES_MAPPING = {
     "xmcd": "External Memory Configuration Data (XMCD)",
     "sb21": "Secure Binary 2.1",
     "sb31": "Secure Binary 3.1",
+    "sbc": "Secure Binary C",
 }
 OTHER_FEATURES_MAPPING = {
     "dat": "nxpdebugmbox",
@@ -71,6 +72,7 @@ OTHER_FEATURES_MAPPING = {
     "el2go_tp": "el2go-host",
     "dice": "nxpdice",
     "fuse_tool": "nxpfuses",
+    "she_scec": "nxpshe",
 }
 ALL_FEATURES_MAPPING = {**NXPIMAGE_FEATURES_MAPPING, **OTHER_FEATURES_MAPPING}
 SUPPORTED_CHAR = "\u2705"

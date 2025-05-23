@@ -272,6 +272,15 @@ The nxpuuu CLI application is designed for image deployment based on the libUUU 
 
     nxpuuu --help
 
+:ref:`nxpshe`
+=================
+
+The nxpshe CLI application is a tool for working with NXP's Secure Hardware Extension (SHE) protocol.
+
+.. code:: bash
+
+    nxpshe --help
+
 -------------------------------
 Deleted/deprecated applications
 -------------------------------

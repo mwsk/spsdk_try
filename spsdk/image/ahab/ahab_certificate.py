@@ -48,7 +48,7 @@ def get_key_by_val(dictionary: dict, val: Any) -> Any:
 
 
 class AhabCertificate(FeatureBaseClass, HeaderContainer):
-    """Class representing certificate in the AHAB container as part of the signature block.
+    """Represents certificate in the AHAB container as part of the signature block.
 
     The Certificate comes in two forms - with and without UUID.
 
@@ -199,6 +199,11 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
         )
 
     def __len__(self) -> int:
+        """Calculate the total length of the certificate.
+
+        :raises SPSDKValueError: When certificate is not properly initialized.
+        :return: Total length of the certificate in bytes.
+        """
         if not (self.public_key_0 and self.public_key_0.srk_data and self.signature_0):
             raise SPSDKValueError("Certificate is not properly initialized.")
         ret = (
@@ -230,7 +235,10 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
 
     @property
     def permission_to_sign_container(self) -> bool:
-        """Certificate has permission to sign container."""
+        """Check if certificate has permission to sign container.
+
+        :return: True if certificate has permission to sign container, False otherwise.
+        """
         return bool(self._permissions & self.PERM_OEM["container"])
 
     def create_config_permissions(self, srk_set: FlagsSrkSet) -> list[str]:
@@ -253,14 +261,13 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
         return ret
 
     def get_signature_data(self) -> bytes:
-        """Returns binary data to be signed.
+        """Return binary data to be signed.
 
         The certificate block must be properly initialized, so the data are valid for
         signing. There is signed whole certificate block without signature part.
 
-
-        :raises SPSDKValueError: if Signature Block or SRK Table is missing.
-        :return: bytes representing data to be signed.
+        :raises SPSDKValueError: If Signature Block or SRK Table is missing.
+        :return: Bytes representing data to be signed.
         """
         assert isinstance(self.public_key_0, SRKRecordV2)
         cert_data_to_sign = pack(
@@ -289,7 +296,7 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
         return cert_data_to_sign
 
     def update_fields(self) -> None:
-        """Update all fields depended on input values."""
+        """Update all fields depending on input values."""
         assert isinstance(self.public_key_0, SRKRecordV2)
         assert isinstance(self.public_key_0.srk_data, SRKData)
         self.public_key_0.update_fields()
@@ -310,7 +317,7 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
     def export(self) -> bytes:
         """Export container certificate object into bytes.
 
-        :return: bytes representing container content.
+        :return: Bytes representing container content.
         """
         cert = self.get_signature_data()
         cert += self.signature_0.export()
@@ -326,6 +333,7 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
         """Verify container certificate data.
 
         :param srk: SRK table to allow verify also signature of certificate.
+        :return: Verifier object with verification results.
         """
         ret = Verifier("Certificate", description="")
         ret.add_child(self.verify_parsed_header())

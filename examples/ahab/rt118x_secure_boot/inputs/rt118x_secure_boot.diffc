@@ -5,8 +5,7 @@ user_cfg: inputs/config_signed_fspi1.yaml
 custom_command: "%! nxpimage ahab get-template -f mimxrt1189 -o workspace/ahab_template.yaml --force"
 
 comments:
-  target_memory: "Change the target memory to serial downloader"
-  ahab_container: "Define the path to the EdgeLock Enclave Firmware container (And clean up the comments about possible options of container definitions)"
+  ahab_container: "In example is omitted the EdgeLock Enclave Firmware container (And clean up the comments about possible options of container definitions)"
   output: "Change the output file name"
   srk_set: "Change srk_set to OEM to sign the image with OEM SRK"
   gdet_runtime_behavior: "This might be deleted, it is not used on RT1180"

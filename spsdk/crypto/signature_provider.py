@@ -51,7 +51,7 @@ class SignatureProvider(abc.ABC):
 
     # Subclasses override the following signature provider type
     identifier = "INVALID"
-    reserved_keys = ["type", "identifier", "search_paths", "pss_padding"]
+    reserved_keys = ["type", "identifier", "search_paths"]
     legacy_identifier_name = "sp_type"
 
     def __init_subclass__(cls) -> None:

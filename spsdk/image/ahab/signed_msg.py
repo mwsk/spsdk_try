@@ -4,12 +4,19 @@
 # Copyright 2021-2025 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
-"""Implementation of raw AHAB container support.
+"""AHAB signed message implementation.
 
-This module represents a generic AHAB container implementation. You can set the
-containers values at will. From this perspective, consult with your reference
-manual of your device for allowed values.
+This module provides classes and functions to create, parse, and manipulate AHAB
+(Advanced High Assurance Boot) signed messages. The implementation supports various
+message types such as key provisioning, lifecycle management, secure fuse operations,
+and debug authentication.
+
+Signed messages are used for secure communication with NXP devices that support
+EdgeLock security features. The module allows customization of container values
+according to device-specific requirements - consult your device reference manual
+for allowed values and message formats.
 """
+
 import datetime
 import logging
 from abc import abstractmethod

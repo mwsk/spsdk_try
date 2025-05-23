@@ -81,14 +81,13 @@ class SignatureBlock(HeaderContainer):
         certificate: Optional[AhabCertificate] = None,
         blob: Optional[AhabBlob] = None,
     ):
-        """Class object initializer.
+        """Initialize the signature block object.
 
         :param chip_config: AHAB container chip configuration.
         :param srk_assets: SRK table.
-        :param chip_config: AHAB container chip configuration.
-        :param container_signature: container signature.
-        :param certificate: container certificate.
-        :param blob: container blob.
+        :param container_signature: Container signature.
+        :param certificate: Container certificate.
+        :param blob: Container blob.
         """
         super().__init__(tag=self.TAG, length=-1, version=self.VERSION)
         self._srk_assets_offset = 0
@@ -102,9 +101,9 @@ class SignatureBlock(HeaderContainer):
         self.chip_config = chip_config
 
     def __eq__(self, other: object) -> bool:
-        """Compares for equality with other Signature Block objects.
+        """Compare for equality with other Signature Block objects.
 
-        :param other: object to compare with.
+        :param other: Object to compare with.
         :return: True on match, False otherwise.
         """
         if isinstance(other, SignatureBlock):
@@ -124,14 +123,26 @@ class SignatureBlock(HeaderContainer):
         return False
 
     def __len__(self) -> int:
+        """Get the length of the signature block.
+
+        :return: Length of the signature block in bytes.
+        """
         if self.length <= 0:
             self.update_fields()
         return self.length
 
     def __repr__(self) -> str:
+        """Get the string representation of the object.
+
+        :return: String representation.
+        """
         return "AHAB Signature Block"
 
     def __str__(self) -> str:
+        """Get the readable string representation of the object.
+
+        :return: Readable string representation.
+        """
         return (
             "AHAB Signature Block:\n"
             f"  SRK Table:          {bool(self.srk_assets)}\n"
@@ -142,7 +153,10 @@ class SignatureBlock(HeaderContainer):
 
     @classmethod
     def format(cls) -> str:
-        """Format of binary representation."""
+        """Get the format of binary representation.
+
+        :return: Format string for struct operations.
+        """
         return (
             super().format()
             + UINT16  # certificate offset
@@ -153,7 +167,7 @@ class SignatureBlock(HeaderContainer):
         )
 
     def update_fields(self) -> None:
-        """Update all fields depended on input values."""
+        """Update all fields dependent on input values."""
         # 1: Update SRK Table
         # Nothing to do with SRK Table
         last_offset = 0
@@ -198,16 +212,20 @@ class SignatureBlock(HeaderContainer):
         self.length = last_offset + last_block_size
 
     def sign_itself(self, data_to_sign: bytes) -> None:
-        """Sign itself if needed."""
+        """Sign the container with provided data.
+
+        :param data_to_sign: Data to be signed.
+        :raises SPSDKError: When signature container is missing.
+        """
         if not self.signature:
             raise SPSDKError("Cannot sign because the Signature container is missing.")
         self.signature.sign(data_to_sign)
 
     def export(self) -> bytes:
-        """Export Signature block.
+        """Export signature block as binary data.
 
-        :raises SPSDKLengthError: if exported data length doesn't match container length.
-        :return: bytes signature block content.
+        :return: Binary representation of the signature block.
+        :raises SPSDKLengthError: If exported data length doesn't match container length.
         """
         extended_header = pack(
             self.format(),
@@ -245,7 +263,7 @@ class SignatureBlock(HeaderContainer):
     def verify(self) -> Verifier:
         """Verify container signature block data.
 
-        :return: Verifier object
+        :return: Verifier object with verification results.
         """
 
         def verify_block(
@@ -322,10 +340,10 @@ class SignatureBlock(HeaderContainer):
         return ret
 
     def verify_container_authenticity(self, data_to_sign: bytes) -> Verifier:
-        """Verify container authenticity.
+        """Verify container authenticity using signature verification.
 
-        :param data_to_sign: Data to sign provided by container.
-        :return: Verifier object with result.
+        :param data_to_sign: Data to verify signature against, provided by container.
+        :return: Verifier object with verification results.
         """
 
         def verify_signature() -> None:
@@ -413,7 +431,7 @@ class SignatureBlock(HeaderContainer):
         ver_sign.add_record(
             "SRK Table & Signature block presence", bool(self.srk_assets and self.signature)
         )
-        used_image_key = self.certificate and self.certificate.permission_to_sign_container
+        used_image_key = bool(self.certificate and self.certificate.permission_to_sign_container)
         ver_sign.add_record(
             "Signed source", True, "Certificate image key" if used_image_key else "SRK key"
         )
@@ -784,7 +802,13 @@ class SignatureBlockV2(HeaderContainer):
         self.length = last_offset + last_block_size
 
     def sign_itself(self, data_to_sign: bytes) -> None:
-        """Sign itself if needed."""
+        """Sign the container with provided data.
+
+        Signs both the primary and secondary (PQC) signatures if applicable.
+
+        :param data_to_sign: Data to be signed.
+        :raises SPSDKError: When signature container or SRK table array is missing.
+        """
         if not self.signature:
             raise SPSDKError("Cannot sign because the Signature container is missing.")
         if not self.srk_assets:
@@ -1014,7 +1038,7 @@ class SignatureBlockV2(HeaderContainer):
                 elif public_key is not None:
                     sign_ok = public_key.verify_signature(
                         signature_container.signature_data,
-                        bytes(data_to_sign),
+                        data_to_sign,
                         algorithm=EnumHashAlgorithm.from_label(
                             self.srk_assets._srk_tables[i].srk_records[0].hash_algorithm.label
                         ),
@@ -1056,7 +1080,7 @@ class SignatureBlockV2(HeaderContainer):
         ret.add_record(
             "SRK Table & Signature block presence", bool(self.srk_assets and self.signature)
         )
-        used_image_key = self.certificate and self.certificate.permission_to_sign_container
+        used_image_key = bool(self.certificate and self.certificate.permission_to_sign_container)
         ret.add_record(
             "Signed source", True, "Certificate image key" if used_image_key else "SRK key"
         )

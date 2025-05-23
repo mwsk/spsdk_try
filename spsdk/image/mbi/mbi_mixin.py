@@ -1366,9 +1366,7 @@ class Mbi_MixinBca(Mbi_Mixin):
 
         :param family: Family revision to get schemas
         """
-        bca_dict = BCA.get_validation_schemas(family)[1]
-        bca_dict.pop("required")
-        bca_dict["title"] = "BCA Configuration (Boot Configuration Array)"
+        bca_dict = BCA.get_validation_schemas(family)[1]["properties"]["bca"]
         bca_dict["skip_in_template"] = True
 
         bca_file = {

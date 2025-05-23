@@ -1996,6 +1996,10 @@ Weblink: `mcxa275 <https://www.nxp.com/products/processors-and-microcontrollers/
     +------------------------------+-------+
     |:ref:`Bootable image`         |✅     |
     +------------------------------+-------+
+    |:ref:`nxpdevhsm`              |✅     |
+    +------------------------------+-------+
+    |:ref:`Secure Binary C`        |✅     |
+    +------------------------------+-------+
 
 Similar examples for mbi
 
@@ -2019,6 +2023,11 @@ Similar examples for blhost
 Similar examples for bootable_image
 
 * `RW61x Bootable Image <examples\bootable_image\rw61x\rw61x_bootable_image.ipynb>`__
+
+
+Similar examples for devhsm
+
+* `MC56F81xxx/MWCT2xxx Device HSM and Secure Boot <examples\devhsm\mc56_devhsm\mc56_devhsm.ipynb>`__
 
 
 mcxa276
@@ -2045,6 +2054,10 @@ Weblink: `mcxa276 <https://www.nxp.com/products/processors-and-microcontrollers/
     +------------------------------+-------+
     |:ref:`Bootable image`         |✅     |
     +------------------------------+-------+
+    |:ref:`nxpdevhsm`              |✅     |
+    +------------------------------+-------+
+    |:ref:`Secure Binary C`        |✅     |
+    +------------------------------+-------+
 
 Similar examples for mbi
 
@@ -2068,6 +2081,11 @@ Similar examples for blhost
 Similar examples for bootable_image
 
 * `RW61x Bootable Image <examples\bootable_image\rw61x\rw61x_bootable_image.ipynb>`__
+
+
+Similar examples for devhsm
+
+* `MC56F81xxx/MWCT2xxx Device HSM and Secure Boot <examples\devhsm\mc56_devhsm\mc56_devhsm.ipynb>`__
 
 
 mcxa345
@@ -2094,6 +2112,10 @@ Weblink: `mcxa345 <https://www.nxp.com/products/processors-and-microcontrollers/
     +------------------------------+-------+
     |:ref:`Bootable image`         |✅     |
     +------------------------------+-------+
+    |:ref:`nxpdevhsm`              |✅     |
+    +------------------------------+-------+
+    |:ref:`Secure Binary C`        |✅     |
+    +------------------------------+-------+
 
 Similar examples for mbi
 
@@ -2117,6 +2139,11 @@ Similar examples for blhost
 Similar examples for bootable_image
 
 * `RW61x Bootable Image <examples\bootable_image\rw61x\rw61x_bootable_image.ipynb>`__
+
+
+Similar examples for devhsm
+
+* `MC56F81xxx/MWCT2xxx Device HSM and Secure Boot <examples\devhsm\mc56_devhsm\mc56_devhsm.ipynb>`__
 
 
 mcxa346
@@ -2143,6 +2170,10 @@ Weblink: `mcxa346 <https://www.nxp.com/products/processors-and-microcontrollers/
     +------------------------------+-------+
     |:ref:`Bootable image`         |✅     |
     +------------------------------+-------+
+    |:ref:`nxpdevhsm`              |✅     |
+    +------------------------------+-------+
+    |:ref:`Secure Binary C`        |✅     |
+    +------------------------------+-------+
 
 Similar examples for mbi
 
@@ -2166,6 +2197,11 @@ Similar examples for blhost
 Similar examples for bootable_image
 
 * `RW61x Bootable Image <examples\bootable_image\rw61x\rw61x_bootable_image.ipynb>`__
+
+
+Similar examples for devhsm
+
+* `MC56F81xxx/MWCT2xxx Device HSM and Secure Boot <examples\devhsm\mc56_devhsm\mc56_devhsm.ipynb>`__
 
 
 mcxa355
@@ -2192,6 +2228,10 @@ Weblink: `mcxa355 <https://www.nxp.com/products/processors-and-microcontrollers/
     +------------------------------+-------+
     |:ref:`Bootable image`         |✅     |
     +------------------------------+-------+
+    |:ref:`nxpdevhsm`              |✅     |
+    +------------------------------+-------+
+    |:ref:`Secure Binary C`        |✅     |
+    +------------------------------+-------+
 
 Similar examples for mbi
 
@@ -2215,6 +2255,11 @@ Similar examples for blhost
 Similar examples for bootable_image
 
 * `RW61x Bootable Image <examples\bootable_image\rw61x\rw61x_bootable_image.ipynb>`__
+
+
+Similar examples for devhsm
+
+* `MC56F81xxx/MWCT2xxx Device HSM and Secure Boot <examples\devhsm\mc56_devhsm\mc56_devhsm.ipynb>`__
 
 
 mcxa356
@@ -2241,6 +2286,10 @@ Weblink: `mcxa356 <https://www.nxp.com/products/processors-and-microcontrollers/
     +------------------------------+-------+
     |:ref:`Bootable image`         |✅     |
     +------------------------------+-------+
+    |:ref:`nxpdevhsm`              |✅     |
+    +------------------------------+-------+
+    |:ref:`Secure Binary C`        |✅     |
+    +------------------------------+-------+
 
 Similar examples for mbi
 
@@ -2264,6 +2313,11 @@ Similar examples for blhost
 Similar examples for bootable_image
 
 * `RW61x Bootable Image <examples\bootable_image\rw61x\rw61x_bootable_image.ipynb>`__
+
+
+Similar examples for devhsm
+
+* `MC56F81xxx/MWCT2xxx Device HSM and Secure Boot <examples\devhsm\mc56_devhsm\mc56_devhsm.ipynb>`__
 
 
 mcxc041
@@ -2627,11 +2681,11 @@ Weblink: `mcxe247 <https://placeholder.com>`_
 
 .. table::
 
-    +---------------+-------+
-    |    Feature    |Support|
-    +===============+=======+
-    |:ref:`she_scec`|✅     |
-    +---------------+-------+
+    +-------------+-------+
+    |   Feature   |Support|
+    +=============+=======+
+    |:ref:`nxpshe`|✅     |
+    +-------------+-------+
 
 mcxn235
 --------------------------

@@ -4,7 +4,23 @@
 # Copyright 2021-2025 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
-"""Implementation of AHAB container SRK (Super Root Keys) support."""
+"""Implementation of AHAB container SRK (Super Root Keys) support.
+
+This module provides classes and functionality for creating, parsing, verifying and exporting
+Super Root Keys used in AHAB (Advanced High Assurance Boot) secure boot implementations.
+The module supports multiple cryptographic algorithms including RSA, ECDSA, SM2, and
+post-quantum cryptography (Dilithium/ML-DSA).
+
+The main classes are:
+- SRKRecordBase: Base class for SRK records
+- SRKRecord: Class for SRK records version 1
+- SRKRecordV2: Enhanced version supporting post-quantum cryptography
+- SRKData: Class for storing key data
+- SRKTable: Class representing a table of SRK records
+- SRKTableV2: Enhanced SRK table supporting PQC keys
+- SRKTableArray: Class managing multiple SRK tables
+"""
+
 
 import logging
 import math
@@ -113,16 +129,18 @@ class SRKRecordBase(HeaderContainerInverted):
     RSA_KEY_TYPE = {2048: 0x5, 3072: 0x6, 4096: 0x7}
     SM2_KEY_TYPE = 0x8
     DILITHIUM_KEY_TYPE = {3: 0x9, 5: 0xA}
+
+    # Dictionary of key sizes for different algorithms.
     KEY_SIZES = {
-        0x1: (32, 32),  # PRIME256V1
-        0x2: (48, 48),  # SEC384R1
-        0x3: (66, 66),  # SEC521R1
-        0x5: (256, 4),  # RSA2048
-        0x6: (384, 4),  # RSA3072
-        0x7: (512, 4),  # RSA4096
-        0x8: (32, 32),  # SM2
-        0x9: (1952, 0),  # Dilithium 3 / ML-DSA-65
-        0xA: (2592, 0),  # Dilithium 5 / ML-DSA-87
+        0x1: (32, 32),  # PRIME256V1: (32, 32) bytes for X and Y coordinates
+        0x2: (48, 48),  # SEC384R1: (48, 48) bytes for X and Y coordinates
+        0x3: (66, 66),  # SEC521R1: (66, 66) bytes for X and Y coordinates
+        0x5: (256, 4),  # RSA2048: (256, 4) bytes for modulus and exponent
+        0x6: (384, 4),  # RSA3072: (384, 4) bytes for modulus and exponent
+        0x7: (512, 4),  # RSA4096: (512, 4) bytes for modulus and exponent
+        0x8: (32, 32),  # SM2: (32, 32) bytes for X and Y coordinates
+        0x9: (1952, 0),  # Dilithium 3 / ML-DSA-65: (1952, 0) bytes for raw key data
+        0xA: (2592, 0),  # Dilithium 5 / ML-DSA-87: (2592, 0) bytes for raw key data
     }
 
     FLAGS_CA_MASK = 0x80
@@ -178,7 +196,12 @@ class SRKRecordBase(HeaderContainerInverted):
 
     @property
     def signing_algorithm(self) -> AHABSignAlgorithm:
-        """Get signing algorithm."""
+        """Return the signing algorithm used by this SRK record.
+
+        Converts the internal version tag into the corresponding AHABSignAlgorithm enum value.
+
+        :return: The signing algorithm as an AHABSignAlgorithm enum value
+        """
         return self.SIGN_ALGORITHM_ENUM.from_tag(self.version)
 
     def __eq__(self, other: object) -> bool:
@@ -718,11 +741,11 @@ class SRKRecordV2(SRKRecordBase):
                         "SRK Data Crypto parameter 2", VerifierResult.ERROR, "Not exists"
                     )
 
-                elif len(crypto_param2) != self.KEY_SIZES[self.key_size][0]:
+                elif len(crypto_param2) != self.KEY_SIZES[self.key_size][1]:
                     ret.add_record(
                         "SRK Data Crypto parameter 2",
                         VerifierResult.ERROR,
-                        f"Invalid length: {len(crypto_param2)} != {self.KEY_SIZES[self.key_size][0]}",
+                        f"Invalid length: {len(crypto_param2)} != {self.KEY_SIZES[self.key_size][1]}",
                     )
                 else:
                     ret.add_record(

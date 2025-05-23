@@ -129,6 +129,14 @@ SBFile Version X - DEVHSM
 
 SBFile Version C
 -----------------
+.. automodule:: spsdk.sbfile.sbc   
+   :no-index:
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+SBFile Version C - images
+---------------------------
 .. automodule:: spsdk.sbfile.sbc.images
    :members:
    :undoc-members:

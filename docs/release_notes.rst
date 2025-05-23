@@ -10,6 +10,93 @@
 Release Notes
 =============
 
+--------------------
+3.0.0 (16-May-2025)
+--------------------
+
+**ANNOUNCEMENT**
+
+Current version introduces breaking changes, which are described in details in `migration guide`_.
+
+**New features**
+
+* :ref:`el2go-host`:
+    - check UUID fuse index
+* :ref:`ifr`:
+    - move into `pfr`_ application
+* :ref:`nxpcrypto`:
+    - allow adding image key into existing PKI tree
+    - remove nxpcertgen application (all functionality is now available in nxpcrypto application)
+    - consolidate options ``-k/--private-key`` and ``-sp/--signature-provider`` replace with option ``-s/--signer``
+* :ref:`nxpdebugmbox`:
+    - move commands to separated groups with clearer organization
+    - move parameter --family from the root command to individual command groups
+    - derive test address from the family parameter
+* :ref:`nxpdevhsm`:
+    - require oemRandomShare when oemEncMasterShare is defined
+    - add new format for sbfile for mcxa family devices with secure installer/extended bootloader
+* :ref:`nxpimage`:
+    - generate fuse script when merging signed image
+    - add unicode characters for better BinaryImage visualization
+    - remove the deprecated 'image_type' key in ahab configuration and replace by 'target_memory'
+    - remove input_binary and base_address parameters from bee
+    - rename merge commands in bootable-image and binary-image to export
+    - remove 'mainCertChainId' key in cert-block configuration by 'mainRootCertId'
+    - replace hab export /parse commands with unified configuration approach
+    - implement SB3.1 data compression
+    - add parser of SB3.1 
+    - consolidate all keys for data of SB3.1 load command into one
+    - simplify load command configuration
+    - simplify input data values
+* `pfr`_:
+    - remove option --show-calc from parse/read commands
+    - remove option --calc-inverse from generte binary command
+    - rename generate-binary command to export
+    - rename parse-binary command to parse
+    - require 'family' in BD file for SB2.1 and optionally 'revision' in the 'options' block
+* :ref:`tphost`/:ref:`tpconfig`:
+    - remove applications
+* remove family option from main top command to individual subcommands
+* remove '--plugin' as optional parameter 
+* rename merge commands to export
+* improve displaying of --help 
+* all applications that support the ``--config`` option now also support the ``-oc/--override-config`` option
+
+**Bugfixes**
+
+* :ref:`blhost`: 
+    - fix receive-sb-file command failures with usb
+* :ref:`el2go-host`:
+    - fix family parameter issue
+* :ref:`nxpdebugmbox`:
+    - fix famode-image get-templates command
+    - resolve debug authentication issues
+    - fix general error handling
+* :ref:`nxpdevhsm`:
+    - fix config file issues
+* :ref:`nxpele`:
+    - fix get-info error
+* :ref:`nxpfuses`:
+    - fix get-config errors
+* :ref:`nxpimage`:
+    - fix HAB and BIMG issues
+    - fix ahab export assertion error
+    - fix RT118x build IEE image failure
+    - fix parsing of imx943 bootable image
+    - fix issues with receiving sb31
+    - fix convertion binary from S19
+    - fix parsing of FCB for RT7xx
+    - remove unnecessary enableTrustZone parameter in MBI config files
+    - fix overlapping detection and adjust-offsets functionality in binary-image merge
+* :ref:`nxpmemcfg`:
+    - fix deprecation warning
+* :ref:`nxpwpc`:
+    - fix missing family parameter for service parameters
+    - fix api key existence
+* :ref:`shadowregs`:
+    - fix general error 
+* fix invalid -oc option behavior
+
 ------------------------
 3.0.0 - future release
 ------------------------

@@ -15,10 +15,10 @@ family: mimxrt1189
 # -----------------------------------------===== MCU revision [Optional] =====------------------------------------------
 # Description: Revision of silicon
 revision: b0
-# ----------------------------------===== Target memory [Conditionally required] =====----------------------------------
+# -----------------------------------------===== Target memory [Optional] =====-----------------------------------------
 # Description: Target memory for AHAB container
-# Possible options: <nor, serial_downloader, nand_2k, nand_4k>
-target_memory: nor
+# Possible options: <serial_downloader, standard, nand_2k, nand_4k>
+target_memory: standard
 # ---------------------------------------===== Output file name [Required] =====----------------------------------------
 # Description: Output AHAB file name
 output: N/A
@@ -61,7 +61,7 @@ containers:
       # Description: Array of image entries.
       images:
         -
-          # -------------------------------------===== Image path [Required] =====--------------------------------------
+          # -------------------------------------===== Image path [Optional] =====--------------------------------------
           # Description: Path to image binary (absolute/relative).
           image_path: container0_image0_executable_cortex-m33.bin
           # ---------------------------===== Image offset in AHAB container [Required] =====----------------------------

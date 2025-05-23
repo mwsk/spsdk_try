@@ -12,6 +12,6 @@ outputImageExecutionTarget: Internal flash (XIP) # [Required], Application targe
 outputImageAuthenticationType: CRC # [Required], Type of boot image authentication; Specification of final master boot image authentication; Possible options:['Plain', 'CRC', 'Signed', 'Encrypted + Signed', 'encrypted', 'signed', 'crc']
 inputImageFile: "./workspace/input_images/mc56xx_flash_image_short.bin" # [Required], Plain application image; The input application image to by modified to Master Boot Image.
 masterBootOutputFile: "./workspace/output_images/mc56f818xx/mb_xip_crc.bin" # [Required], Master Boot Image name; The file for Master Boot Image result file.
-FCF:
+fcf:
   LIFECYCLE:
     LIFECYCLE_STATE: OEM_CLOSED_ROP1

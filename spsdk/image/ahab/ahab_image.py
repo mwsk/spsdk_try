@@ -4,7 +4,21 @@
 # Copyright 2021-2025 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
-"""Implementation of AHAB image support."""
+"""Implementation of AHAB image support.
+
+This module provides functionality for creating, parsing, validating, and exporting AHAB
+(Advanced High Assurance Boot) images used in NXP secure boot process. AHAB images consist
+of multiple containers that include headers, image arrays, and digital signatures to ensure
+secure boot functionality.
+
+The module supports different container types (V1, V1forV2, V2) and various target memory
+configurations. It enables operations such as adding containers, updating container fields,
+verifying container configurations, and exporting complete AHAB images to binary format.
+
+Additionally, it provides utilities for loading AHAB images from configurations, parsing
+binary data into AHAB image objects, and generating validation schemas for configuration
+validation.
+"""
 
 import logging
 from copy import deepcopy
@@ -51,12 +65,11 @@ class AHABImage(FeatureBaseClass):
         target_memory: str = AhabTargetMemory.TARGET_MEMORY_STANDARD.label,
         ahab_containers: Optional[list[Union[AHABContainer, AHABContainerV2]]] = None,
     ) -> None:
-        """AHAB Image constructor.
+        """Initialize AHAB Image object.
 
         :param family: Name of device family.
-        :param target_memory: Target memory for AHAB image [serial_downloader, standard, nand], defaults to "standard"
-        :param ahab_containers: _description_, defaults to None
-        :param search_paths: List of paths where to search for the file, defaults to None
+        :param target_memory: Target memory for AHAB image [serial_downloader, standard, nand], defaults to "standard".
+        :param ahab_containers: List of initial AHAB containers to include, defaults to None.
         :raises SPSDKValueError: Invalid input configuration.
         """
         self.chip_config = create_chip_config(family=family, target_memory=target_memory)
@@ -80,7 +93,14 @@ class AHABImage(FeatureBaseClass):
     def container_type(
         self,
     ) -> Union[Type[AHABContainer], Type[AHABContainerV1forV2], Type[AHABContainerV2]]:
-        """Get container class type."""
+        """Get container class type.
+
+        Determines the container type based on the first container in the list.
+        If the container type is already set, returns the stored type.
+
+        :raises SPSDKError: If there are no containers in the list.
+        :return: The container class type.
+        """
         if self._container_type is None:
             if len(self.ahab_containers) == 0:
                 raise SPSDKError("Can't determine the AHAB Container type.")
@@ -89,7 +109,11 @@ class AHABImage(FeatureBaseClass):
 
     @property
     def start_recommended_image_address(self) -> int:
-        """Start data images address."""
+        """Start recommended address for data images.
+
+        :return: Start address for data images based on target memory type.
+        :raises SPSDKError: If no containers are defined.
+        """
         if len(self.ahab_containers) == 0:
             raise SPSDKError(
                 "Cannot determine the Start data images address without defined container version."
@@ -130,7 +154,17 @@ class AHABImage(FeatureBaseClass):
         )
 
     def add_container(self, container: Union[AHABContainer, AHABContainerV2]) -> None:
-        """Add new container into AHAB Image."""
+        """Add new container into AHAB Image.
+
+        Validates container compatibility before adding:
+        - V2 containers can be mixed with V1forV2 containers
+        - V1 containers must all be of the same type
+        - Cannot mix V1 with V2/V1forV2 containers
+
+        :param container: AHAB container to be added to the image.
+        :raises SPSDKLengthError: If maximum container count is reached.
+        :raises SPSDKError: If container type is incompatible with existing containers.
+        """
         if len(self.ahab_containers) >= self.chip_config.containers_max_cnt:
             raise SPSDKLengthError(
                 "Cannot add new container because the AHAB Image already reached"
@@ -260,7 +294,20 @@ class AHABImage(FeatureBaseClass):
         return ret
 
     def verify(self) -> Verifier:
-        """Verifier object data."""
+        """Perform comprehensive verification of the AHAB image.
+
+        Validates multiple aspects of the AHAB image:
+        - Container counts and offsets
+        - Image counts per container
+        - Image offsets and alignments
+        - Serial downloader mode requirements
+        - Checks for overlapping images
+
+        The verification results are organized hierarchically in the returned Verifier object,
+        including SUCCESS, WARNING, and ERROR status for each checked item.
+
+        :return: Verifier object containing the detailed verification results.
+        """
 
         def verify_container_offsets(container: AHABContainer) -> None:
             # Verify the container offset

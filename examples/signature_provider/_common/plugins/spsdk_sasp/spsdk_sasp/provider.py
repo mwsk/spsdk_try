@@ -21,7 +21,7 @@ class SuperAwesomeSP(SignatureProvider):
     # identifier of this signature provider; used in yaml configuration file
     identifier = "sasp"
 
-    def __init__(self, key_number: int, key_type: str) -> None:
+    def __init__(self, key_number: int, key_type: str, **kwargs) -> None:
         """Initialize the Super Awesome SignatureProvider.
 
         :param key_number: index of the key to use (rot_id from yaml config)
@@ -29,6 +29,7 @@ class SuperAwesomeSP(SignatureProvider):
         self.url = "http://127.0.0.1:5000"
         self.key_number = key_number
         self.key_type = key_type
+        self.sign_kwargs = kwargs
 
     def sign(self, data: bytes) -> bytes:
         """Perform the signing.
@@ -37,8 +38,8 @@ class SuperAwesomeSP(SignatureProvider):
         :return: Signature
         """
         endpoint = f"{self.url}/signer/{self.key_type}/{self.key_number}"
-        params = {"data": base64.b64encode(data)}
-        response = requests.get(endpoint, params=params, timeout=30)
+        params = {"data": data.hex(), **self.sign_kwargs}
+        response = requests.get(endpoint, json=params, timeout=30)
         self.check_response(response)
         signature = response.json()["signature"]
         data = base64.b64decode(signature)
@@ -51,8 +52,8 @@ class SuperAwesomeSP(SignatureProvider):
         :return: True if public_key is matching private_key, False otherwise
         """
         endpoint = f"{self.url}/verifier/{self.key_type}/{self.key_number}"
-        params = {"public_key": base64.b64encode(public_key.export())}
-        response = requests.get(endpoint, params=params, timeout=30)
+        params = {"public_key": public_key.export().hex()}
+        response = requests.get(endpoint, json=params, timeout=30)
         self.check_response(response)
         is_matching = response.json()["is_matching"]
         return is_matching

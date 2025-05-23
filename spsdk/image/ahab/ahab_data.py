@@ -5,7 +5,19 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-"""AHAB data storage classes and various constants."""
+"""AHAB data storage classes and various constants.
+
+This module provides data structures, enumerations, and utility functions for working with
+Advanced High Assurance Boot (AHAB) components. It includes definitions for target memories,
+cryptographic algorithms, container tags, and configuration helpers required for secure boot image creation.
+
+The module contains:
+- Basic data constants (endianness, alignment, data types)
+- Enumeration classes for AHAB features (memories, algorithms, tags)
+- Data classes for chip and container configuration
+- Utility functions for loading configurations from databases
+"""
+
 import logging
 from dataclasses import dataclass, field
 from typing import Optional, Type, Union
@@ -348,12 +360,12 @@ class AhabChipContainerConfig:
 def load_images_types(
     db: Features, feature: str = DatabaseManager.AHAB, base_key: Optional[list[str]] = None
 ) -> dict[str, Type[SpsdkSoftEnum]]:
-    """Load images types.
+    """Load image types from the database.
 
-    :param db: database to load from.
-    :param feature: The database feature, default is AHAB
-    :param base_key: List of base keys if applicable, default is None
-    :return: Loaded dictionary with image types.
+    :param db: Database to load from
+    :param feature: The database feature to query
+    :param base_key: List of base keys if applicable
+    :return: Dictionary with loaded image types
     """
 
     def make_key(key: str) -> Union[str, list[str]]:
@@ -379,12 +391,12 @@ def create_chip_config(
 ) -> AhabChipConfig:
     """Create AHAB chip configuration structure.
 
-    :param family: Name of device family.
-    :param target_memory: Target memory for AHAB image [serial_downloader, standard, nand], defaults to "standard"
-    :param feature: The database feature, default is AHAB
-    :param base_key: List of base keys if applicable, default is None
-    :raises SPSDKValueError: Invalid input configuration.
-    :return: AHAB chip configuration structure.
+    :param family: Name of device family
+    :param target_memory: Target memory for AHAB image
+    :param feature: The database feature to query
+    :param base_key: List of base keys if applicable
+    :raises SPSDKValueError: When invalid input configuration is provided
+    :return: AHAB chip configuration structure
     """
 
     def make_key(key: str) -> Union[str, list[str]]:

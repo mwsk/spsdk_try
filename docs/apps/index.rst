@@ -23,3 +23,4 @@ Application User Guides
     nxpwpc
     nxpdice
     nxpuuu
+    nxpshe

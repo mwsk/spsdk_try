@@ -9,14 +9,13 @@
 import json
 import os
 from os import path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
 from spsdk.crypto.crypto_types import SPSDKEncoding
 from spsdk.crypto.keys import (
     IS_OSCCA_SUPPORTED,
-    EccCurve,
     ECDSASignature,
     PrivateKeyEcc,
     PrivateKeyRsa,
@@ -28,12 +27,10 @@ from spsdk.crypto.keys import (
 from spsdk.crypto.signature_provider import (
     HttpProxySP,
     SignatureProvider,
-    get_signature_provider,
     get_signature_provider_from_config_str,
     requests,
 )
 from spsdk.exceptions import SPSDKError, SPSDKKeyError, SPSDKValueError
-from spsdk.utils.config import Config
 from spsdk.utils.misc import write_file
 
 

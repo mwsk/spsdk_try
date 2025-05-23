@@ -20,7 +20,7 @@ bca:
 certBlock: ./workspace/cfgs/cert_block/vx_cert_256_256.yaml
 signer: .\workspace\keys_certs\ec_pk_secp256r1_sign_cert.pem # [Conditionally required], Signing Certificate; Path to Signing Certificate. Unused when 'binaryCertificateBlock' is defined
 addCertHash: True
-FCF:
+fcf:
   LIFECYCLE:
     LIFECYCLE_STATE: OEM_CLOSED_ROP1
 
