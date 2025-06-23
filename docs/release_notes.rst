@@ -4,8 +4,8 @@
 .. _crypto: api/crypto.html
 .. _usb_device_identification: usage/usb.html
 .. _pfr: apps/pfr.html
-.. _migration_guide: migration_guide.html
-
+.. _migration guide: migration_guide.html
+.. _nxpcrypto: apps/nxpcrypto.html
 =============
 Release Notes
 =============
@@ -38,7 +38,7 @@ Release Notes
 
 **ANNOUNCEMENT**
 
-Current version introduces breaking changes, which are described in details in `migration_guide`_.
+Current version introduces breaking changes, which are described in details in `migration guide`_.
 
 **New features**
 
@@ -227,7 +227,7 @@ Current version introduces breaking changes, which are described in details in `
 
 **ANNOUNCEMENT**
 
-Current version introduces breaking changes, which are described in details in `migration_guide`_.
+Current version introduces breaking changes, which are described in details in `migration guide`_.
 
 **New features**
 
@@ -318,7 +318,7 @@ Current version introduces breaking changes, which are described in details in `
 
 **ANNOUNCEMENT**
 
-Current version introduces breaking changes, which are described in details in `migration_guide`_.
+Current version introduces breaking changes, which are described in details in `migration guide`_.
 
 **New features**
 
@@ -468,7 +468,7 @@ Current version introduces breaking changes, which are described in details in `
 
 **ANNOUNCEMENT**
 
-Current version introduces breaking changes, which are described in details in `migration_guide`_.
+Current version introduces breaking changes, which are described in details in `migration guide`_.
 
 **New features**
 
