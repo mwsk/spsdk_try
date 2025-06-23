@@ -22,6 +22,8 @@ Weblink: `mc56f81646 <https://www.nxp.com/products/processors-and-microcontrolle
     +==============================+=======+
     |:ref:`Master Boot Image (MBI)`|✅     |
     +------------------------------+-------+
+    |:ref:`pfr`                    |✅     |
+    +------------------------------+-------+
     |:ref:`Bootable image`         |✅     |
     +------------------------------+-------+
     |:ref:`bca`                    |✅     |
@@ -56,6 +58,8 @@ Weblink: `mc56f81648 <https://www.nxp.com/products/processors-and-microcontrolle
     |           Feature            |Support|
     +==============================+=======+
     |:ref:`Master Boot Image (MBI)`|✅     |
+    +------------------------------+-------+
+    |:ref:`pfr`                    |✅     |
     +------------------------------+-------+
     |:ref:`Bootable image`         |✅     |
     +------------------------------+-------+
@@ -92,6 +96,8 @@ Weblink: `mc56f81666 <https://www.nxp.com/products/processors-and-microcontrolle
     +==============================+=======+
     |:ref:`Master Boot Image (MBI)`|✅     |
     +------------------------------+-------+
+    |:ref:`pfr`                    |✅     |
+    +------------------------------+-------+
     |:ref:`Bootable image`         |✅     |
     +------------------------------+-------+
     |:ref:`bca`                    |✅     |
@@ -126,6 +132,8 @@ Weblink: `mc56f81668 <https://www.nxp.com/products/processors-and-microcontrolle
     |           Feature            |Support|
     +==============================+=======+
     |:ref:`Master Boot Image (MBI)`|✅     |
+    +------------------------------+-------+
+    |:ref:`pfr`                    |✅     |
     +------------------------------+-------+
     |:ref:`Bootable image`         |✅     |
     +------------------------------+-------+
@@ -162,6 +170,8 @@ Weblink: `mc56f81746 <https://www.nxp.com/products/processors-and-microcontrolle
     +==============================+=======+
     |:ref:`Master Boot Image (MBI)`|✅     |
     +------------------------------+-------+
+    |:ref:`pfr`                    |✅     |
+    +------------------------------+-------+
     |:ref:`Bootable image`         |✅     |
     +------------------------------+-------+
     |:ref:`bca`                    |✅     |
@@ -196,6 +206,8 @@ Weblink: `mc56f81748 <https://www.nxp.com/products/processors-and-microcontrolle
     |           Feature            |Support|
     +==============================+=======+
     |:ref:`Master Boot Image (MBI)`|✅     |
+    +------------------------------+-------+
+    |:ref:`pfr`                    |✅     |
     +------------------------------+-------+
     |:ref:`Bootable image`         |✅     |
     +------------------------------+-------+
@@ -232,6 +244,8 @@ Weblink: `mc56f81766 <https://www.nxp.com/products/processors-and-microcontrolle
     +==============================+=======+
     |:ref:`Master Boot Image (MBI)`|✅     |
     +------------------------------+-------+
+    |:ref:`pfr`                    |✅     |
+    +------------------------------+-------+
     |:ref:`Bootable image`         |✅     |
     +------------------------------+-------+
     |:ref:`bca`                    |✅     |
@@ -266,6 +280,8 @@ Weblink: `mc56f81768 <https://www.nxp.com/products/processors-and-microcontrolle
     |           Feature            |Support|
     +==============================+=======+
     |:ref:`Master Boot Image (MBI)`|✅     |
+    +------------------------------+-------+
+    |:ref:`pfr`                    |✅     |
     +------------------------------+-------+
     |:ref:`Bootable image`         |✅     |
     +------------------------------+-------+
@@ -304,6 +320,8 @@ Weblink: `mc56f81866 <https://www.nxp.com/products/processors-and-microcontrolle
     +------------------------------+-------+
     |:ref:`Master Boot Image (MBI)`|✅     |
     +------------------------------+-------+
+    |:ref:`pfr`                    |✅     |
+    +------------------------------+-------+
     |:ref:`nxpdevhsm`              |✅     |
     +------------------------------+-------+
     |:ref:`bca`                    |✅     |
@@ -340,6 +358,8 @@ Weblink: `mc56f81868 <https://www.nxp.com/products/processors-and-microcontrolle
     |:ref:`RoT`                    |vX     |
     +------------------------------+-------+
     |:ref:`Master Boot Image (MBI)`|✅     |
+    +------------------------------+-------+
+    |:ref:`pfr`                    |✅     |
     +------------------------------+-------+
     |:ref:`nxpdevhsm`              |✅     |
     +------------------------------+-------+
@@ -2670,6 +2690,62 @@ Similar examples for mbi
 * `LPC55Sxx Secure Firmware Update <examples\mbi\lpc55sxx_secure_boot\lpc55sxx_secure_fw_update.ipynb>`__
 
 
+mcxe245
+--------------------------
+
+Latest revision: a0
+
+All supported chip revisions: a0
+
+Weblink: `mcxe245 <https://nxp.com>`_
+
+.. table::
+
+    +------------------------------+-------+
+    |           Feature            |Support|
+    +==============================+=======+
+    |:ref:`Master Boot Image (MBI)`|✅     |
+    +------------------------------+-------+
+    |:ref:`fcf`                    |✅     |
+    +------------------------------+-------+
+    |:ref:`nxpshe`                 |✅     |
+    +------------------------------+-------+
+
+Similar examples for mbi
+
+* `KW45xx, K32W1xx and MCXW71x Secure Boot <examples\mbi\kw45xx_k32w1xx_mcxw71x\kw45xx_k32w1xx_mcxw71x_secure_boot.ipynb>`__
+* `LPC55Sxx Secure Boot <examples\mbi\lpc55sxx_secure_boot\lpc55sxx_secure_boot.ipynb>`__
+* `LPC55Sxx Secure Firmware Update <examples\mbi\lpc55sxx_secure_boot\lpc55sxx_secure_fw_update.ipynb>`__
+
+
+mcxe246
+--------------------------
+
+Latest revision: a0
+
+All supported chip revisions: a0
+
+Weblink: `mcxe246 <https://nxp.com>`_
+
+.. table::
+
+    +------------------------------+-------+
+    |           Feature            |Support|
+    +==============================+=======+
+    |:ref:`Master Boot Image (MBI)`|✅     |
+    +------------------------------+-------+
+    |:ref:`fcf`                    |✅     |
+    +------------------------------+-------+
+    |:ref:`nxpshe`                 |✅     |
+    +------------------------------+-------+
+
+Similar examples for mbi
+
+* `KW45xx, K32W1xx and MCXW71x Secure Boot <examples\mbi\kw45xx_k32w1xx_mcxw71x\kw45xx_k32w1xx_mcxw71x_secure_boot.ipynb>`__
+* `LPC55Sxx Secure Boot <examples\mbi\lpc55sxx_secure_boot\lpc55sxx_secure_boot.ipynb>`__
+* `LPC55Sxx Secure Firmware Update <examples\mbi\lpc55sxx_secure_boot\lpc55sxx_secure_fw_update.ipynb>`__
+
+
 mcxe247
 --------------------------
 
@@ -2677,15 +2753,26 @@ Latest revision: a0
 
 All supported chip revisions: a0
 
-Weblink: `mcxe247 <https://placeholder.com>`_
+Weblink: `mcxe247 <https://nxp.com>`_
 
 .. table::
 
-    +-------------+-------+
-    |   Feature   |Support|
-    +=============+=======+
-    |:ref:`nxpshe`|✅     |
-    +-------------+-------+
+    +------------------------------+-------+
+    |           Feature            |Support|
+    +==============================+=======+
+    |:ref:`Master Boot Image (MBI)`|✅     |
+    +------------------------------+-------+
+    |:ref:`fcf`                    |✅     |
+    +------------------------------+-------+
+    |:ref:`nxpshe`                 |✅     |
+    +------------------------------+-------+
+
+Similar examples for mbi
+
+* `KW45xx, K32W1xx and MCXW71x Secure Boot <examples\mbi\kw45xx_k32w1xx_mcxw71x\kw45xx_k32w1xx_mcxw71x_secure_boot.ipynb>`__
+* `LPC55Sxx Secure Boot <examples\mbi\lpc55sxx_secure_boot\lpc55sxx_secure_boot.ipynb>`__
+* `LPC55Sxx Secure Firmware Update <examples\mbi\lpc55sxx_secure_boot\lpc55sxx_secure_fw_update.ipynb>`__
+
 
 mcxn235
 --------------------------
@@ -4794,6 +4881,8 @@ Weblink: `mwct2012 <https://www.nxp.com/products/power-management/wireless-power
     +==============================+=======+
     |:ref:`Master Boot Image (MBI)`|✅     |
     +------------------------------+-------+
+    |:ref:`pfr`                    |✅     |
+    +------------------------------+-------+
     |:ref:`Bootable image`         |✅     |
     +------------------------------+-------+
     |:ref:`bca`                    |✅     |
@@ -4830,6 +4919,8 @@ Weblink: `mwct2012a <https://www.nxp.com/products/power-management/wireless-powe
     |           Feature            |Support|
     +==============================+=======+
     |:ref:`Master Boot Image (MBI)`|✅     |
+    +------------------------------+-------+
+    |:ref:`pfr`                    |✅     |
     +------------------------------+-------+
     |:ref:`Bootable image`         |✅     |
     +------------------------------+-------+
@@ -4921,6 +5012,8 @@ Weblink: `mwct20d2 <https://www.nxp.com/products/power-management/wireless-power
     +------------------------------+-------+
     |:ref:`Master Boot Image (MBI)`|✅     |
     +------------------------------+-------+
+    |:ref:`pfr`                    |✅     |
+    +------------------------------+-------+
     |:ref:`nxpdevhsm`              |✅     |
     +------------------------------+-------+
     |:ref:`bca`                    |✅     |
@@ -4959,6 +5052,8 @@ Weblink: `mwct20d2a <https://www.nxp.com/products/power-management/wireless-powe
     |:ref:`RoT`                    |vX     |
     +------------------------------+-------+
     |:ref:`Master Boot Image (MBI)`|✅     |
+    +------------------------------+-------+
+    |:ref:`pfr`                    |✅     |
     +------------------------------+-------+
     |:ref:`nxpdevhsm`              |✅     |
     +------------------------------+-------+
@@ -5095,6 +5190,8 @@ Weblink: `mimx9131 <https://www.nxp.com/products/processors-and-microcontrollers
     |:ref:`RoT`           |SRK AHAB|
     +---------------------+--------+
     |:ref:`nxpdebugmbox`  |✅      |
+    +---------------------+--------+
+    |:ref:`el2go-host`    |✅      |
     +---------------------+--------+
     |:ref:`Bootable image`|✅      |
     +---------------------+--------+

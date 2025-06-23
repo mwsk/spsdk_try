@@ -10,6 +10,28 @@
 Release Notes
 =============
 
+---------------------
+3.0.1 (27-June-2025)
+---------------------
+
+**Bugfixes**
+
+* :ref:`nxpcrypto`:
+    - improve serial number validation in certificate generation
+* :ref:`nxpimage`:
+    - fix AHAB container header info display
+    - fix MBI parameter for mcxa series
+    - add input data size validation for HAB segments
+    - add hardware key mixin to NHS52S04 MBI types
+    - add load address mixin to every MBI type
+    - improve CA Flag description in AHAB schemas
+    - fix AHAB update keyblob
+    - add new Fast Boot flags to AHABContainerV2
+* :ref:`nxpmemcfg`:
+    - add missing memory types (MicronOPI_SDR, AdestoOPI_SDR)
+* update default BOOT_FLAGS value in MC56F81x68 BCA configuration
+* validate and clean up the contents of SPSDK data files
+
 --------------------
 3.0.0 (16-May-2025)
 --------------------
