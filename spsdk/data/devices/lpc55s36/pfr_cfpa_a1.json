@@ -303,7 +303,7 @@
                             "width": 16,
                             "id": "field054-bits0-15",
                             "name": "DBG_VENDOR_USAGE",
-                            "description": "Debug Vendor Usage"
+                            "description": "Debug Vendor Usage - Implemented as a monotonic counter field. Whenever a new version of CFPA page is written this field can have the same value or a higher value. It is recommended to use this field to revoke DC certificates issued till that point"
                         },
                         {
                             "width": 16,

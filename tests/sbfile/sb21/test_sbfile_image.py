@@ -68,7 +68,7 @@ def gen_cert_block(data_dir, sign_bits) -> CertBlockV1:
     :return: certificate block for SB2.x
     """
     cert_obj = Certificate.load(
-        os.path.join(data_dir, "sb2_x", "selfsign_" + str(sign_bits) + "_v3.der.crt")
+        os.path.join(data_dir, "selfsign_" + str(sign_bits) + "_v3.der.crt")
     )
     root_key_hash = cert_obj.public_key_hash()
 
@@ -97,7 +97,7 @@ def get_boot_sections(
         TEST = (3, "TEST", "Test memory id")
 
     # load input image (binary)
-    with open(os.path.join(data_dir, "sb2_x", "boot_image.bin"), "rb") as f:
+    with open(os.path.join(data_dir, "boot_image.bin"), "rb") as f:
         plain_image = f.read()
 
     # OTFAD
@@ -274,7 +274,7 @@ def test_sb2x_builder(
     if signed:
         boot_image.cert_block = gen_cert_block(data_dir, sign_bits)
         private_key = os.path.join(
-            data_dir, "sb2_x", "selfsign_privatekey_rsa" + str(sign_bits) + ".pem"
+            data_dir, "selfsign_privatekey_rsa" + str(sign_bits) + ".pem"
         )
         signature_provider = PlainFileSP(private_key)
 
@@ -302,12 +302,12 @@ def test_sb2x_builder(
         mode = "unsigned"
     expected_file_name = f"expected_sb2_{str(sb_minor_ver)}_{sect_cont_str}_{mode}.sb2"
 
-    with open(os.path.join(data_dir, "sb2_x", expected_file_name), "rb") as f:
+    with open(os.path.join(data_dir, expected_file_name), "rb") as f:
         expected = f.read()
 
     if result != expected:  # if result does not match, save it for debugging
         with open(
-            os.path.join(data_dir, "sb2_x", expected_file_name.replace("expected_", "generated_")),
+            os.path.join(data_dir, expected_file_name.replace("expected_", "generated_")),
             "wb",
         ) as f:
             f.write(result)

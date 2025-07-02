@@ -262,11 +262,6 @@
                                     "name": "OEM_RETURN",
                                     "value": 63,
                                     "description": "OEM Return"
-                                },
-                                {
-                                    "name": "BRICK",
-                                    "value": 255,
-                                    "description": "Brick (11xx_xxxx)"
                                 }
                             ]
                         }

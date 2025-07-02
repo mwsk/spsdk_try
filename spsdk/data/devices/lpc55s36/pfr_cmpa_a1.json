@@ -650,7 +650,7 @@
                             "width": 16,
                             "id": "field018-bits16-31",
                             "name": "VENDOR_USAGE",
-                            "description": "Upper 16 bits of vendor usage field defined in DAP. Lower 16-bits come from customer field area"
+                            "description": "Recommended to use this field to identify department or model number. So that Debug Credential (DC) Certificates can be issued on class basis instead of issuing UUID specific certificates"
                         }
                     ]
                 },

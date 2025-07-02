@@ -5140,12 +5140,15 @@ Weblink: `mimx8ulp <https://www.nxp.com/products/processors-and-microcontrollers
     +---------------------+--------+
     |:ref:`nxpele`        |✅      |
     +---------------------+--------+
+    |:ref:`otfad`         |✅      |
+    +---------------------+--------+
     |:ref:`nxpuuu`        |✅      |
     +---------------------+--------+
 
 Examples for mimx8ulp
 
 * `i.MX 8ULP AHAB with U-BOOT <examples/ahab/imx8ulp/imx8ulp_ahab_uboot.ipynb>`__
+* `i.MX8ULP OTFAD (On-The-Fly AES Decryption) Example <examples/otfad/imx8ulp/imx8ulp_otfad.ipynb>`__
 
 
 Similar examples for dat
@@ -5166,6 +5169,12 @@ Similar examples for ahab
 * `i.MXRT118x Signed AHAB Example <examples\ahab\rt118x_secure_boot\rt118x_secure_boot.ipynb>`__
 * `i.MXRT118x Signed Flashloader <examples\ahab\rt118x_signed_flashloader\rt118x_signed_flashloader.ipynb>`__
 * `AHAB SRK Table <examples\ahab\srk_table\srk_table.ipynb>`__
+
+
+Similar examples for otfad
+
+* `i.MX8ULP OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx8ulp\imx8ulp_otfad.ipynb>`__
+* `i.MX 93 OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx93\imx93_otfad.ipynb>`__
 
 
 Similar examples for bootable_image
@@ -5253,9 +5262,9 @@ Weblink: `mimx9352 <https://www.nxp.com/products/processors-and-microcontrollers
     +---------------------+--------+
     |:ref:`nxpele`        |✅      |
     +---------------------+--------+
-    |:ref:`nxpuuu`        |✅      |
-    +---------------------+--------+
     |:ref:`otfad`         |✅      |
+    +---------------------+--------+
+    |:ref:`nxpuuu`        |✅      |
     +---------------------+--------+
 
 Examples for mimx9352
@@ -5288,6 +5297,7 @@ Similar examples for ahab
 
 Similar examples for otfad
 
+* `i.MX8ULP OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx8ulp\imx8ulp_otfad.ipynb>`__
 * `i.MX 93 OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx93\imx93_otfad.ipynb>`__
 
 
@@ -5447,6 +5457,7 @@ Similar examples for hab
 
 Similar examples for otfad
 
+* `i.MX8ULP OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx8ulp\imx8ulp_otfad.ipynb>`__
 * `i.MX 93 OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx93\imx93_otfad.ipynb>`__
 
 
@@ -5901,6 +5912,7 @@ Similar examples for hab
 
 Similar examples for otfad
 
+* `i.MX8ULP OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx8ulp\imx8ulp_otfad.ipynb>`__
 * `i.MX 93 OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx93\imx93_otfad.ipynb>`__
 
 
@@ -5954,6 +5966,7 @@ Similar examples for hab
 
 Similar examples for otfad
 
+* `i.MX8ULP OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx8ulp\imx8ulp_otfad.ipynb>`__
 * `i.MX 93 OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx93\imx93_otfad.ipynb>`__
 
 
@@ -6007,6 +6020,7 @@ Similar examples for hab
 
 Similar examples for otfad
 
+* `i.MX8ULP OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx8ulp\imx8ulp_otfad.ipynb>`__
 * `i.MX 93 OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx93\imx93_otfad.ipynb>`__
 
 
@@ -6060,6 +6074,7 @@ Similar examples for hab
 
 Similar examples for otfad
 
+* `i.MX8ULP OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx8ulp\imx8ulp_otfad.ipynb>`__
 * `i.MX 93 OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx93\imx93_otfad.ipynb>`__
 
 
@@ -6113,6 +6128,7 @@ Similar examples for hab
 
 Similar examples for otfad
 
+* `i.MX8ULP OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx8ulp\imx8ulp_otfad.ipynb>`__
 * `i.MX 93 OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx93\imx93_otfad.ipynb>`__
 
 
@@ -6166,6 +6182,7 @@ Similar examples for hab
 
 Similar examples for otfad
 
+* `i.MX8ULP OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx8ulp\imx8ulp_otfad.ipynb>`__
 * `i.MX 93 OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx93\imx93_otfad.ipynb>`__
 
 
@@ -6219,6 +6236,7 @@ Similar examples for hab
 
 Similar examples for otfad
 
+* `i.MX8ULP OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx8ulp\imx8ulp_otfad.ipynb>`__
 * `i.MX 93 OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx93\imx93_otfad.ipynb>`__
 
 
@@ -6289,6 +6307,7 @@ Similar examples for ahab
 
 Similar examples for otfad
 
+* `i.MX8ULP OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx8ulp\imx8ulp_otfad.ipynb>`__
 * `i.MX 93 OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx93\imx93_otfad.ipynb>`__
 
 
@@ -6367,6 +6386,7 @@ Similar examples for ahab
 
 Similar examples for otfad
 
+* `i.MX8ULP OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx8ulp\imx8ulp_otfad.ipynb>`__
 * `i.MX 93 OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx93\imx93_otfad.ipynb>`__
 
 
@@ -6445,6 +6465,7 @@ Similar examples for ahab
 
 Similar examples for otfad
 
+* `i.MX8ULP OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx8ulp\imx8ulp_otfad.ipynb>`__
 * `i.MX 93 OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx93\imx93_otfad.ipynb>`__
 
 
@@ -6523,6 +6544,7 @@ Similar examples for ahab
 
 Similar examples for otfad
 
+* `i.MX8ULP OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx8ulp\imx8ulp_otfad.ipynb>`__
 * `i.MX 93 OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx93\imx93_otfad.ipynb>`__
 
 
@@ -6598,6 +6620,7 @@ Similar examples for bootable_image
 
 Similar examples for otfad
 
+* `i.MX8ULP OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx8ulp\imx8ulp_otfad.ipynb>`__
 * `i.MX 93 OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx93\imx93_otfad.ipynb>`__
 
 
@@ -6668,6 +6691,7 @@ Similar examples for bootable_image
 
 Similar examples for otfad
 
+* `i.MX8ULP OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx8ulp\imx8ulp_otfad.ipynb>`__
 * `i.MX 93 OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx93\imx93_otfad.ipynb>`__
 
 
@@ -6738,6 +6762,7 @@ Similar examples for bootable_image
 
 Similar examples for otfad
 
+* `i.MX8ULP OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx8ulp\imx8ulp_otfad.ipynb>`__
 * `i.MX 93 OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx93\imx93_otfad.ipynb>`__
 
 
@@ -6808,6 +6833,7 @@ Similar examples for bootable_image
 
 Similar examples for otfad
 
+* `i.MX8ULP OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx8ulp\imx8ulp_otfad.ipynb>`__
 * `i.MX 93 OTFAD (On-The-Fly AES Decryption) Example <examples\otfad\imx93\imx93_otfad.ipynb>`__
 
 
