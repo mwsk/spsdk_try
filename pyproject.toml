@@ -46,6 +46,7 @@ pemicro = ["spsdk-pemicro<1,>=0.3.1"]
 # disabled until the support of Python 3.12 is fixed (https://github.com/pyauth/python-pkcs11/issues/165)
 # pkcs11 = ["spsdk-pkcs11<1,>=0.3.1"]
 pqc = ["spsdk-pqc<1.0,>=0.6.1"]
+rblhost = ["pymboot<0.2.0"]
 all = [
     "spsdk[examples]",
     "spsdk[dk6]",
@@ -55,6 +56,7 @@ all = [
     "spsdk[lauterbach]",
     "spsdk[pemicro]",
     "spsdk[pqc]",
+    "spsdk[rblhost]"
 ]
 
 [project.scripts]
@@ -234,13 +236,13 @@ checkers = [
 [tool.release-tools]
 
 [tool.release-tools.docs]
-install_hook = ['uv pip install ".[all]" -r docs/requirements.txt']
+install_hook = ['uv pip install ".[all]" -r docs/requirements.txt --force-reinstall']
 docs_directory = "docs"
 # Disable JIRA upload due to artifacts size
 disable_jira_upload = true
 
 [tool.release-tools.clr]
-install_hook = ['uv pip install ".[all]"']
+install_hook = ['uv pip install ".[all]" --force-reinstall']
 check_directories = ["spsdk", "tests", "tools", "examples"]
 excluded_files = ["spsdk/__version__.py"]
 
@@ -260,7 +262,10 @@ spsdk_full_test_scope_win11 = { artifact_regex = ".*results.xml" }
 project_name = "spsdk"
 include_detector_types = ["pip"]
 sbom_location = "SBOM-spsdk.spdx.json"
-install_hook = ['uv pip install ".[all]"','uv pip install -r requirements-develop.txt']
+install_hook = ['uv pip install ".[all]" -r requirements-develop.txt --force-reinstall']
+
+[tool.release-tools.github]
+full_name = "nxp-mcuxpresso/spsdk"
 
 [tool.check-wheel-contents]
 ignore = "W002" # Wheel contains duplicate files
