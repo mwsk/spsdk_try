@@ -323,7 +323,7 @@ rblhost
 -------
 Dependencies for rapid rust blhost:
 
-* pymboot - Python interface for MCU bootloader
+* pymboot-rs - Python interface for MCU bootloader
 
 .. code:: bash
 
