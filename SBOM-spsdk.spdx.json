@@ -2,7 +2,7 @@
   "SPDXID": "SPDXRef-DOCUMENT",
   "spdxVersion": "SPDX-2.3",
   "creationInfo": {
-    "created": "2025-08-27T11:31:49Z",
+    "created": "2025-08-28T10:40:32Z",
     "creators": [
       "Organization: NXP"
     ],
@@ -30,7 +30,7 @@
       "versionInfo": "3.2.0",
       "licenseConcluded": "(BSD-3-Clause)",
       "licenseDeclared": "(BSD-3-Clause)",
-      "downloadLocation": "NOASSERTION",
+      "downloadLocation": "https://github.com/nxp-mcuxpresso/spsdk/releases/tag/v3.2.0",
       "originator": "Organization: NXP",
       "supplier": "NOASSERTION",
       "externalRefs": [],
@@ -438,7 +438,7 @@
       "name": "platformdirs",
       "versionInfo": "4.4.0",
       "licenseConcluded": "MIT",
-      "licenseDeclared": "NOASSERTION",
+      "licenseDeclared": "MIT",
       "homepage": "https://github.com/platformdirs/platformdirs",
       "downloadLocation": "https://pypi.org/project/platformdirs/4.4.0",
       "originator": "Organization: pypi",
