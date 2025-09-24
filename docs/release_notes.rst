@@ -25,7 +25,7 @@ Release Notes
 * :ref:`el2go-host`:
     - extend error codes for EL2GO product-based provisioning
 
-* :ref:`nxpdebugmbox`:
+* `nxpdebugmbox`_:
     - add validation in DAT authentication of SRKH for MCU PQC
     - unify get-template output messages
 
