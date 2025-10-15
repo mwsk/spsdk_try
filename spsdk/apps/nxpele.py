@@ -374,7 +374,7 @@ def ele_get_info(ele_handler: EleMessageHandler) -> None:
     type=INT(),
     help="Address of EdgeLock Enclave firmware container in target memory.",
 )
-@optgroup.option(
+@optgroup.option(  # type: ignore[arg-type]
     "-b",
     "--binary",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, resolve_path=True),

@@ -58,6 +58,7 @@ features:
     sub_features: [overridden_properties]
     overridden_properties:
       10: "verify-erase"
+      34: "fuse-program-voltage"
 
   # ======== DAT section ========
   dat:

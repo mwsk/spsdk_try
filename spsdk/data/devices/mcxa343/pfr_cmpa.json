@@ -777,6 +777,7 @@
                             "width": 1
                         },
                         {
+                            "id": "field040-bits17-19",
                             "width": 3,
                             "name": "ACL_SEC_4",
                             "description": "Access control for flash sector (offset range 0x00_8000 - 0x00_9FFF).",
