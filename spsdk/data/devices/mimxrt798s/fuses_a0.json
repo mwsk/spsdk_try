@@ -3079,11 +3079,6 @@
                                     "description": "Normal boot (192 MHz) - VDD1 = 1.0 V"
                                 },
                                 {
-                                    "name": "Reserved",
-                                    "value": 1,
-                                    "description": "Reserved"
-                                },
-                                {
                                     "name": "Low",
                                     "value": 2,
                                     "description": "Low speed boot (32 MHz) -VDD1 = 1.0 V"

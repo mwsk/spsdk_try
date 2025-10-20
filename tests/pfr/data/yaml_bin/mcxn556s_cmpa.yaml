@@ -154,7 +154,7 @@ settings:
     WDOG_TIMEOUT_COUNT: 0
   # --------------------------------------===== FLEXSPI_BOOT_CFG0 [Optional] =====--------------------------------------
   # Description: Offset: 0x00000010, Width: 32b; ROM code will not manage these fields, but SDK driver can manage these.
-  FLEXSPI_BOOT_CFG0:
+  FLEXSPI_CFG0:
     # -----------------------------------===== FLEXSPI_AUTO_PROBE_EN [Optional] =====-----------------------------------
     # Description: Offset: 0b, Width: 1b, Quad/Octal-SPI flash auto probe feature enable
     FLEXSPI_AUTO_PROBE_EN: 0
@@ -200,7 +200,7 @@ settings:
     PORT_SEL: PORT_A
   # --------------------------------------===== FLEXSPI_BOOT_CFG1 [Optional] =====--------------------------------------
   # Description: Offset: 0x00000014, Width: 32b; ROM code will not manage these fields, but SDK driver can manage these.
-  FLEXSPI_BOOT_CFG1:
+  FLEXSPI_CFG1:
     # ----------------------------------===== FLEXSPI_DELAY_CELL_NUM [Optional] =====-----------------------------------
     # Description: Offset: 0b, Width: 7b, Delay cell numbers for Flash read sampling via DQS (either internal loopback
     # or external DQS). The value provided here is loaded into the FLEXSPIn_DLLnCR
@@ -395,9 +395,6 @@ settings:
     # ---------------------------------------===== ISP_USB_CUST [Optional] =====----------------------------------------
     # Description: Offset: 22b, Width: 2b, Use customer defined GPIO for USB VBUS detect function during ISP mode
     ISP_USB_CUST: 0
-    # ---------------------------------------===== ISP_CAN_CUST [Optional] =====----------------------------------------
-    # Description: Offset: 24b, Width: 2b, Use customer defined CAN ISP pins
-    ISP_CAN_CUST: 0
     # ---------------------------------------===== ISP_SPI_CUST [Optional] =====----------------------------------------
     # Description: Offset: 26b, Width: 2b, Use customer defined SPI ISP pins
     ISP_SPI_CUST: 0

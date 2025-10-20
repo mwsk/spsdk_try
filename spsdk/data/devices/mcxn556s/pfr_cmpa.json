@@ -78,11 +78,6 @@
                                     "name": "USB1_HID",
                                     "value": 5,
                                     "description": "USB1 HID"
-                                },
-                                {
-                                    "name": "CAN_ISP",
-                                    "value": 6,
-                                    "description": "CAN ISP"
                                 }
                             ]
                         },
@@ -178,7 +173,7 @@
                             "width": 3,
                             "id": "field004-bits5-7",
                             "name": "OEM_BANK1_IFR0_PROT",
-                            "description": "Defines flash protection of Bank1_IFR0 area based on usage. The MBC module is used to configure the access protections as readable (R), writeable (W), and/or executable (X). The access protections can also be configured as locked (L) which prevents later application code from changing the access protection configuration. The final MBC protection bits used for Bank1_IFR0 depend on the boot mode configuration, the boot path that is selected and the device life cycle state. The access This field will only modify the MBC protection bits for the Bank1_IFR0 area after the life cycle is advanced out of Develop. In the Develop life cycle state this field has no effect. For example, if using the In-Field life cycle and Bank1_IFR0 is being used as a recovery boot image (REC_BOOT_SRC = 1) and OEM_BANK1_IFR0_PROT value = 5 is selected), then for a regular boot using the primary image Bank1_IFR0 is mapped to GLBAC2. If the primary boot fails, and the recovery path is taken, then Bank1_IFR0 is mapped to GLBAC4 instead. Note: Settings 5-7 should not be used if Bank1_IFR0 is used as OEM_SBL (BOOT_SRC = 2). In Develop life cycle - All settings: MBC protection bits set as RWXL = 1110 (GLBAC0) In other life cycles \u2013"
+                            "description": "Defines flash protection of Bank1_IFR0 area based on usage. The MBC module is used to configure the access protections as readable (R), writeable (W), and/or executable (X). The access protections can also be configured as locked (L) which prevents later application code from changing the access protection configuration. The final MBC protection bits used for Bank1_IFR0 depend on the boot mode configuration, the boot path that is selected and the device life cycle state. The access This field will only modify the MBC protection bits for the Bank1_IFR0 area after the life cycle is advanced out of Develop. In the Develop life cycle state this field has no effect. For example, if using the In-Field life cycle and Bank1_IFR0 is being used as a recovery boot image (REC_BOOT_SRC = 1) and OEM_BANK1_IFR0_PROT value = 5 is selected), then for a regular boot using the primary image Bank1_IFR0 is mapped to GLBAC2. If the primary boot fails, and the recovery path is taken, then Bank1_IFR0 is mapped to GLBAC4 instead. Note: Settings 5-7 should not be used if Bank1_IFR0 is used as OEM_SBL (BOOT_SRC = 2). In Develop life cycle - All settings: MBC protection bits set as RWXL = 1110 (GLBAC0) In other life cycles –"
                         },
                         {
                             "width": 2,
@@ -350,10 +345,11 @@
                 },
                 {
                     "id": "field010",
-                    "name": "FLEXSPI_BOOT_CFG0",
+                    "name": "FLEXSPI_CFG0",
                     "description": "ROM code will not manage these fields, but SDK driver can manage these.",
                     "offset_int": "0x0010",
                     "default_value_int": "0",
+                    "deprecated_names": ["FLEXSPI_BOOT_CFG0"],
                     "bitfields": [
                         {
                             "width": 1,
@@ -377,7 +373,7 @@
                             "width": 4,
                             "id": "field010-bits7-10",
                             "name": "FLEXSPI_DUMMY_CYCLES",
-                            "description": "Quad/Octal-SPI dummy cycles for read command. If a non-zero value is programmed in this field, then the value is used to override the default number of dummy cycles for a fast read command read from the serial flash\u2019s SFDP information. Note: this field is only used if FLEXSPI_AUTO_PROBE_EN is set"
+                            "description": "Quad/Octal-SPI dummy cycles for read command. If a non-zero value is programmed in this field, then the value is used to override the default number of dummy cycles for a fast read command read from the serial flash’s SFDP information. Note: this field is only used if FLEXSPI_AUTO_PROBE_EN is set"
                         },
                         {
                             "width": 3,
@@ -440,10 +436,11 @@
                 },
                 {
                     "id": "field014",
-                    "name": "FLEXSPI_BOOT_CFG1",
+                    "name": "FLEXSPI_CFG1",
                     "description": "ROM code will not manage these fields, but SDK driver can manage these.",
                     "offset_int": "0x0014",
                     "default_value_int": "0",
+                    "deprecated_names": ["FLEXSPI_BOOT_CFG1"],
                     "bitfields": [
                         {
                             "width": 7,
@@ -784,7 +781,7 @@
                             "width": 3,
                             "id": "field038-bits16-18",
                             "name": "EXT_XTAL_CLK",
-                            "description": "USB PHY input clock frequency. For USB high speed PHY external XTAL input is needed. This field specifies the frequency of XTAL used on board. \u2022 000 - 24MHz input clock (Divide by 20) - Default option when CMPA is blank. \u2022 001 - 30MHz input clock (Divide by 16) \u2022 010 - 32MHz input clock (Divide by 15) \u2022 011 - Reserved \u2022 100 - 20MHz input clock (Divide by 24) \u2022 101 - 19.2MHz input clock (Divide by 25) \u2022 110 - 16MHz input clock (Divide by 30) \u2022 111 - 12MHz input clock (Divide by 40)"
+                            "description": "USB PHY input clock frequency. For USB high speed PHY external XTAL input is needed. This field specifies the frequency of XTAL used on board. • 000 - 24MHz input clock (Divide by 20) - Default option when CMPA is blank. • 001 - 30MHz input clock (Divide by 16) • 010 - 32MHz input clock (Divide by 15) • 011 - Reserved • 100 - 20MHz input clock (Divide by 24) • 101 - 19.2MHz input clock (Divide by 25) • 110 - 16MHz input clock (Divide by 30) • 111 - 12MHz input clock (Divide by 40)"
                         },
                         {
                             "width": 1,
@@ -820,10 +817,7 @@
                             "description": "Use customer defined GPIO for USB VBUS detect function during ISP mode"
                         },
                         {
-                            "width": 2,
-                            "id": "field03C-bits24-25",
-                            "name": "ISP_CAN_CUST",
-                            "description": "Use customer defined CAN ISP pins"
+                            "width": 2
                         },
                         {
                             "width": 2,
@@ -1511,7 +1505,7 @@
                                 {
                                     "name": "Not included",
                                     "value": 0,
-                                    "description": "not included"
+                                    "description": "Not included"
                                 },
                                 {
                                     "name": "Boot on failure",
@@ -1539,7 +1533,7 @@
                                 {
                                     "name": "Not included",
                                     "value": 0,
-                                    "description": "not included"
+                                    "description": "Not included"
                                 },
                                 {
                                     "name": "Boot on failure",
@@ -1567,7 +1561,7 @@
                                 {
                                     "name": "Not included",
                                     "value": 0,
-                                    "description": "not included"
+                                    "description": "Not included"
                                 },
                                 {
                                     "name": "Boot on failure",
@@ -1595,7 +1589,7 @@
                                 {
                                     "name": "Not included",
                                     "value": 0,
-                                    "description": "not included"
+                                    "description": "Not included"
                                 },
                                 {
                                     "name": "Boot on failure",
@@ -1623,7 +1617,7 @@
                                 {
                                     "name": "Not included",
                                     "value": 0,
-                                    "description": "not included"
+                                    "description": "Not included"
                                 },
                                 {
                                     "name": "Boot on failure",
@@ -1651,7 +1645,7 @@
                                 {
                                     "name": "Not included",
                                     "value": 0,
-                                    "description": "not included"
+                                    "description": "Not included"
                                 },
                                 {
                                     "name": "Boot on failure",
@@ -1679,7 +1673,7 @@
                                 {
                                     "name": "Not included",
                                     "value": 0,
-                                    "description": "not included"
+                                    "description": "Not included"
                                 },
                                 {
                                     "name": "Boot on failure",
@@ -3670,3 +3664,4 @@
         }
     ]
 }
+

@@ -299,116 +299,28 @@
                             ]
                         },
                         {
-                            "width": 2,
-                            "id": "field014-bits8-9",
-                            "name": "PQC_ROTK0_EN",
-                            "description": "RoT Key 0 enable. Determines if ROTK0 can be used during secure boot",
-                            "values": [
-                                {
-                                    "name": "ENABLED_0",
-                                    "value": 0,
-                                    "description": "Enabled"
-                                },
-                                {
-                                    "name": "ENABLED_1",
-                                    "value": 1,
-                                    "description": "Enabled"
-                                },
-                                {
-                                    "name": "KEY_REVOKED_2",
-                                    "value": 2,
-                                    "description": "Key revoked"
-                                },
-                                {
-                                    "name": "KEY_REVOKED_3",
-                                    "value": 3,
-                                    "description": "Key revoked"
-                                }
-                            ]
+                            "width": 1
                         },
                         {
-                            "width": 2,
-                            "id": "field014-bits10-11",
-                            "name": "PQC_ROTK1_EN",
-                            "description": "RoT Key 1 enable. Determines if ROTK1 can be used during secure boot",
-                            "values": [
-                                {
-                                    "name": "ENABLED_0",
-                                    "value": 0,
-                                    "description": "Enabled"
-                                },
-                                {
-                                    "name": "ENABLED_1",
-                                    "value": 1,
-                                    "description": "Enabled"
-                                },
-                                {
-                                    "name": "KEY_REVOKED_2",
-                                    "value": 2,
-                                    "description": "Key revoked"
-                                },
-                                {
-                                    "name": "KEY_REVOKED_3",
-                                    "value": 3,
-                                    "description": "Key revoked"
-                                }
-                            ]
+                            "width": 1
                         },
                         {
-                            "width": 2,
-                            "id": "field014-bits12-13",
-                            "name": "PQC_ROTK2_EN",
-                            "description": "RoT Key 2 enable. Determines if ROTK2 can be used during secure boot",
-                            "values": [
-                                {
-                                    "name": "ENABLED_0",
-                                    "value": 0,
-                                    "description": "Enabled"
-                                },
-                                {
-                                    "name": "ENABLED_1",
-                                    "value": 1,
-                                    "description": "Enabled"
-                                },
-                                {
-                                    "name": "KEY_REVOKED_2",
-                                    "value": 2,
-                                    "description": "Key revoked"
-                                },
-                                {
-                                    "name": "KEY_REVOKED_3",
-                                    "value": 3,
-                                    "description": "Key revoked"
-                                }
-                            ]
+                            "width": 1
                         },
                         {
-                            "width": 2,
-                            "id": "field014-bits14-15",
-                            "name": "PQC_ROTK3_EN",
-                            "description": "RoT Key 3 enable. Determines if ROTK3 can be used during secure boot",
-                            "values": [
-                                {
-                                    "name": "ENABLED_0",
-                                    "value": 0,
-                                    "description": "Enabled"
-                                },
-                                {
-                                    "name": "ENABLED_1",
-                                    "value": 1,
-                                    "description": "Enabled"
-                                },
-                                {
-                                    "name": "KEY_REVOKED_2",
-                                    "value": 2,
-                                    "description": "Key revoked"
-                                },
-                                {
-                                    "name": "KEY_REVOKED_3",
-                                    "value": 3,
-                                    "description": "Key revoked"
-                                }
-                            ]
+                            "width": 1
+                        },
+                        {
+                            "width": 1
+                        },
+                        {
+                            "width": 1
+                        },
+                        {
+                            "width": 1
+                        },
+                        {
+                            "width": 1
                         },
                         {
                             "width": 1

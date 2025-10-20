@@ -59,13 +59,15 @@ def ahab_export(config: Config) -> None:
     ahab = AHABImage.load_from_config(config)
     ahab.update_fields()
     ahab.verify().validate()
-    ahab_data = ahab.export()
+    ahab_image = ahab.image_info()
 
     ahab_output_file_path = config.get_output_file_name("output")
-    write_file(ahab_data, ahab_output_file_path, mode="wb")
+    ahab_output_file_format = config.get_str("output_format", default="bin").lower()
+    ahab_image.offset = config.get_int("output_offset", default=0)
+    ahab_image.save_binary_image(ahab_output_file_path, file_format=ahab_output_file_format)
 
-    logger.info(f"Created AHAB Image:\n{str(ahab.image_info())}")
-    logger.info(f"Created AHAB Image memory map:\n{ahab.image_info().draw()}")
+    logger.info(f"Created AHAB Image:\n{ahab_image}")
+    logger.info(f"Created AHAB Image memory map:\n{ahab_image.draw()}")
     click.echo(f"Success. (AHAB: {get_printable_path(ahab_output_file_path)} created.)")
 
     post_export_files = ahab.post_export(config.get_output_dir("output"))

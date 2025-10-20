@@ -28,5 +28,6 @@ AHAB
     imx95/imx95_signed_ahab_uboot
     imx95/imx95_ahab_sign
     imx95/imx95_encrypted_signed_ahab_uboot
+    imx95/imx95_anti_rollback_protection
     srk_table/srk_table
     imx8ulp/imx8ulp_ahab_uboot

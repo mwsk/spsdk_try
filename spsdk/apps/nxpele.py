@@ -16,6 +16,7 @@ from typing import Any, Callable, Optional, TypeVar, Union
 import click
 from click_option_group import RequiredMutuallyExclusiveOptionGroup, optgroup
 
+from spsdk.apps.nxpele_apps.nxpele_hse import hse_group
 from spsdk.apps.utils import spsdk_logger
 from spsdk.apps.utils.common_cli_options import (
     CommandsTreeGroup,
@@ -2132,6 +2133,9 @@ def ele_export_nxp_prod_ka_puk(
                     ele_session_close(ele_handler, session_handle)
                 except Exception as e:
                     click.echo(f"Warning: Failed to close session: {e}")
+
+
+main.add_command(hse_group)
 
 
 @catch_spsdk_error
