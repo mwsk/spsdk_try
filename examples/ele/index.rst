@@ -1,7 +1,7 @@
 ================
-HAB
+ELE
 ================
 .. toctree::
     :maxdepth: 1
 
-    ele/nxpele
+    nxpele
