@@ -307,12 +307,21 @@ def main() -> None:
         "Crypto",
         "Master Boot Image",
         "Secure Binary File",
-        "AHAB + ELE",
+        "EdgeLock Enclave",
+        "Image",
         "Debug Authentication",
         "Mboot Protocol",
         "SDP(S) Protocol",
         "Debuggers",
         "DK6",
+        "DICE",
+        "EdgeLock 2GO",
+        "Fuses",
+        "SHE",
+        "LPC programming",
+        "WPC",
+        "UBoot",
+        "Memory Configuration",
     ]
 
     tools_list = ["MCUXpresso SEC tool", "Mass production tools", "3rd party tools"]
