@@ -27,12 +27,10 @@ from pytablewriter import MarkdownTableWriter
 from spsdk.image.ahab.ahab_image import AHABImage
 from spsdk.image.bee import Bee
 from spsdk.image.bootable_image.bimg import BootableImage
-from spsdk.image.fcb.fcb import FCB
 from spsdk.image.hab.hab_image import HabImage
 from spsdk.image.iee.iee import Iee
 from spsdk.image.mbi.mbi import MasterBootImage
 from spsdk.image.otfad.otfad import Otfad
-from spsdk.image.xmcd.xmcd import XMCD, MemoryType
 from spsdk.sbfile.sb2.sb_21_helper import SB21Helper
 from spsdk.sbfile.sb4.images import SecureBinary4
 from spsdk.sbfile.sb31.images import SecureBinary31
@@ -52,8 +50,8 @@ HAB_SCHEMAS_FILE = os.path.join(DOC_DIR, "hab_schemas.inc")
 OTFAD_SCHEMAS_FILE = os.path.join(DOC_DIR, "otfad_schemas.inc")
 IEE_SCHEMAS_FILE = os.path.join(DOC_DIR, "iee_schemas.inc")
 BEE_SCHEMAS_FILE = os.path.join(DOC_DIR, "bee_schemas.inc")
-FCB_SCHEMAS_FILE = os.path.join(DOC_DIR, "fcb_schemas.inc")
-XMCD_SCHEMAS_FILE = os.path.join(DOC_DIR, "xmcd_schemas.inc")
+# FCB_SCHEMAS_FILE = os.path.join(DOC_DIR, "fcb_schemas.inc")
+# XMCD_SCHEMAS_FILE = os.path.join(DOC_DIR, "xmcd_schemas.inc")
 BOOTABLE_SCHEMAS_FILE = os.path.join(DOC_DIR, "bootable_schemas.inc")
 SB21_TABLE_FILE = os.path.join(DOC_DIR, "table_sb21.inc")
 SB31_TABLE_FILE = os.path.join(DOC_DIR, "table_sb31.inc")
@@ -69,8 +67,8 @@ schema_files = [
     OTFAD_SCHEMAS_FILE,
     IEE_SCHEMAS_FILE,
     BEE_SCHEMAS_FILE,
-    FCB_SCHEMAS_FILE,
-    XMCD_SCHEMAS_FILE,
+    # FCB_SCHEMAS_FILE,
+    # XMCD_SCHEMAS_FILE,
     BOOTABLE_SCHEMAS_FILE,
     SB21_TABLE_FILE,
     SB31_TABLE_FILE,
@@ -634,61 +632,62 @@ def get_bootable_image_table() -> None:
     )
 
 
-def get_fcb_doc() -> None:
-    """Generate documentation for FCB (Firmware Configuration Block) configurations.
+# temporary disable due to the fact that generating takes a lot of time
+#  def get_fcb_doc() -> None:
+#     """Generate documentation for FCB (Firmware Configuration Block) configurations.
 
-    This method generates schema documentation for all supported families and memory types
-    in the FCB database. It removes any existing FCB schemas file, iterates through all
-    supported family-memory combinations, retrieves their validation schemas, and appends
-    the parsed documentation to the output file.
+#     This method generates schema documentation for all supported families and memory types
+#     in the FCB database. It removes any existing FCB schemas file, iterates through all
+#     supported family-memory combinations, retrieves their validation schemas, and appends
+#     the parsed documentation to the output file.
 
-    :raises OSError: If there are file system issues when removing or writing files.
-    :raises SPSDKError: If FCB validation schemas cannot be retrieved or parsed.
-    """
-    # Get validation schemas DOC
-    if os.path.exists(FCB_SCHEMAS_FILE):
-        os.remove(FCB_SCHEMAS_FILE)
-    families = get_docs_families(DatabaseManager.FCB)
-    for fam in families:
-        memories = FCB.get_supported_memory_types(fam)
-        for mem in memories:
-            validation_schemas = FCB.get_validation_schemas(fam, mem)
-            schema = get_schema(validation_schemas)
-            schema["title"] = f"FCB for {fam} and {mem.label}"
-            parsed_schema = parse_schema(schema)
-            template = get_template([schema], f"FCB for {fam} and {mem.label}")
-            append_schema(parsed_schema, template, FCB_SCHEMAS_FILE, title=schema["title"])
+#     :raises OSError: If there are file system issues when removing or writing files.
+#     :raises SPSDKError: If FCB validation schemas cannot be retrieved or parsed.
+#     """
+#     # Get validation schemas DOC
+#     if os.path.exists(FCB_SCHEMAS_FILE):
+#         os.remove(FCB_SCHEMAS_FILE)
+#     families = get_docs_families(DatabaseManager.FCB)
+#     for fam in families:
+#         memories = FCB.get_supported_memory_types(fam)
+#         for mem in memories:
+#             validation_schemas = FCB.get_validation_schemas(fam, mem)
+#             schema = get_schema(validation_schemas)
+#             schema["title"] = f"FCB for {fam} and {mem.label}"
+#             parsed_schema = parse_schema(schema)
+#             template = get_template([schema], f"FCB for {fam} and {mem.label}")
+#             append_schema(parsed_schema, template, FCB_SCHEMAS_FILE, title=schema["title"])
 
+# temporary disable due to the fact that generating takes a lot of time
+# def get_xmcd_doc() -> None:
+#     """Generate documentation for XMCD configurations.
 
-def get_xmcd_doc() -> None:
-    """Generate documentation for XMCD configurations.
+#     This method generates schema documentation for all supported XMCD (External Memory Configuration Data)
+#     configurations across different families, memory types, and configuration types. It removes any existing
+#     XMCD schemas file and recreates it with updated documentation for each supported combination.
 
-    This method generates schema documentation for all supported XMCD (External Memory Configuration Data)
-    configurations across different families, memory types, and configuration types. It removes any existing
-    XMCD schemas file and recreates it with updated documentation for each supported combination.
-
-    :raises OSError: If there are file system access issues when removing or writing files.
-    :raises SPSDKError: If there are issues retrieving XMCD validation schemas or supported types.
-    """
-    # Get validation schemas DOC
-    if os.path.exists(XMCD_SCHEMAS_FILE):
-        os.remove(XMCD_SCHEMAS_FILE)
-    families = get_docs_families(DatabaseManager.XMCD)
-    for fam in families:
-        memories = XMCD.get_supported_memory_types(fam)
-        for mem in memories:
-            config_types = XMCD.get_supported_configuration_types(fam, mem)
-            for cfg_type in config_types:
-                validation_schemas = XMCD.get_validation_schemas(
-                    fam, MemoryType.from_label(mem.name), cfg_type
-                )
-                schema = get_schema(validation_schemas)
-                schema["title"] = f"XMCD for {fam} and {mem.label}_{cfg_type.label}"
-                parsed_schema = parse_schema(schema)
-                template = get_template(
-                    [schema], f"XMCD for {fam} and {mem.label}_{cfg_type.label}"
-                )
-                append_schema(parsed_schema, template, XMCD_SCHEMAS_FILE, title=schema["title"])
+#     :raises OSError: If there are file system access issues when removing or writing files.
+#     :raises SPSDKError: If there are issues retrieving XMCD validation schemas or supported types.
+#     """
+#     # Get validation schemas DOC
+#     if os.path.exists(XMCD_SCHEMAS_FILE):
+#         os.remove(XMCD_SCHEMAS_FILE)
+#     families = get_docs_families(DatabaseManager.XMCD)
+#     for fam in families:
+#         memories = XMCD.get_supported_memory_types(fam)
+#         for mem in memories:
+#             config_types = XMCD.get_supported_configuration_types(fam, mem)
+#             for cfg_type in config_types:
+#                 validation_schemas = XMCD.get_validation_schemas(
+#                     fam, MemoryType.from_label(mem.name), cfg_type
+#                 )
+#                 schema = get_schema(validation_schemas)
+#                 schema["title"] = f"XMCD for {fam} and {mem.label}_{cfg_type.label}"
+#                 parsed_schema = parse_schema(schema)
+#                 template = get_template(
+#                     [schema], f"XMCD for {fam} and {mem.label}_{cfg_type.label}"
+#                 )
+#                 append_schema(parsed_schema, template, XMCD_SCHEMAS_FILE, title=schema["title"])
 
 
 def write_table(
@@ -778,8 +777,8 @@ def main() -> None:
     get_bee_doc()
     # get_bootable_image()
     # get_bootable_image_table()
-    get_fcb_doc()
-    get_xmcd_doc()
+    # get_fcb_doc()
+    # get_xmcd_doc()
     print("Finished running")
 
 
