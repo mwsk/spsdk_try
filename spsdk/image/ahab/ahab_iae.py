@@ -579,10 +579,6 @@ class ImageArrayEntry(Container):
         # In case the hash is shorter, the pack() (in little endian mode) should grant, that the
         # hash is left aligned and padded with zeros due to the '64s' formatter.
         # iv: fixed at 256 bits.
-        if self._image_offset < 0:
-            raise SPSDKError(
-                f"Invalid image offset: {hex(self._image_offset)} for {self.__str__()}"
-            )
         data = pack(
             self.format(self.chip_config.base.iae_has_signed_offsets),
             self._image_offset,
@@ -635,6 +631,24 @@ class ImageArrayEntry(Container):
                 )
             else:
                 ret.add_record("Image", VerifierResult.SUCCEEDED)
+
+        def verify_offset() -> None:
+            """Verify the image offset within the container.
+
+            Performs validation checks on the image offset:
+                - Checks the offset range
+                - Handles signed/unsigned offset configurations
+                - Logs verification results
+            """
+            ver_offset = Verifier("Offset in container")
+            ver_offset.add_record_bit_range("Range", self._image_offset)
+            if not self.chip_config.base.iae_has_signed_offsets:
+                ver_offset.add_record(
+                    "Signed offset",
+                    VerifierResult.SUCCEEDED if self._image_offset >= 0 else VerifierResult.ERROR,
+                    f"Offset value: {self._image_offset}",
+                )
+            ret.add_child(ver_offset)
 
         def verify_flags() -> None:
             """Verify the flags field and its component parts.
@@ -715,7 +729,7 @@ class ImageArrayEntry(Container):
 
         ret = Verifier(name=repr(self), description="")
         verify_image()
-        ret.add_record_bit_range("Offset in container", self._image_offset)
+        verify_offset()
         ret.add_record_bit_range("Image Size [B]", self.image_size)
         ret.add_record_bit_range("Load address", self.load_address, 64)
         ret.add_record_bit_range("Entry point", self.entry_point, 64)

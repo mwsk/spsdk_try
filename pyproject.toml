@@ -4,7 +4,7 @@ dynamic = ["dependencies", "version"]
 description = "Open Source Secure Provisioning SDK for NXP MCU/MPU"
 readme = "README.md"
 authors = [{ name = "NXP", email = "spsdk@nxp.com" }]
-license = { text = "BSD-3-Clause" }
+license = "BSD-3-Clause"
 requires-python = ">=3.9"
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -17,7 +17,6 @@ classifiers = [
     "Operating System :: POSIX :: Linux",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: MacOS :: MacOS X",
-    "License :: OSI Approved :: BSD License",
     "Topic :: Scientific/Engineering",
     "Topic :: Software Development :: Embedded Systems",
     "Topic :: System :: Hardware",
@@ -86,7 +85,7 @@ lpcprog = "spsdk.apps.lpcprog:safe_main"
 nxpshe = "spsdk.apps.nxpshe:safe_main"
 
 [build-system]
-requires = ["setuptools_scm<8.2", "setuptools>=72.1,<74", "wheel"]
+requires = ["setuptools_scm<8.2", "setuptools>=77", "wheel"]
 
 [tool.black]
 line-length = 100

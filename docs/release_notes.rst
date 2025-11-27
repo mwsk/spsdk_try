@@ -10,7 +10,6 @@
 .. _nxpdice: apps/nxpdice.html
 .. _nxpimage: apps/nxpimage.html
 .. _shadowregs: apps/shadowregs.html
-.. _el2go-host: apps/el2go-host.html
 .. _migration guide: migration_guide.html
 
 =============
@@ -23,7 +22,7 @@ Release Notes
 
 **New features**
 
-* `el2go-host`_:
+* :ref:`el2go-host`:
     - enhance SecureObject and TLVElement string representations and size handling
 
 * `nxpcrypto`_:
@@ -38,7 +37,7 @@ Release Notes
 
 **Bugfixes**
 
-* `el2go-host`_:
+* :ref:`el2go-host`:
     - add PROV_ID element tag to secure objects
     - fix i.MX93 El2go provisioning batch mode issue with more robust handling of loading bootloaders with temporary timeouts
     - disable cleanup method on mcxn236
@@ -77,7 +76,7 @@ Release Notes
 
 **Bugfixes**
 
-* `el2go-host`_:
+* :ref:`el2go-host`:
     - fix u-boot support for product flow
 
 * `blhost`_:
@@ -94,7 +93,7 @@ Release Notes
 
 **New features**
 
-* `el2go-host`_:
+* :ref:`el2go-host`:
     - extend error codes for EL2GO product-based provisioning
 
 * `nxpdebugmbox`_:
@@ -141,7 +140,7 @@ Available on `GitHub <https://github.com/nxp-mcuxpresso/rblhost>`_, `Crates <htt
     - support configurable hash algorithms in ahab certificate
     - add SHAKE hash algorithms to SPSDK and AHAB container
 
-* `el2go-host`_:
+* :ref:`el2go-host`:
     - add API/command to get stats of db file with product-based secure objects
     - add prepare-device command to prod command group
 
@@ -156,7 +155,7 @@ Available on `GitHub <https://github.com/nxp-mcuxpresso/rblhost>`_, `Crates <htt
 
 **Bugfixes**
 
-* `el2go-host`_:
+* :ref:`el2go-host`:
     - fix parameter "--secure-objects-file" for prod prepare-device
     - fix get-next-so fails with static-only database
 
@@ -177,7 +176,7 @@ Available on `GitHub <https://github.com/nxp-mcuxpresso/rblhost>`_, `Crates <htt
 
 **New features**
 
-* `el2go-host`_:
+* :ref:`el2go-host`:
     - implement product based provisioning for RW61x
     - improved exit code handling on error
 
@@ -202,7 +201,7 @@ Available on `GitHub <https://github.com/nxp-mcuxpresso/rblhost>`_, `Crates <htt
 
 **Bugfixes**
 
-* `el2go-host`_:
+* :ref:`el2go-host`:
     - fix exit code on error
     - fix YAML configuration loading
 
@@ -257,7 +256,7 @@ Current version introduces breaking changes, which are described in details in `
 
 **New features**
 
-* `el2go-host`_:
+* :ref:`el2go-host`:
     - check UUID fuse index
 * :ref:`ifr`:
     - move into `pfr`_ application
@@ -303,7 +302,7 @@ Current version introduces breaking changes, which are described in details in `
 
 * `blhost`_:
     - fix receive-sb-file command failures with usb
-* `el2go-host`_:
+* :ref:`el2go-host`:
     - fix family parameter issue
 * `nxpdebugmbox`_:
     - fix famode-image get-templates command
@@ -357,7 +356,7 @@ Current version introduces breaking changes, which are described in details in `
 
 **New features**
 
-* `el2go-host`_:
+* :ref:`el2go-host`:
     - support iMX8ULP
     - add possibility to save OEM app config
 * :ref:`lpcprog`:
@@ -372,7 +371,7 @@ Current version introduces breaking changes, which are described in details in `
 
 **Bugfixes**
 
-* `el2go-host`_:
+* :ref:`el2go-host`:
     - fix loading item yaml configuration
 * `nxpimage`_:
     - fix XMCD data for mimxrt798s
@@ -388,7 +387,7 @@ Current version introduces breaking changes, which are described in details in `
 
 * :ref:`nxpdevscan`:
     - add timeout option
-* `el2go-host`_:
+* :ref:`el2go-host`:
     - enablement on i.MX 93
 * support i.MX RT735S and i.MX RT758S
 * support i.MX RT1043 and i.MX RT1046
@@ -418,7 +417,7 @@ Current version introduces breaking changes, which are described in details in `
 
 **New features**
 
-* `el2go-host`_:
+* :ref:`el2go-host`:
     - implement parallel download of Secure Objects using database
     - speed up repeated calls to EL2GO server
     - allow to specify scope of Secure Objects to download
@@ -431,7 +430,7 @@ Current version introduces breaking changes, which are described in details in `
 
 **Bugfixes**
 
-* `el2go-host`_:
+* :ref:`el2go-host`:
     - fix memory buffer used for data exchange for KW45
 * `nxpimage`_:
     - allow to parse AHAB image with empty image hash for rt118x
@@ -448,7 +447,7 @@ Current version introduces breaking changes, which are described in details in `
 
 * `blhost`_:
     - support nIRQ pin feature
-* `el2go-host`_:
+* :ref:`el2go-host`:
     - unify subcommands for RW61x
     - add get-otp-binary command
     - add UUID harvesting
@@ -492,7 +491,7 @@ Current version introduces breaking changes, which are described in details in `
 
 **Bugfixes**
 
-* `el2go-host`_:
+* :ref:`el2go-host`:
     - fix general error when database has no blob
     - fix revision in configuration
 * `nxpdebugmbox`_:
@@ -539,7 +538,7 @@ Current version introduces breaking changes, which are described in details in `
 
 * `blhost`_:
     - add can interface
-* `el2go-host`_:
+* :ref:`el2go-host`:
     - support for mwct2x12, mwct2xd2
 * :ref:`ifr`:
     - add option to configure sector 2
