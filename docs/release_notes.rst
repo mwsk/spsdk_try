@@ -17,6 +17,36 @@
 Release Notes
 =============
 
+-------------------------
+3.6.0 (19-December-2025)
+-------------------------
+
+**New features**
+
+* `el2go-host`_:
+    - enable product based provisioning over fastboot
+    - enable EL2GO support for mcxn556s device
+    - add unclaim skip interactive mode option
+    - sync error codes between SPSDK and TP FW
+
+* `nxpimage`_:
+    - implement Key Import feature for MCX E31
+    - add NBU signing support for KW47
+
+* add support for reserved bitfields access information in database JSON files
+* enable support for all available USB devices in Serial Downloader mode
+* drop support for Python 3.9
+
+**Bugfixes**
+
+* `nxpimage`_:
+    - fix SB4.0 parsing support in AHAB
+
+* `el2go-host`_:
+    - fix product based flow for MPUs
+
+* Fix spsdk utils clear-cache command when cache is broken
+
 -----------------------
 3.5.0 28-November-2025
 -----------------------

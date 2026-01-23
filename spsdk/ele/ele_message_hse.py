@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright 2025 NXP
+# Copyright 2025-2026 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
+
 """SPSDK ELE HSE message implementation for Hardware Security Engine operations.
 
 This module provides specialized ELE message classes for HSE (Hardware Security Engine)
@@ -30,7 +31,8 @@ from spsdk.ele.ele_constants import HseMessageIDs, HseResponseStatus, MessageIDs
 from spsdk.ele.ele_message import LITTLE_ENDIAN, UINT8, UINT16, UINT32, EleMessage
 from spsdk.ele.hse_attrs import HseAttributeHandler, HseAttributeId
 from spsdk.exceptions import SPSDKValueError
-from spsdk.image.hse.key_info import KeyFormat, KeyHandle, KeyInfo, KeyType
+from spsdk.image.hse.common import KeyHandle
+from spsdk.image.hse.key_info import KeyFormat, KeyInfo, KeyType
 from spsdk.utils.database import DatabaseManager
 from spsdk.utils.misc import Endianness
 from spsdk.utils.spsdk_enum import SpsdkEnum
@@ -737,9 +739,9 @@ class EleMessageHseSmrEntryInstall(EleMessageHse):
         self,
         access_mode: HseAccessMode,
         entry_index: int,
-        smr_entry_addr: int,
-        smr_data_addr: int,
-        smr_data_length: int,
+        smr_entry_addr: Optional[int] = None,
+        smr_data_addr: Optional[int] = None,
+        smr_data_length: Optional[int] = None,
         auth_tag_addr: tuple = (0, 0),
         auth_tag_length: tuple = (0, 0),
         cipher_params: Optional[HseSmrCipherParams] = None,
@@ -766,7 +768,7 @@ class EleMessageHseSmrEntryInstall(EleMessageHse):
         self.entry_index = entry_index
         self.smr_entry_addr = smr_entry_addr
         self.smr_data_addr = smr_data_addr
-        self.smr_data_length = smr_data_length
+        self.smr_data_length = smr_data_length or 0
         self.auth_tag_addr = auth_tag_addr
         self.auth_tag_length = auth_tag_length
         self.cipher_params = cipher_params or HseSmrCipherParams()
@@ -783,6 +785,10 @@ class EleMessageHseSmrEntryInstall(EleMessageHse):
         :return: Packed service descriptor bytes containing access mode, entry index,
                  SMR entry/data addresses, authentication tags, and cipher parameters.
         """
+        if self.smr_entry_addr is None:
+            raise SPSDKValueError("SMR entry address must be provided")
+        if self.smr_data_addr is None:
+            raise SPSDKValueError("SMR data address must be provided")
         return pack(
             self.CMD_DESCRIPTOR_FORMAT,
             self.access_mode.tag,  # accessMode
@@ -1304,3 +1310,136 @@ class EleMessageHseFormatKeyCatalogs(EleMessageHse):
         if self.status == ResponseStatus.ELE_SUCCESS_IND.tag:
             return "Key catalogs formatting successful"
         return "Key catalogs formatting failed"
+
+
+class EleMessageHseEraseFirmware(EleMessageHse):
+    """HSE Erase Firmware service.
+
+    This service is used for erasing the HSE Firmware from flash-based devices (HSE_B variant).
+    It also erases the SYS-IMG and backup (if present) in the secure flash from the device.
+
+    Important restrictions:
+    - Available for flash based devices only (HSE_B variant)
+    - Can be performed only in CUST_DEL life cycle
+    - Will return HSE_SRV_RSP_NOT_ALLOWED error if performed in other life cycles
+
+    :cvar CMD: Command identifier for HSE firmware erase operation.
+    :cvar CMD_DESCRIPTOR_FORMAT: Binary format specification for command descriptor.
+    """
+
+    CMD = HseMessageIDs.ERASE_FW.tag
+    CMD_DESCRIPTOR_FORMAT = LITTLE_ENDIAN + UINT8 + UINT8 + UINT8 + UINT8  # reserved[4]
+
+    def __init__(
+        self,
+        srv_version: EleMessageHse.ServiceVersion = EleMessageHse.ServiceVersion.VERSION_0,
+    ):
+        """Initialize the HSE Erase Firmware message.
+
+        Creates a new HSE firmware erase message. This operation will completely erase
+        the HSE firmware, SYS-IMG, and any backup images from the secure flash.
+
+        Warning: This is a destructive operation that cannot be undone. Use with caution.
+
+        :param srv_version: Service version to use for this message.
+        """
+        super().__init__(srv_version)
+
+        # No response data expected for this command beyond status
+        self.response_data_size = 0
+
+    def get_srv_descriptor(self) -> bytes:
+        """Get service descriptor for the Erase Firmware command.
+
+        Creates a packed binary service descriptor containing only reserved fields
+        as specified in the hseEraseFwSrv_t structure.
+
+        :return: Packed service descriptor bytes with 4 reserved bytes set to zero.
+        """
+        return pack(
+            self.CMD_DESCRIPTOR_FORMAT,
+            0,  # reserved[0]
+            0,  # reserved[1]
+            0,  # reserved[2]
+            0,  # reserved[3]
+        )
+
+    def response_info(self) -> str:
+        """Get formatted information about the response.
+
+        Returns a human-readable string describing the result of the HSE firmware
+        erase operation, indicating success or failure with appropriate messaging.
+
+        :return: String representation of the firmware erase operation result.
+        """
+        if self.status == ResponseStatus.ELE_SUCCESS_IND.tag:
+            return "HSE Firmware erase operation successful"
+        if self.indication == HseResponseStatus.NOT_ALLOWED.tag:
+            return "HSE Firmware erase failed - Operation not allowed (check life cycle state)"
+        return "HSE Firmware erase operation failed"
+
+
+class EleMessageHseFirmwareIntegrityCheck(EleMessageHse):
+    """HSE Firmware Integrity Check service.
+
+    This service performs an integrity check of the HSE Firmware and SYS-IMG inside HSE.
+    It verifies the cryptographic integrity and authenticity of the firmware components
+    to ensure they have not been corrupted or tampered with.
+
+    Important notes:
+    - Available for HSE_B variant only
+    - No input data structure required
+    - Returns success/failure status indicating firmware integrity state
+
+    :cvar CMD: Command identifier for HSE firmware integrity check operation.
+    :cvar CMD_DESCRIPTOR_FORMAT: Binary format specification for command descriptor.
+    """
+
+    CMD = HseMessageIDs.FW_INTEGRITY_CHECK.tag
+    CMD_DESCRIPTOR_FORMAT = (
+        LITTLE_ENDIAN + UINT8 + UINT8 + UINT8 + UINT8
+    )  # reserved[4] - no data structure used
+
+    def __init__(
+        self,
+        srv_version: EleMessageHse.ServiceVersion = EleMessageHse.ServiceVersion.VERSION_0,
+    ):
+        """Initialize the HSE Firmware Integrity Check message.
+
+        Creates a new HSE firmware integrity check message. This operation will verify
+        the integrity of the HSE firmware and SYS-IMG components without modifying them.
+
+        :param srv_version: Service version to use for this message.
+        """
+        super().__init__(srv_version)
+
+        # No response data expected for this command beyond status
+        self.response_data_size = 0
+
+    def get_srv_descriptor(self) -> bytes:
+        """Get service descriptor for the Firmware Integrity Check command.
+
+        Creates a packed binary service descriptor. Since no data structure is used
+        for this service, the descriptor contains only reserved/padding bytes.
+
+        :return: Packed service descriptor bytes with reserved fields set to zero.
+        """
+        return pack(
+            self.CMD_DESCRIPTOR_FORMAT,
+            0,  # reserved[0]
+            0,  # reserved[1]
+            0,  # reserved[2]
+            0,  # reserved[3]
+        )
+
+    def response_info(self) -> str:
+        """Get formatted information about the response.
+
+        Returns a human-readable string describing the result of the HSE firmware
+        integrity check operation, indicating whether the firmware integrity is valid.
+
+        :return: String representation of the firmware integrity check result.
+        """
+        if self.status == ResponseStatus.ELE_SUCCESS_IND.tag:
+            return "HSE Firmware integrity check passed - Firmware is valid"
+        return "HSE Firmware integrity check failed - Firmware may be corrupted"

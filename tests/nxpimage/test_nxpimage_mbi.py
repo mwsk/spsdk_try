@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2022-2025 NXP
+# Copyright 2022-2026 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -395,9 +395,17 @@ def test_nxpimage_mbi_signed(
             assert ref_data[:-signature_length] == new_data[:-signature_length]
 
 
-@pytest.mark.parametrize("config_file,device", [("mb_xip_signed.yaml", "mcxe31b")])
+@pytest.mark.parametrize(
+    "config_file,device,app_offset",
+    [("mb_xip_signed.yaml", "mcxe31b", 0), ("mb_xip_signed_with_ivt.yaml", "mcxe31b", 0x1000)],
+)
 def test_nxpimage_mbi_signed_mcxe31(
-    cli_runner: CliRunner, nxpimage_data_dir: str, tmpdir: str, config_file: str, device: str
+    cli_runner: CliRunner,
+    nxpimage_data_dir: str,
+    tmpdir: str,
+    config_file: str,
+    device: str,
+    app_offset: int,
 ) -> None:
     """Test signed MBI export and parse functionality for MCXE31 device.
 
@@ -432,7 +440,10 @@ def test_nxpimage_mbi_signed_mcxe31(
         ).replace("\\", "/")
         parsed_app = os.path.join(tmpdir, "parsed", "application.bin")
         assert os.path.isfile(parsed_app)
-        assert filecmp.cmp(input_image, parsed_app)
+
+        input_image_data = load_binary(input_image)
+        parsed_app_data = load_binary(parsed_app)
+        assert input_image_data[app_offset:] == parsed_app_data
 
 
 @pytest.mark.parametrize(
