@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2021-2025 NXP
+# Copyright 2021-2026 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -21,7 +21,7 @@ from spsdk.apps.utils.utils import format_raw_data
 from spsdk.crypto.hash import EnumHashAlgorithm
 from spsdk.crypto.rng import random_bytes
 from spsdk.exceptions import SPSDKError, SPSDKNotImplementedError
-from spsdk.image.cert_block.cert_blocks import CertificateBlockHeader
+from spsdk.image.cert_block.cert_block_v21 import CertificateBlockHeader
 from spsdk.mboot.commands import TrustProvKeyType, TrustProvOemKeyType
 from spsdk.mboot.mcuboot import McuBoot
 from spsdk.sbfile.devhsm.devhsm import DevHsm
@@ -319,6 +319,14 @@ class DevHsmSB31(DevHsm):
         self.info_print(" 5.4 Handling CUST_MK_SK/SBKEK keyblob")
         if cust_mk_sk_blob_found:
             self.info_print(" 5.4.1 CUST_MK_SK/SBKEK key blob found in configuration")
+            expected_position = self.get_keyblob_position()
+            if (
+                not isinstance(sb3_data.commands[expected_position], CmdLoadKeyBlob)
+                and not self._keyblob_pos_warning_logged
+            ):
+                expected_desc = "last" if expected_position == -1 else str(expected_position)
+                logger.debug(f"LoadKeyBlob command not found at expected {expected_desc} position.")
+                self._keyblob_pos_warning_logged = True
         elif self.cust_mk_sk:
             self.info_print(" 5.4.1 Injecting wrapped key")
 

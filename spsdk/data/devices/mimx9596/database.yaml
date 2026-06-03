@@ -208,10 +208,23 @@ info:
           pid: 0x015D
         - vid: 0x1FC9
           pid: 0x015C
+        - vid: 0x1FC9
+          pid: 0x151
       protocol_params:
         no_cmd: True
         hid_ep1: True
         hid_pack_size: 1020
+    fastboot:
+      interfaces: [usb]
+      usb:
+        - vid: 0x1FC9
+          pid: 0x0152
+    sdpv:
+      protocol: sdpv
+      interfaces: [usb]
+      usb:
+        - vid: 0x1FC9
+          pid: 0x0151
 
 features:
   # ======== Fuses description section ========
@@ -252,6 +265,7 @@ features:
     based_on_ele: True # Flag if the implementation of DAT is based on EdgeLock Enclave
     dat_is_using_sha256_always: True
     auth_beacon_length: 4 # The length in bytes of authentication beacon
+    clear_iee_config_on_ele: True # Flag to enable configuration for clear IEE configuration with ELE
     ele_cnt_version: 1
     dac_version_is_swapped: True
     sub_features: ["ele_pqc"]
@@ -294,16 +308,39 @@ features:
           [0x0A, executable_fast_boot_image, Executable fast boot Image]
         OEI_DDR: [0x0D, oei_ddr, Executable boot Image]
         V2X_DUMMY: [0x0E, v2x_dummy, V2X dummy Image]
-
       ele:
         ELE_AS_IMAGE: [0x05, ele_as_image, EdgeLock Enclave Image in OEM Image]
         ELE: [0x06, ele, EdgeLock Enclave Image]
-
       v2x:
         V2X_AS_IMAGE: [0x0A, v2x_as_image, V2X image as OEM Image]
         V2X_PRIMARY: [0x0B, v2x_primary, V2X primary Image]
         V2X_SECONDARY: [0x0C, v2x_secondary, V2X secondary Image]
         V2X_ROM_PATCH: [0x0D, v2x_rom_patch, V2X rom patch Image]
+
+    signature_algorithms:
+      RSA_PSS: [0x22, "RSA_PSS", "RSA PSS signature algorithm"]
+      ECDSA: [0x27, "ECDSA", "ECDSA signature algorithm"]
+      SM2: [0x28, "SM2", "SM2 signature algorithm"]
+      # V2 only
+      DILITHIUM: [0xD1, "DILITHIUM", "Dilithium PQC algorithm"]
+      ML_DSA: [0xD2, "ML-DSA", "ML-DSA PQC algorithm"]
+
+    hash_algorithms:
+      SHA256: [0x00, "SHA256", "SHA-256 hash algorithm"]
+      SHA384: [0x01, "SHA384", "SHA-384 hash algorithm"]
+      SHA512: [0x02, "SHA512", "SHA-512 hash algorithm"]
+      SM3: [0x03, "SM3", "SM3 hash algorithm"]
+      # V2 only
+      SHA3_256: [0x04, "SHA3_256", "SHA3-256 hash algorithm"]
+      SHA3_384: [0x05, "SHA3_384", "SHA3-384 hash algorithm"]
+      SHA3_512: [0x06, "SHA3_512", "SHA3-512 hash algorithm"]
+      SHAKE_128_256: [0x08, "SHAKE_128_256", "SHAKE-128 with 256-bit output"]
+      SHAKE_256_512: [0x09, "SHAKE_256_512", "SHAKE-256 with 512-bit output"]
+
+    srk_sets:
+      NONE: [0x00, "none", "Image is not signed"]
+      NXP: [0x01, "nxp", "Signed by NXP keys"]
+      OEM: [0x02, "oem", "Signed by OEM keys"]
 
     image_types_mapping:
       ele: [6]
@@ -396,6 +433,9 @@ features:
         kernel,
         dtb,
       ]
+
+    metadata: sm # uses IAE metadata for SM
+
   # ======== EdgeLock Enclave section ========
   ele: {}
 
@@ -413,6 +453,7 @@ features:
           #not_used: 0xC00
           primary_image_container_set: 0x1_000
           secondary_image_container_set: -1 # Just behind previous segment
+        image_pattern: ones
       emmc:
         segments:
           primary_image_container_set: 0x8_000
@@ -460,8 +501,8 @@ features:
       imx95-15x15-lpddr4x-evk:
         lpddr_imem: lpddr4x_imem_v202409.bin
         lpddr_dmem: lpddr4x_dmem_v202409.bin
-        lpddr_imem_qb: lpddr4x_imem_qb_v202409
-        lpddr_dmem_qb: lpddr4x_dmem_qb_v202409
+        lpddr_imem_qb: lpddr4x_imem_qb_v202409.bin
+        lpddr_dmem_qb: lpddr4x_dmem_qb_v202409.bin
         oei_ddr: oei-m33-ddr.bin
         system_manager: m33_image-mx95evk.bin
         cortex_m7_app: imx95-15x15-evk_m7_TCM_power_mode_switch.bin
@@ -500,6 +541,7 @@ features:
     sb_21_supported: False
     has_kek_fuses: True
     supports_key_scrambling: True
+    reversed_scramble_key: True
 
     fuses_1: # Fuses for OTFAD1
       _name: Configuration of fuses for OTFAD1

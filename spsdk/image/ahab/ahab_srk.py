@@ -17,18 +17,20 @@ import logging
 import math
 import os
 from struct import pack, unpack
-from typing import Any, Optional, Sequence, cast
+from typing import Optional, Sequence, TypedDict, TypeVar, cast
 
 from typing_extensions import Self, TypeAlias
 
-from spsdk.crypto.dilithium import IS_DILITHIUM_SUPPORTED
 from spsdk.crypto.hash import EnumHashAlgorithm, get_hash
 from spsdk.crypto.keys import (
+    IS_DILITHIUM_SUPPORTED,
+    IS_LMS_SUPPORTED,
     IS_OSCCA_SUPPORTED,
     EccCurve,
     PublicKey,
     PublicKeyDilithium,
     PublicKeyEcc,
+    PublicKeyLMS,
     PublicKeyMLDSA,
     PublicKeyRsa,
     PublicKeySM2,
@@ -46,21 +48,20 @@ from spsdk.image.ahab.ahab_abstract_interfaces import (
     HeaderContainerInverted,
 )
 from spsdk.image.ahab.ahab_data import (
-    LITTLE_ENDIAN,
     RESERVED,
-    UINT8,
-    UINT16,
+    AhabChipConfig,
     AhabChipContainerConfig,
     AHABSignAlgorithm,
-    AHABSignAlgorithmV1,
-    AHABSignAlgorithmV2,
     AHABSignHashAlgorithm,
-    AHABSignHashAlgorithmV1,
-    AHABSignHashAlgorithmV2,
     AHABTags,
+    get_hash_algorithm_enum,
+    get_signature_algorithm_enum,
 )
 from spsdk.utils.config import Config
 from spsdk.utils.misc import (
+    LITTLE_ENDIAN,
+    UINT8,
+    UINT16,
     Endianness,
     bytes_to_print,
     extend_block,
@@ -68,12 +69,17 @@ from spsdk.utils.misc import (
     value_to_bytes,
     write_file,
 )
+from spsdk.utils.spsdk_enum import SpsdkEnum
 from spsdk.utils.verifier import Verifier, VerifierResult
 
 logger = logging.getLogger(__name__)
 
 
-def get_key_by_val(dictionary: dict, val: Any) -> Any:
+K = TypeVar("K")
+V = TypeVar("V")
+
+
+def get_key_by_val(dictionary: dict[K, V], val: V) -> K:
     """Get dictionary key by its value.
 
     Searches through the provided dictionary to find the key that corresponds to the given value.
@@ -89,6 +95,14 @@ def get_key_by_val(dictionary: dict, val: Any) -> Any:
     raise SPSDKValueError(
         f"The requested value [{val}] in dictionary [{dictionary}] is not available."
     )
+
+
+class KeyParameters(TypedDict):
+    """Parameters for creating an SRK record from a key."""
+
+    signing_algorithm: SpsdkEnum
+    hash_type: SpsdkEnum
+    key_size: int
 
 
 class SRKRecordBase(HeaderContainerInverted):
@@ -119,16 +133,14 @@ class SRKRecordBase(HeaderContainerInverted):
     :cvar MLDSA_KEY_TYPE: Mapping of ML-DSA parameter sets to type identifiers.
     """
 
-    SIGN_ALGORITHM_ENUM = AHABSignAlgorithmV2
-    HASH_ALGORITHM_ENUM = AHABSignHashAlgorithmV2
-
     TAG = AHABTags.SRK_RECORD.tag
-    VERSION = SIGN_ALGORITHM_ENUM.tags()
+    VERSION = AHABSignAlgorithm.tags()
     ECC_KEY_TYPE = {EccCurve.SECP521R1: 0x3, EccCurve.SECP384R1: 0x2, EccCurve.SECP256R1: 0x1}
     RSA_KEY_TYPE = {2048: 0x5, 3072: 0x6, 4096: 0x7}
     SM2_KEY_TYPE = 0x8
     DILITHIUM_KEY_TYPE = {3: 0x9, 5: 0xA}
     MLDSA_KEY_TYPE = {65: 0x9, 87: 0xA}
+    LMS_KEY_TYPE = {32: 0xB, 24: 0xC}
 
     # Dictionary of key sizes for different algorithms.
     KEY_SIZES = {
@@ -141,6 +153,8 @@ class SRKRecordBase(HeaderContainerInverted):
         0x8: (32, 32),  # SM2: (32, 32) bytes for X and Y coordinates
         0x9: (1952, 0),  # Dilithium 3 / ML-DSA-65: (1952, 0) bytes for raw key data
         0xA: (2592, 0),  # Dilithium 5 / ML-DSA-87: (2592, 0) bytes for raw key data
+        0xB: (56, 0),  # LMS SHA256 key
+        0xC: (48, 0),  # LMS SHA256-192 key
     }
 
     FLAGS_CA_MASK = 0x80
@@ -149,12 +163,13 @@ class SRKRecordBase(HeaderContainerInverted):
     def __init__(
         self,
         src_key: Optional[PublicKey] = None,
-        signing_algorithm: AHABSignAlgorithm = SIGN_ALGORITHM_ENUM.RSA_PSS,
-        hash_type: AHABSignHashAlgorithm = HASH_ALGORITHM_ENUM.SHA256,
+        signing_algorithm: Optional[SpsdkEnum] = None,
+        hash_type: Optional[SpsdkEnum] = None,
         key_size: int = 0,
         srk_flags: int = 0,
         crypto_params: bytes = b"",
         legacy_rsa_exponent_size: bool = False,
+        chip_config: Optional[AhabChipConfig] = None,
     ):
         """Initialize AHAB SRK Record object.
 
@@ -171,11 +186,22 @@ class SRKRecordBase(HeaderContainerInverted):
         :param legacy_rsa_exponent_size: Enable legacy 4-byte RSA exponent size for backward
             compatibility with older implementations.
         """
+        # Get the appropriate enum classes
+        sig_enum = get_signature_algorithm_enum(chip_config)
+        hash_enum = get_hash_algorithm_enum(chip_config)
+
+        # Use default values if not provided
+        if signing_algorithm is None:
+            signing_algorithm = sig_enum.from_label("RSA_PSS")
+        if hash_type is None:
+            hash_type = hash_enum.from_label("SHA256")
+
         super().__init__(
             tag=self.TAG,
             length=-1,
             version=signing_algorithm.tag,
         )
+        self.chip_config = chip_config
         self.src_key = src_key
         self.hash_algorithm = hash_type
         self.key_size = key_size
@@ -212,8 +238,8 @@ class SRKRecordBase(HeaderContainerInverted):
 
         # For RSA keys, check if we need to use actual exponent size
         if self.signing_algorithm in [
-            self.SIGN_ALGORITHM_ENUM.RSA,
-            self.SIGN_ALGORITHM_ENUM.RSA_PSS,
+            AHABSignAlgorithm.RSA,
+            AHABSignAlgorithm.RSA_PSS,
         ]:
             if self.legacy_rsa_exponent_size:
                 # Use legacy 4-byte exponent size
@@ -281,14 +307,15 @@ class SRKRecordBase(HeaderContainerInverted):
         return len1 + len2
 
     @property
-    def signing_algorithm(self) -> AHABSignAlgorithm:
+    def signing_algorithm(self) -> SpsdkEnum:
         """Get signing algorithm used by this SRK record.
 
         Converts the internal version tag into the corresponding AHABSignAlgorithm enum value.
 
         :return: The signing algorithm as an AHABSignAlgorithm enum value.
         """
-        return self.SIGN_ALGORITHM_ENUM.from_tag(self.version)
+        sig_enum = get_signature_algorithm_enum(self.chip_config)
+        return sig_enum.from_tag(self.version)
 
     def __eq__(self, other: object) -> bool:
         """Check equality of two SRK (Super Root Key) objects.
@@ -429,8 +456,8 @@ class SRKRecordBase(HeaderContainerInverted):
             the result object.
             """
             if self.signing_algorithm in (
-                self.SIGN_ALGORITHM_ENUM.RSA,
-                self.SIGN_ALGORITHM_ENUM.RSA_PSS,
+                AHABSignAlgorithm.RSA,
+                AHABSignAlgorithm.RSA_PSS,
             ):  # Signing algorithm RSA
                 if self.key_size not in self.RSA_KEY_TYPE.values():
                     ret.add_record(
@@ -438,16 +465,14 @@ class SRKRecordBase(HeaderContainerInverted):
                         VerifierResult.ERROR,
                         f"Invalid Key size in match to RSA signing algorithm: {self.key_size}",
                     )
-            elif (
-                self.signing_algorithm == self.SIGN_ALGORITHM_ENUM.ECDSA
-            ):  # Signing algorithm ECDSA
+            elif self.signing_algorithm == AHABSignAlgorithm.ECDSA:  # Signing algorithm ECDSA
                 if self.key_size not in self.ECC_KEY_TYPE.values():
                     ret.add_record(
                         "Key size",
                         VerifierResult.ERROR,
                         f"Invalid Key size in match to ECDSA signing algorithm: {self.key_size}",
                     )
-            elif self.signing_algorithm == self.SIGN_ALGORITHM_ENUM.SM2:  # Signing algorithm SM2
+            elif self.signing_algorithm == AHABSignAlgorithm.SM2:  # Signing algorithm SM2
                 if self.key_size != self.SM2_KEY_TYPE:
                     ret.add_record(
                         "Key size",
@@ -461,9 +486,9 @@ class SRKRecordBase(HeaderContainerInverted):
         key_sizes = self.key_sizes
         ret.add_child(self.verify_parsed_header())
         ret.add_child(self.verify_header())
-        ret.add_record_enum("Signing algorithm", self.signing_algorithm, self.SIGN_ALGORITHM_ENUM)
+        ret.add_record_enum("Signing algorithm", self.signing_algorithm, AHABSignAlgorithm)
         ret.add_child(verify_flags())
-        ret.add_record_enum("Signing hash algorithm", self.hash_algorithm, self.HASH_ALGORITHM_ENUM)
+        ret.add_record_enum("Signing hash algorithm", self.hash_algorithm, AHABSignHashAlgorithm)
         ret.add_record_range("Crypto parameter 1 length", key_sizes[0], 32, 2592)
         ret.add_record_range("Crypto parameter 2 length", key_sizes[1], 0, 66)
         verify_key_size()
@@ -498,8 +523,9 @@ class SRKRecordBase(HeaderContainerInverted):
         public_key: PublicKey,
         srk_flags: int = 0,
         srk_id: int = 0,
-        hash_algorithm: Optional[AHABSignHashAlgorithm] = None,
+        hash_algorithm: Optional[SpsdkEnum] = None,
         legacy_rsa_exponent_size: bool = False,
+        chip_config: Optional[AhabChipConfig] = None,
     ) -> Self:
         """Create AHAB SRK instance from cryptographic key data.
 
@@ -512,12 +538,16 @@ class SRKRecordBase(HeaderContainerInverted):
         :param srk_id: Index position of key in the SRK table.
         :param hash_algorithm: Hash algorithm to use, defaults to key-type appropriate algorithm.
         :param legacy_rsa_exponent_size: Use 4-byte RSA exponent for backward compatibility.
+        :param chip_config: Chip config
         :raises SPSDKValueError: Unsupported key size or invalid key parameters.
         :raises SPSDKUnsupportedOperation: Unsupported public key type.
         :return: New AHAB SRK instance configured with the provided key data.
         """
         if hasattr(public_key, "ca"):
             srk_flags |= cls.FLAGS_CA_MASK
+
+        sig_enum = get_signature_algorithm_enum(chip_config)
+        hash_enum = get_hash_algorithm_enum(chip_config)
 
         if isinstance(public_key, PublicKeyRsa):
             par_n: int = public_key.public_numbers.n
@@ -538,8 +568,8 @@ class SRKRecordBase(HeaderContainerInverted):
                     )
             return cls(
                 src_key=public_key,
-                signing_algorithm=cls.SIGN_ALGORITHM_ENUM.RSA_PSS,
-                hash_type=hash_algorithm or cls.HASH_ALGORITHM_ENUM.SHA256,
+                signing_algorithm=sig_enum.from_label("RSA_PSS"),
+                hash_type=hash_algorithm or hash_enum.from_label("SHA256"),
                 key_size=key_size,
                 srk_flags=srk_flags,
                 crypto_params=par_n.to_bytes(
@@ -547,6 +577,7 @@ class SRKRecordBase(HeaderContainerInverted):
                 )
                 + par_e.to_bytes(length=actual_e_size, byteorder=Endianness.BIG.value),
                 legacy_rsa_exponent_size=legacy_rsa_exponent_size,
+                chip_config=chip_config,
             )
 
         if isinstance(public_key, PublicKeyEcc):
@@ -561,14 +592,11 @@ class SRKRecordBase(HeaderContainerInverted):
             if hash_algorithm:
                 hash_type = hash_algorithm
             else:
-                hash_type = {
-                    256: cls.HASH_ALGORITHM_ENUM.SHA256,
-                    384: cls.HASH_ALGORITHM_ENUM.SHA384,
-                    521: cls.HASH_ALGORITHM_ENUM.SHA512,
-                }[public_key.key_size]
+                _ecc_hash_label = {256: "SHA256", 384: "SHA384", 521: "SHA512"}
+                hash_type = hash_enum.from_label(_ecc_hash_label[public_key.key_size])
 
             return cls(
-                signing_algorithm=cls.SIGN_ALGORITHM_ENUM.ECDSA,
+                signing_algorithm=sig_enum.from_label("ECDSA"),
                 hash_type=hash_type,
                 key_size=key_size,
                 srk_flags=srk_flags,
@@ -576,6 +604,7 @@ class SRKRecordBase(HeaderContainerInverted):
                     length=cls.KEY_SIZES[key_size][0], byteorder=Endianness.BIG.value
                 )
                 + par_y.to_bytes(length=cls.KEY_SIZES[key_size][1], byteorder=Endianness.BIG.value),
+                chip_config=chip_config,
             )
 
         if IS_OSCCA_SUPPORTED and isinstance(public_key, PublicKeySM2):
@@ -586,17 +615,18 @@ class SRKRecordBase(HeaderContainerInverted):
             key_size = cls.SM2_KEY_TYPE
             return cls(
                 src_key=public_key,
-                signing_algorithm=cls.SIGN_ALGORITHM_ENUM.SM2,
-                hash_type=hash_algorithm or cls.HASH_ALGORITHM_ENUM.SM3,
+                signing_algorithm=sig_enum.from_label("SM2"),
+                hash_type=hash_algorithm or hash_enum.from_label("SM3"),
                 key_size=key_size,
                 srk_flags=srk_flags,
                 crypto_params=param1 + param2,
+                chip_config=chip_config,
             )
 
         raise SPSDKUnsupportedOperation(f"Unsupported public key type: {type(public_key)}")
 
     @classmethod
-    def parse(cls, data: bytes) -> Self:
+    def parse(cls, data: bytes, chip_config: Optional[AhabChipConfig] = None) -> Self:
         """Parse input binary chunk to the container object.
 
         The method parses binary data containing SRK (Super Root Key) record block and recreates
@@ -604,6 +634,7 @@ class SRKRecordBase(HeaderContainerInverted):
         RSA exponent size determination.
 
         :param data: Binary data with SRK record block to parse.
+        :param chip_config: Optional chip configuration for dynamic enum resolution.
         :raises SPSDKLengthError: Invalid length of SRK record data block.
         :return: SRK record recreated from the binary data.
         """
@@ -618,6 +649,12 @@ class SRKRecordBase(HeaderContainerInverted):
             srk_flags,
             parameters_len_raw,
         ) = unpack(cls.format(), data[: cls.fixed_length()])
+
+        sig_enum = get_signature_algorithm_enum(chip_config)
+        hash_enum = get_hash_algorithm_enum(chip_config)
+
+        signing_algorithm = sig_enum.from_tag(signing_algo)
+        hash_algorithm = hash_enum.from_tag(hash_algo)
 
         # Although we know from the total length, that we have enough bytes,
         # the crypto param lengths may be set improperly and we may get into trouble
@@ -635,8 +672,13 @@ class SRKRecordBase(HeaderContainerInverted):
         crypto_params = data[cls.fixed_length() : cls.fixed_length() + parameters_len]
 
         # For RSA keys, determine the actual exponent size
-
-        if signing_algo in [cls.SIGN_ALGORITHM_ENUM.RSA, cls.SIGN_ALGORITHM_ENUM.RSA_PSS]:
+        rsa_labels = ["RSA", "RSA_PSS"]
+        is_rsa = any(
+            signing_algorithm == sig_enum.from_label(label)
+            for label in rsa_labels
+            if label in sig_enum.labels()
+        )
+        if is_rsa:
             modulus_size = cls.KEY_SIZES[key_size_curve][0]
             # The exponent starts after the modulus
             exponent_data = crypto_params[modulus_size:]
@@ -645,20 +687,22 @@ class SRKRecordBase(HeaderContainerInverted):
 
             # Create the SRK record with the actual exponent
             srk_rec = cls(
-                signing_algorithm=cls.SIGN_ALGORITHM_ENUM.from_tag(signing_algo),
-                hash_type=cls.HASH_ALGORITHM_ENUM.from_tag(hash_algo),
+                signing_algorithm=signing_algorithm,
+                hash_type=hash_algorithm,
                 key_size=key_size_curve,
                 srk_flags=srk_flags,
                 crypto_params=crypto_params[: modulus_size + actual_exponent_size],
+                chip_config=chip_config,
             )
         else:
             # For non-RSA keys, use the existing approach
             srk_rec = cls(
-                signing_algorithm=cls.SIGN_ALGORITHM_ENUM.from_tag(signing_algo),
-                hash_type=cls.HASH_ALGORITHM_ENUM.from_tag(hash_algo),
+                signing_algorithm=signing_algorithm,
+                hash_type=hash_algorithm,
                 key_size=key_size_curve,
                 srk_flags=srk_flags,
                 crypto_params=crypto_params,
+                chip_config=chip_config,
             )
 
         srk_rec.length = container_length
@@ -675,19 +719,19 @@ class SRKRecordBase(HeaderContainerInverted):
         :return: Formatted key name string for the current signing algorithm and key size,
             or "Unknown Key name!" if algorithm is not recognized.
         """
-        if self.signing_algorithm == self.SIGN_ALGORITHM_ENUM.RSA:
+        if self.signing_algorithm == AHABSignAlgorithm.RSA:
             return f"rsa{get_key_by_val(self.RSA_KEY_TYPE, self.key_size)}"
-        if self.signing_algorithm == self.SIGN_ALGORITHM_ENUM.RSA_PSS:
+        if self.signing_algorithm == AHABSignAlgorithm.RSA_PSS:
             return f"rsa_pss{get_key_by_val(self.RSA_KEY_TYPE, self.key_size)}"
-        if self.signing_algorithm == self.SIGN_ALGORITHM_ENUM.ECDSA:
-            return get_key_by_val(self.ECC_KEY_TYPE, self.key_size)
-        if self.signing_algorithm == self.SIGN_ALGORITHM_ENUM.SM2:
+        if self.signing_algorithm == AHABSignAlgorithm.ECDSA:
+            curve = get_key_by_val(self.ECC_KEY_TYPE, self.key_size)
+            return curve.name
+        if self.signing_algorithm == AHABSignAlgorithm.SM2:
             return "sm2"
-        if self.SIGN_ALGORITHM_ENUM == AHABSignAlgorithmV2:
-            if self.signing_algorithm == self.SIGN_ALGORITHM_ENUM.DILITHIUM:
-                return f"dilithium{get_key_by_val(self.DILITHIUM_KEY_TYPE, self.key_size)}"
-            if self.signing_algorithm == self.SIGN_ALGORITHM_ENUM.ML_DSA:
-                return f"mldsa{get_key_by_val(self.MLDSA_KEY_TYPE, self.key_size)}"
+        if self.signing_algorithm == AHABSignAlgorithm.DILITHIUM:
+            return f"dilithium{get_key_by_val(self.DILITHIUM_KEY_TYPE, self.key_size)}"
+        if self.signing_algorithm == AHABSignAlgorithm.ML_DSA:
+            return f"mldsa{get_key_by_val(self.MLDSA_KEY_TYPE, self.key_size)}"
 
         return "Unknown Key name!"
 
@@ -722,12 +766,7 @@ class SRKRecord(SRKRecordBase):
         |...  | RSA exponent (big endian) / ECDSA Y (big endian)              |
         +-----+---------------------------------------------------------------+
 
-    :cvar SIGN_ALGORITHM_ENUM: Supported signing algorithms for AHAB v1.
-    :cvar HASH_ALGORITHM_ENUM: Supported hash algorithms for AHAB v1.
     """
-
-    SIGN_ALGORITHM_ENUM: TypeAlias = AHABSignAlgorithmV1
-    HASH_ALGORITHM_ENUM: TypeAlias = AHABSignHashAlgorithmV1
 
     def __eq__(self, other: object) -> bool:
         """Check equality of two AHAB SRK objects.
@@ -859,18 +898,18 @@ class SRKRecord(SRKRecordBase):
         par2 = int.from_bytes(self.crypto_param2, Endianness.BIG.value)
 
         if self.signing_algorithm in [
-            self.SIGN_ALGORITHM_ENUM.RSA,
-            self.SIGN_ALGORITHM_ENUM.RSA_PSS,
+            AHABSignAlgorithm.RSA,
+            AHABSignAlgorithm.RSA_PSS,
         ]:
             # RSA Key to store
             return PublicKeyRsa.recreate(modulus=par1, exponent=par2)
 
-        if self.signing_algorithm == self.SIGN_ALGORITHM_ENUM.ECDSA:
+        if self.signing_algorithm == AHABSignAlgorithm.ECDSA:
             # ECDSA Key to store
             curve = get_key_by_val(self.ECC_KEY_TYPE, self.key_size)
             return PublicKeyEcc.recreate(par1, par2, curve=curve)
 
-        if self.signing_algorithm == self.SIGN_ALGORITHM_ENUM.SM2 and IS_OSCCA_SUPPORTED:
+        if self.signing_algorithm == AHABSignAlgorithm.SM2 and IS_OSCCA_SUPPORTED:
             return PublicKeySM2.recreate(self.crypto_param1 + self.crypto_param2)
 
         raise SPSDKUnsupportedOperation("Unsupported public key type")
@@ -910,12 +949,13 @@ class SRKRecordV2(SRKRecordBase):
     def __init__(
         self,
         src_key: Optional[PublicKey] = None,
-        signing_algorithm: AHABSignAlgorithmV2 = AHABSignAlgorithmV2.RSA_PSS,
-        hash_type: AHABSignHashAlgorithmV2 = AHABSignHashAlgorithmV2.SHA256,
+        signing_algorithm: SpsdkEnum = AHABSignAlgorithm.RSA_PSS,
+        hash_type: SpsdkEnum = AHABSignHashAlgorithm.SHA256,
         key_size: int = 0,
         srk_flags: int = 0,
         crypto_params: bytes = b"",
         legacy_rsa_exponent_size: bool = False,
+        chip_config: Optional[AhabChipConfig] = None,
     ):
         """Initialize AHAB SRK record with cryptographic parameters.
 
@@ -939,6 +979,7 @@ class SRKRecordV2(SRKRecordBase):
             srk_flags,
             crypto_params,
             legacy_rsa_exponent_size,
+            chip_config=chip_config,
         )
         self.srk_data: Optional[SRKData] = None
 
@@ -1052,8 +1093,8 @@ class SRKRecordV2(SRKRecordBase):
             key_sizes = self.key_sizes
 
             if self.signing_algorithm in [
-                self.SIGN_ALGORITHM_ENUM.RSA,
-                self.SIGN_ALGORITHM_ENUM.RSA_PSS,
+                AHABSignAlgorithm.RSA,
+                AHABSignAlgorithm.RSA_PSS,
             ]:
                 # For RSA keys, use actual sizes
                 modulus_size = key_sizes[0]
@@ -1153,8 +1194,9 @@ class SRKRecordV2(SRKRecordBase):
         public_key: PublicKey,
         srk_flags: int = 0,
         srk_id: int = 0,
-        hash_algorithm: Optional[AHABSignHashAlgorithm] = None,
+        hash_algorithm: Optional[SpsdkEnum] = None,
         legacy_rsa_exponent_size: bool = False,
+        chip_config: Optional[AhabChipConfig] = None,
     ) -> Self:
         """Create instance from key data.
 
@@ -1168,91 +1210,236 @@ class SRKRecordV2(SRKRecordBase):
             based on key type.
         :param legacy_rsa_exponent_size: Use legacy 4-byte RSA exponent size for backward
             compatibility, defaults to False.
+        :param chip_config: Optional chip configuration for device-specific enumerations.
         :raises SPSDKValueError: Unsupported key size or unsupported public key type.
         :raises SPSDKUnsupportedOperation: Unsupported key type or operation.
         :return: New instance of the class configured with the provided key data.
         """
-        if hash_algorithm:
-            assert isinstance(
-                hash_algorithm, AHABSignHashAlgorithmV2
-            ), "Invalid hash algorithm type"
-
-        signing_algorithm = None
-        hash_type = cls.HASH_ALGORITHM_ENUM.SHA256
-        key_size = 0
-
         if hasattr(public_key, "ca"):
             srk_flags |= cls.FLAGS_CA_MASK
 
-        if isinstance(public_key, PublicKeyRsa):
-            signing_algorithm = cls.SIGN_ALGORITHM_ENUM.RSA_PSS
-            hash_type = hash_algorithm or cls.HASH_ALGORITHM_ENUM.SHA256
-            key_size = cls.RSA_KEY_TYPE[public_key.key_size]
-
-        elif isinstance(public_key, PublicKeyEcc):
-            signing_algorithm = cls.SIGN_ALGORITHM_ENUM.ECDSA
-            key_size = cls.ECC_KEY_TYPE[public_key.curve]
-
-            if public_key.key_size not in [256, 384, 521]:
-                raise SPSDKValueError(
-                    f"Unsupported ECC key for AHAB container: {public_key.key_size}"
-                )
-            if hash_algorithm:
-                hash_type = hash_algorithm
-            else:
-                hash_type = {
-                    256: cls.HASH_ALGORITHM_ENUM.SHA256,
-                    384: cls.HASH_ALGORITHM_ENUM.SHA384,
-                    521: cls.HASH_ALGORITHM_ENUM.SHA512,
-                }[public_key.key_size]
-
-        elif IS_OSCCA_SUPPORTED and isinstance(public_key, PublicKeySM2):
-            signing_algorithm = cls.SIGN_ALGORITHM_ENUM.SM2
-            hash_type = hash_algorithm or cls.HASH_ALGORITHM_ENUM.SM3
-            key_size = cls.SM2_KEY_TYPE
-
-        elif IS_DILITHIUM_SUPPORTED and isinstance(public_key, PublicKeyDilithium):
-            signing_algorithm = cls.SIGN_ALGORITHM_ENUM.DILITHIUM
-            key_size = cls.DILITHIUM_KEY_TYPE[public_key.level]
-            if hash_algorithm:
-                hash_type = hash_algorithm
-            else:
-                hash_type = {
-                    3: cls.HASH_ALGORITHM_ENUM.SHA384,
-                    5: cls.HASH_ALGORITHM_ENUM.SHA512,
-                }[public_key.level]
-        elif IS_DILITHIUM_SUPPORTED and isinstance(public_key, PublicKeyMLDSA):
-            signing_algorithm = cls.SIGN_ALGORITHM_ENUM.ML_DSA
-            try:
-                key_size = cls.DILITHIUM_KEY_TYPE[public_key.level]
-            except KeyError as exc:
-                raise SPSDKUnsupportedOperation(
-                    f"Unsupported ML-DSA key level: {public_key.level}"
-                ) from exc
-            if hash_algorithm:
-                hash_type = hash_algorithm
-            else:
-                hash_type = {
-                    3: cls.HASH_ALGORITHM_ENUM.SHA384,
-                    5: cls.HASH_ALGORITHM_ENUM.SHA512,
-                }[public_key.level]
-
-        else:
-            raise SPSDKValueError("Unsupported public key by AHAB SPSDK support.")
+        params = cls._get_key_parameters(public_key, hash_algorithm, chip_config)
 
         ret = cls(
             src_key=public_key,
-            signing_algorithm=signing_algorithm,
-            hash_type=hash_type,
-            key_size=key_size,
+            signing_algorithm=params["signing_algorithm"],
+            hash_type=params["hash_type"],
+            key_size=params["key_size"],
             srk_flags=srk_flags,
             legacy_rsa_exponent_size=legacy_rsa_exponent_size,
+            chip_config=chip_config,
         )
         ret.srk_data = SRKData.create_from_key(
             public_key=public_key, srk_id=srk_id, legacy_rsa_exponent_size=legacy_rsa_exponent_size
         )
 
         return ret
+
+    @classmethod
+    def _get_key_parameters(
+        cls,
+        public_key: PublicKey,
+        hash_algorithm: Optional[SpsdkEnum],
+        chip_config: Optional[AhabChipConfig],
+    ) -> KeyParameters:
+        """Get key parameters based on public key type.
+
+        :param public_key: Public key to extract parameters from.
+        :param hash_algorithm: Optional hash algorithm override.
+        :param chip_config: Optional chip configuration.
+        :return: Dictionary with signing_algorithm, hash_type, and key_size.
+        :raises SPSDKValueError: Unsupported public key type.
+        :raises SPSDKUnsupportedOperation: Unsupported key operation.
+        """
+        if isinstance(public_key, PublicKeyRsa):
+            return cls._get_rsa_parameters(public_key, hash_algorithm, chip_config)
+
+        if isinstance(public_key, PublicKeyEcc):
+            return cls._get_ecc_parameters(public_key, hash_algorithm, chip_config)
+
+        if IS_OSCCA_SUPPORTED and isinstance(public_key, PublicKeySM2):
+            return cls._get_sm2_parameters(hash_algorithm, chip_config)
+
+        if IS_DILITHIUM_SUPPORTED and isinstance(public_key, PublicKeyDilithium):
+            return cls._get_dilithium_parameters(public_key, hash_algorithm, chip_config)
+
+        if IS_DILITHIUM_SUPPORTED and isinstance(public_key, PublicKeyMLDSA):
+            return cls._get_mldsa_parameters(public_key, hash_algorithm, chip_config)
+
+        if IS_LMS_SUPPORTED and isinstance(public_key, PublicKeyLMS):
+            return cls._get_lms_parameters(public_key, hash_algorithm, chip_config)
+
+        # Build detailed error message
+        error_parts = [f"Unsupported public key type: {type(public_key).__name__}"]
+        error_parts.append("Supported key types:")
+        error_parts.append("  - RSA (2048, 3072, 4096 bits)")
+        error_parts.append("  - ECC (secp256r1, secp384r1, secp521r1)")
+
+        if IS_OSCCA_SUPPORTED:
+            error_parts.append("  - SM2")
+        else:
+            error_parts.append("  - SM2 (install 'gmssl' to enable)")
+
+        if IS_DILITHIUM_SUPPORTED:
+            error_parts.append("  - Dilithium (level 3, 5)")
+            error_parts.append("  - ML-DSA (level 3, 5)")
+        else:
+            error_parts.append("  - Dilithium/ML-DSA (install 'spsdk-pqc' to enable)")
+
+        raise SPSDKValueError("\n".join(error_parts))
+
+    @classmethod
+    def _get_rsa_parameters(
+        cls,
+        public_key: PublicKeyRsa,
+        hash_algorithm: Optional[SpsdkEnum],
+        chip_config: Optional[AhabChipConfig],
+    ) -> KeyParameters:
+        """Get RSA key parameters.
+
+        :param public_key: RSA public key.
+        :param hash_algorithm: Optional hash algorithm override.
+        :param chip_config: Optional chip configuration.
+        :return: Dictionary with signing_algorithm, hash_type, and key_size.
+        """
+        sig_enum = get_signature_algorithm_enum(chip_config)
+        hash_enum = get_hash_algorithm_enum(chip_config)
+
+        return KeyParameters(
+            signing_algorithm=sig_enum.from_label("RSA_PSS"),
+            hash_type=hash_algorithm or hash_enum.from_label("SHA256"),
+            key_size=cls.RSA_KEY_TYPE[public_key.key_size],
+        )
+
+    @classmethod
+    def _get_ecc_parameters(
+        cls,
+        public_key: PublicKeyEcc,
+        hash_algorithm: Optional[SpsdkEnum],
+        chip_config: Optional[AhabChipConfig],
+    ) -> KeyParameters:
+        """Get ECC key parameters.
+
+        :param public_key: ECC public key.
+        :param hash_algorithm: Optional hash algorithm override.
+        :param chip_config: Optional chip configuration.
+        :return: Dictionary with signing_algorithm, hash_type, and key_size.
+        :raises SPSDKValueError: Unsupported ECC key size.
+        """
+        hash_enum = get_hash_algorithm_enum(chip_config)
+
+        if public_key.key_size not in [256, 384, 521]:
+            raise SPSDKValueError(f"Unsupported ECC key for AHAB container: {public_key.key_size}")
+
+        _ecc_hash_label = {256: "SHA256", 384: "SHA384", 521: "SHA512"}
+        hash_type = hash_algorithm or hash_enum.from_label(_ecc_hash_label[public_key.key_size])
+
+        return KeyParameters(
+            signing_algorithm=AHABSignAlgorithm.ECDSA,
+            hash_type=hash_type,
+            key_size=cls.ECC_KEY_TYPE[public_key.curve],
+        )
+
+    @classmethod
+    def _get_sm2_parameters(
+        cls,
+        hash_algorithm: Optional[SpsdkEnum],
+        chip_config: Optional[AhabChipConfig],
+    ) -> KeyParameters:
+        """Get SM2 key parameters.
+
+        :param hash_algorithm: Optional hash algorithm override.
+        :param chip_config: Optional chip configuration.
+        :return: Dictionary with signing_algorithm, hash_type, and key_size.
+        """
+        sig_enum = get_signature_algorithm_enum(chip_config)
+        hash_enum = get_hash_algorithm_enum(chip_config)
+
+        return KeyParameters(
+            signing_algorithm=sig_enum.from_label("SM2"),
+            hash_type=hash_algorithm or hash_enum.from_label("SM3"),
+            key_size=cls.SM2_KEY_TYPE,
+        )
+
+    @classmethod
+    def _get_dilithium_parameters(
+        cls,
+        public_key: PublicKeyDilithium,
+        hash_algorithm: Optional[SpsdkEnum],
+        chip_config: Optional[AhabChipConfig],
+    ) -> KeyParameters:
+        """Get Dilithium key parameters.
+
+        :param public_key: Dilithium public key.
+        :param hash_algorithm: Optional hash algorithm override.
+        :param chip_config: Optional chip configuration.
+        :return: Dictionary with signing_algorithm, hash_type, and key_size.
+        """
+        hash_enum = get_hash_algorithm_enum(chip_config)
+
+        _dilithium_hash_label = {3: "SHA384", 5: "SHA512"}
+        hash_type = hash_algorithm or hash_enum.from_label(_dilithium_hash_label[public_key.level])
+
+        return KeyParameters(
+            signing_algorithm=AHABSignAlgorithm.DILITHIUM,
+            hash_type=hash_type,
+            key_size=cls.DILITHIUM_KEY_TYPE[public_key.level],
+        )
+
+    @classmethod
+    def _get_mldsa_parameters(
+        cls,
+        public_key: PublicKeyMLDSA,
+        hash_algorithm: Optional[SpsdkEnum],
+        chip_config: Optional[AhabChipConfig],
+    ) -> KeyParameters:
+        """Get ML-DSA key parameters.
+
+        :param public_key: ML-DSA public key.
+        :param hash_algorithm: Optional hash algorithm override.
+        :param chip_config: Optional chip configuration.
+        :return: Dictionary with signing_algorithm, hash_type, and key_size.
+        :raises SPSDKUnsupportedOperation: Unsupported ML-DSA key level.
+        """
+        hash_enum = get_hash_algorithm_enum(chip_config)
+
+        try:
+            key_size = cls.DILITHIUM_KEY_TYPE[public_key.level]
+        except KeyError as exc:
+            raise SPSDKUnsupportedOperation(
+                f"Unsupported ML-DSA key level: {public_key.level}"
+            ) from exc
+
+        _dilithium_hash_label = {3: "SHA384", 5: "SHA512"}
+        hash_type = hash_algorithm or hash_enum.from_label(_dilithium_hash_label[public_key.level])
+
+        return KeyParameters(
+            signing_algorithm=AHABSignAlgorithm.ML_DSA,
+            hash_type=hash_type,
+            key_size=key_size,
+        )
+
+    @classmethod
+    def _get_lms_parameters(
+        cls,
+        public_key: PublicKeyLMS,
+        hash_algorithm: Optional[SpsdkEnum],
+        chip_config: Optional[AhabChipConfig],
+    ) -> KeyParameters:
+        """Get LMS key parameters.
+
+        :param public_key: LMS public key.
+        :param hash_algorithm: Optional hash algorithm override.
+        :param chip_config: Optional chip configuration.
+        :return: Dictionary with signing_algorithm, hash_type, and key_size.
+        """
+        hash_enum = get_hash_algorithm_enum(chip_config)
+
+        return KeyParameters(
+            signing_algorithm=AHABSignAlgorithm.LMS,
+            hash_type=hash_algorithm or hash_enum.from_label("SHA256"),
+            key_size=cls.LMS_KEY_TYPE[public_key.params.hash_length],
+        )
 
     def get_public_key(self) -> PublicKey:
         """Recreate the SRK public key from stored SRK data.
@@ -1267,10 +1454,13 @@ class SRKRecordV2(SRKRecordBase):
         if self.srk_data is None:
             raise SPSDKError("Cannot recreate public key due missing SRK Data")
 
-        if self.signing_algorithm in [
-            self.SIGN_ALGORITHM_ENUM.RSA,
-            self.SIGN_ALGORITHM_ENUM.RSA_PSS,
-        ]:
+        sig_enum = get_signature_algorithm_enum(self.chip_config)
+        rsa_algos = []
+        for label in ["RSA", "RSA_PSS"]:
+            if label in sig_enum.labels():
+                rsa_algos.append(sig_enum.from_label(label))
+
+        if self.signing_algorithm in rsa_algos:
             # For RSA keys, we need to use the actual key sizes, not the default
             modulus_size = self.KEY_SIZES[self.key_size][0]
             crypto_param1 = self.srk_data.data[:modulus_size]
@@ -1287,29 +1477,72 @@ class SRKRecordV2(SRKRecordBase):
         par1 = int.from_bytes(crypto_param1, Endianness.BIG.value)
         par2 = int.from_bytes(crypto_param2, Endianness.BIG.value)
 
-        if self.signing_algorithm == self.SIGN_ALGORITHM_ENUM.ECDSA:
+        if "ECDSA" in sig_enum.labels() and self.signing_algorithm == sig_enum.from_label("ECDSA"):
             # ECDSA Key to store
             curve = get_key_by_val(self.ECC_KEY_TYPE, self.key_size)
             return PublicKeyEcc.recreate(par1, par2, curve=curve)
 
-        if self.signing_algorithm == self.SIGN_ALGORITHM_ENUM.SM2 and IS_OSCCA_SUPPORTED:
+        if (
+            IS_OSCCA_SUPPORTED
+            and "SM2" in sig_enum.labels()
+            and self.signing_algorithm == sig_enum.from_label("SM2")
+        ):
             return PublicKeySM2.recreate(self.srk_data.data)
 
-        if self.signing_algorithm == self.SIGN_ALGORITHM_ENUM.DILITHIUM and IS_DILITHIUM_SUPPORTED:
-            return PublicKeyDilithium.parse(self.srk_data.data)
-        if self.signing_algorithm == self.SIGN_ALGORITHM_ENUM.ML_DSA and IS_DILITHIUM_SUPPORTED:
-            return PublicKeyMLDSA.parse(self.srk_data.data)
+        if IS_DILITHIUM_SUPPORTED:
+            if "DILITHIUM" in sig_enum.labels() and self.signing_algorithm == sig_enum.from_label(
+                "DILITHIUM"
+            ):
+                return PublicKeyDilithium.parse(self.srk_data.data)
 
-        if self.signing_algorithm == self.SIGN_ALGORITHM_ENUM.ML_DSA and IS_DILITHIUM_SUPPORTED:
-            return PublicKeyMLDSA.parse(self.srk_data.data)
+            if "ML-DSA" in sig_enum.labels() and self.signing_algorithm == sig_enum.from_label(
+                "ML-DSA"
+            ):
+                return PublicKeyMLDSA.parse(self.srk_data.data)
+        if IS_LMS_SUPPORTED:
+            if "LMS" in sig_enum.labels() and self.signing_algorithm == sig_enum.from_label("LMS"):
+                return PublicKeyLMS.parse(self.srk_data.data)
 
-        if self.signing_algorithm == self.SIGN_ALGORITHM_ENUM.ML_DSA and IS_DILITHIUM_SUPPORTED:
-            return PublicKeyMLDSA.parse(self.srk_data.data)
+        # Build and raise detailed error message
+        raise SPSDKUnsupportedOperation(self._build_unsupported_algorithm_error(sig_enum))
 
-        if self.signing_algorithm == self.SIGN_ALGORITHM_ENUM.ML_DSA and IS_DILITHIUM_SUPPORTED:
-            return PublicKeyMLDSA.parse(self.srk_data.data)
+    def _build_unsupported_algorithm_error(self, sig_enum: type[SpsdkEnum]) -> str:
+        """Build detailed error message for unsupported algorithm.
 
-        raise SPSDKUnsupportedOperation("Unsupported public key type")
+        :param sig_enum: Signature algorithm enumeration.
+        :return: Formatted error message with supported algorithms.
+        """
+        algo_str = str(self.signing_algorithm)
+        error_parts = [f"Unsupported public key algorithm: {algo_str}"]
+        if "UNKNOWN" in algo_str and self.version in (0xD1, 0xD2, 0xD3):
+            error_parts.append(
+                f"  Algorithm tag 0x{self.version:02X} looks like a PQC algorithm. "
+                "The device database may be missing PQC signature_algorithms. "
+                "Also ensure 'spsdk-pqc' is installed."
+            )
+        error_parts.append("Supported algorithms:")
+
+        # Show what's actually available based on sig_enum
+        if "RSA" in sig_enum.labels() or "RSA_PSS" in sig_enum.labels():
+            error_parts.append("  - RSA/RSA-PSS")
+        if "ECDSA" in sig_enum.labels():
+            error_parts.append("  - ECDSA")
+
+        if IS_OSCCA_SUPPORTED:
+            if "SM2" in sig_enum.labels():
+                error_parts.append("  - SM2")
+        else:
+            error_parts.append("  - SM2 (install 'gmssl' to enable)")
+
+        if IS_DILITHIUM_SUPPORTED:
+            if "DILITHIUM" in sig_enum.labels():
+                error_parts.append("  - Dilithium")
+            if "ML-DSA" in sig_enum.labels():
+                error_parts.append("  - ML-DSA")
+        else:
+            error_parts.append("  - Dilithium/ML-DSA (install 'spsdk-pqc' to enable)")
+
+        return "\n".join(error_parts)
 
 
 class SRKData(HeaderContainer):
@@ -1525,6 +1758,10 @@ class SRKData(HeaderContainer):
             data = public_key.public_numbers
             return cls(src_key=public_key, srk_id=srk_id, data=data)
 
+        if isinstance(public_key, PublicKeyLMS):
+            data = public_key.public_numbers
+            return cls(src_key=public_key, srk_id=srk_id, data=data)
+
         raise SPSDKValueError(f"Unsupported public key for SRK data: {type(public_key)}")
 
     @classmethod
@@ -1597,6 +1834,8 @@ class SRKTable(HeaderContainerInverted):
         """
         super().__init__(tag=self.TAG, length=-1, version=self.VERSION)
         self.srk_records: list[SRKRecordBase] = list(srk_records) if srk_records else []
+        # Store chip_config for use in add_record
+        self._chip_config: Optional[AhabChipConfig] = None
 
     def __repr__(self) -> str:
         """Return string representation of AHAB SRK Table.
@@ -1655,6 +1894,7 @@ class SRKTable(HeaderContainerInverted):
                 srk_id=srk_id,
                 hash_algorithm=hash_algorithm,
                 legacy_rsa_exponent_size=legacy_rsa_exponent_size,
+                chip_config=self._chip_config,
             )
         )
 
@@ -1813,13 +2053,18 @@ class SRKTable(HeaderContainerInverted):
         return ret
 
     @classmethod
-    def parse(cls, data: bytes) -> Self:
+    def parse(
+        cls,
+        data: bytes,
+        chip_config: Optional[AhabChipConfig] = None,
+    ) -> Self:
         """Parse input binary chunk to the container object.
 
         The method validates the container header, calculates SRK record sizes, and reconstructs
         the SRK table with all its records from the binary data.
 
         :param data: Binary data with SRK table block to parse.
+        :param chip_config: Optional chip configuration for device-specific enumerations.
         :raises SPSDKLengthError: Invalid length of SRK table data block.
         :return: Object recreated from the binary data.
         """
@@ -1833,7 +2078,7 @@ class SRKTable(HeaderContainerInverted):
         # try to parse records
         srk_records = []
         for _ in range(cls.SRK_RECORDS_CNT):
-            srk_record = cls.SRK_RECORD.parse(data[srk_rec_offset:])
+            srk_record = cls.SRK_RECORD.parse(data[srk_rec_offset:], chip_config)
             srk_rec_offset += srk_rec_size
             srk_records.append(srk_record)
 
@@ -1901,18 +2146,20 @@ class SRKTable(HeaderContainerInverted):
         return ret_cfg
 
     @classmethod
-    def load_from_config(cls, config: Config) -> Self:
+    def load_from_config(cls, config: Config, chip_config: Optional[AhabChipConfig] = None) -> Self:
         """Load SRK table from configuration.
 
         Creates an SRK (Super Root Key) table object from the provided configuration
         containing public keys and their associated flags and algorithms.
 
         :param config: Configuration object containing SRK array and optional settings.
+        :param chip_config: Optional chip configuration for device-specific enumerations.
         :return: SRK Table object with loaded public keys and configurations.
         """
         srk_table = cls()
+        srk_table._chip_config = chip_config  # Store chip_config for add_record
+
         flags = 0
-        # Allow user to provide flag_ca in configuration
         flag_ca = config.get("flag_ca", False)
         if flag_ca:
             flags |= cls.SRK_RECORD.FLAGS_CA_MASK
@@ -1921,7 +2168,8 @@ class SRKTable(HeaderContainerInverted):
         hash_algorithm = None
         hash_algo_str = config.get("hash_algorithm")
         if hash_algo_str and hash_algo_str != "default":
-            hash_algorithm = cls.SRK_RECORD.HASH_ALGORITHM_ENUM.from_label(hash_algo_str)
+            hash_enum = get_hash_algorithm_enum(chip_config)
+            hash_algorithm = hash_enum.from_label(hash_algo_str)
 
         # Get the legacy RSA exponent size option from config
         legacy_rsa_exponent_size = config.get("rsa_exponent_legacy_size", False)
@@ -1936,7 +2184,7 @@ class SRKTable(HeaderContainerInverted):
             srk_table.add_record(
                 pub_key,
                 srk_flags=flags,
-                hash_algorithm=hash_algorithm,
+                hash_algorithm=cast(AHABSignHashAlgorithm, hash_algorithm),
                 legacy_rsa_exponent_size=legacy_rsa_exponent_size,
             )
         return srk_table
@@ -1974,7 +2222,7 @@ class SRKTableV2(SRKTable):
     SRK_HASH_ALGORITHM = EnumHashAlgorithm.SHA512
 
     @classmethod
-    def load_from_config(cls, config: Config) -> Self:
+    def load_from_config(cls, config: Config, chip_config: Optional[AhabChipConfig] = None) -> Self:
         """Create SRK Table from configuration data.
 
         Processes the configuration to build an SRK (Super Root Key) Table with public keys
@@ -1982,9 +2230,12 @@ class SRKTableV2(SRKTable):
 
         :param config: Configuration object containing SRK table settings including
                        srk_array, flags, hash algorithm, and RSA exponent options.
+        :param chip_config: Optional chip configuration for device-specific enumerations.
         :return: Configured SRK Table object with loaded public keys and records.
         """
         srk_table = cls()
+        srk_table._chip_config = chip_config  # Store chip_config for add_record
+
         flags = 0
         flag_ca = config.get("flag_ca", False)
         if flag_ca:
@@ -1994,7 +2245,11 @@ class SRKTableV2(SRKTable):
         hash_algorithm = None
         hash_algo_str = config.get("hash_algorithm")
         if hash_algo_str and hash_algo_str != "default":
-            hash_algorithm = cls.SRK_RECORD.HASH_ALGORITHM_ENUM.from_label(hash_algo_str)
+            # Use chip_config enumerations if available
+            if chip_config:
+                hash_algorithm = chip_config.hash_algorithms.from_label(hash_algo_str)
+            else:
+                hash_algorithm = AHABSignHashAlgorithm.from_label(hash_algo_str)
 
         # Get the legacy RSA exponent size option from config
         legacy_rsa_exponent_size = config.get("rsa_exponent_legacy_size", False)
@@ -2010,11 +2265,11 @@ class SRKTableV2(SRKTable):
                 pub_key,
                 srk_flags=flags,
                 srk_id=ix,
-                hash_algorithm=hash_algorithm,
+                hash_algorithm=cast(AHABSignHashAlgorithm, hash_algorithm),
                 legacy_rsa_exponent_size=legacy_rsa_exponent_size,
             )
             cast(SRKRecordV2, srk_table.srk_records[ix]).srk_data = SRKData.create_from_key(
-                pub_key, ix
+                pub_key, ix, legacy_rsa_exponent_size=legacy_rsa_exponent_size
             )
         return srk_table
 
@@ -2367,8 +2622,15 @@ class SRKTableArray(HeaderContainer):
         :return: SRK Table array object.
         """
         srk_table_array: list[SRKTableV2] = []
-        srk_table_array.append(SRKTableV2.load_from_config(config))
+
+        # Pass chip_config.base to SRKTableV2
+        srk_table_array.append(SRKTableV2.load_from_config(config, chip_config=chip_config.base))
+
         if "srk_table_#2" in config:
-            srk_table_array.append(SRKTableV2.load_from_config(config.get_config("srk_table_#2")))
+            srk_table_array.append(
+                SRKTableV2.load_from_config(
+                    config.get_config("srk_table_#2"), chip_config=chip_config.base
+                )
+            )
 
         return cls(chip_config=chip_config, srk_tables=srk_table_array)

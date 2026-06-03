@@ -22,7 +22,12 @@ from spsdk.crypto.hash import EnumHashAlgorithm, get_hash
 from spsdk.crypto.signature_provider import SignatureProvider
 from spsdk.image.ahab.ahab_abstract_interfaces import HeaderContainer
 from spsdk.image.ahab.ahab_blob import AhabBlob
-from spsdk.image.ahab.ahab_data import AhabChipContainerConfig, AHABTags, FlagsSrkSet
+from spsdk.image.ahab.ahab_data import (
+    AhabChipContainerConfig,
+    AHABTags,
+    FlagsSrkSet,
+    create_chip_config,
+)
 from spsdk.image.ahab.ahab_image import AHABImage
 from spsdk.image.ahab.ahab_sign_block import SignatureBlock, SignatureBlockV2
 from spsdk.image.ahab.ahab_signature import ContainerSignature
@@ -175,7 +180,10 @@ def ahab_update_keyblob(
             logger.warning(
                 "Updating keyblob of a container signed by NXP, please make sure this is intended behaviour."
             )
-        container_chip_config = AhabChipContainerConfig(used_srk_id=ahab_srk_id)
+        base_config = create_chip_config(family)
+        container_chip_config = AhabChipContainerConfig(base=base_config, used_srk_id=ahab_srk_id)
+        container_chip_config.base.signature_algorithms = base_config.signature_algorithms
+        container_chip_config.base.hash_algorithms = base_config.hash_algorithms
         signature_block = container_type.SIGNATURE_BLOCK.parse(
             data[signature_block_offset:], chip_config=container_chip_config
         )
@@ -266,7 +274,10 @@ def ahab_re_sign(
         ahab_srk_id = (flags >> container_type.FLAGS_USED_SRK_ID_OFFSET) & (
             (1 << container_type.FLAGS_USED_SRK_ID_SIZE) - 1
         )
-        container_chip_config = AhabChipContainerConfig(used_srk_id=ahab_srk_id)
+        base_config = create_chip_config(family)
+        container_chip_config = AhabChipContainerConfig(base=base_config, used_srk_id=ahab_srk_id)
+        container_chip_config.base.signature_algorithms = base_config.signature_algorithms
+        container_chip_config.base.hash_algorithms = base_config.hash_algorithms
         signature_block = container_type.SIGNATURE_BLOCK.parse(
             data[signature_block_offset:], chip_config=container_chip_config
         )
@@ -417,7 +428,7 @@ def ahab_sign_image(
             segment.ahab.verify()
 
         else:
-            logger.error("Segment does not contain AHAB data")
+            logger.warning(f"{segment} does not contain AHAB data")
 
     return bimg.export(), bimg
 
@@ -460,8 +471,8 @@ def ahab_fix_signature_block_version(
 
     logger.info("Trying to find signature blocks version 0 on every 0x10 bytes")
     for offset in range(0, len(data), 0x10):
-        if not DummySignature.check_container_head(data[offset : offset + 0x10]).has_errors:
-            _, length, version = HeaderContainer.parse_head(data[offset : offset + 0x10])
+        if not DummySignature.check_container_head(bytes(data[offset : offset + 0x10])).has_errors:
+            _, length, version = HeaderContainer.parse_head(bytes(data[offset : offset + 0x10]))
             if length == 16 and version == 0:
                 data[offset] = 1
                 logger.info(f"Fixed signature block version at {hex(offset)}")
@@ -470,4 +481,4 @@ def ahab_fix_signature_block_version(
     if bimg.verify().has_errors:
         raise SPSDKError("Verification of fixed image failed")
 
-    return data
+    return bytes(data)

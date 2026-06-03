@@ -1,4 +1,4 @@
-# Copyright 2023-2025 NXP
+# Copyright 2023-2026 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -99,6 +99,7 @@ features:
   dat:
     socc: 4 # SOCC identification
     dmbox_ap_ix: 2 # Typical Index of debug mailbox access port is 2
+    mem_ap_index: 0 # AHB-AP is AP0
 
   # ======== MBI section ========
   mbi:

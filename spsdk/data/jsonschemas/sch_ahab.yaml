@@ -13,8 +13,10 @@ whole_ahab_image:
       type: string
       title: Target memory
       description: Target memory for AHAB container
-      enum: [standard, nor, serial_downloader, nand_2k, nand_4k, sd_emmc]
-      enum_template: [serial_downloader, standard, nand_2k, nand_4k, sd_emmc]
+      enum:
+        [standard, nor, serial_downloader, nand_2k, nand_4k, sd_emmc, fastboot]
+      enum_template:
+        [serial_downloader, standard, nand_2k, nand_4k, sd_emmc, fastboot]
       template_value: standard
     output:
       type: string
@@ -87,7 +89,7 @@ whole_ahab_image:
                     type: string
                     title: Super Root Key (SRK) set
                     description: Defines which set is used to authenticate the container.
-                    enum: [none, oem, nxp]
+                    enum: [none, oem, nxp, oem_dev]
                     template_value: none
                   used_srk_id:
                     type: [number, string]
@@ -109,6 +111,7 @@ whole_ahab_image:
                     title: GDET runtime behavior
                     description:
                       "This option defines runtime behavior of Glitch detector. Not supported by all devices and their ELE firmware.\n
+                      If omitted, the existing flag value in the parsed container is preserved (no override applied).\n
                       - disabled:       GDET is disabled after the first OEM container has been authenticated (default behavior)\n
                       - enabled_eleapi: Automatically enable GDET during all ELE API calls\n
                       - enabled:        Leave GDET enabled"
@@ -128,6 +131,7 @@ whole_ahab_image:
                     type: string
                     title: Fast boot
                     description: "This option enables fast boot mode.\n
+                      If omitted, the existing flag value in the parsed container is preserved (no override applied).\n
                       - disabled: Fast boot disabled.\n
                       - hash_and_copy: ELE will do the hash and copy (when disabled, BootROM will do the copy).\n
                       - external_accelerator: Use external accelerator for authentication (e.g. V2X on i.MX95B0, i.MX943 and i.MX952).\n
@@ -139,7 +143,6 @@ whole_ahab_image:
                         external_accelerator,
                         hash_and_copy_with_external_accelerator,
                       ]
-                    skip_in_template: True
                     template_value: disabled
                   fuse_version:
                     type: [number, string]
@@ -309,6 +312,13 @@ whole_ahab_image:
                               description: OEI - Optional Executable Image firmware
                               template_value: oei-m33-ddr.bin
                               format: file
+                            qb_data:
+                              type: string
+                              title: Quick Boot Data
+                              description: QB data - Optional Quick boot data, if defined a new empty record will be added just behind DDR FW entry
+                              template_value: qb_data.bin
+                              format: file
+                              skip_in_template: True
 
                         - type: object
                           template_title: OEI TCM Settings (ECC configuration etc.)
@@ -532,6 +542,7 @@ whole_ahab_image:
                             - entry_point
                             - image_type
                             - core_id
+                            - image_path
                           properties:
                             image_path:
                               type: string
@@ -607,19 +618,35 @@ whole_ahab_image:
                             meta_data_start_cpu_id:
                               type: [number, string]
                               title: Start CPU ID
-                              description: Resource ID of CPU to be started
+                              description: SCFW - Resource ID of CPU to be started. SM -  CPU ID for System Manager. Identifies which CPU should start executing the image.
                               format: number
                               template_value: 0
                             meta_data_mu_cpu_id:
                               type: [number, string]
                               title: CPU memory unit start ID
-                              description: Resource ID of the MU associated with the CPU
+                              description: SCFW - Resource ID of the MU associated with the CPU
                               format: number
                               template_value: 0
                             meta_data_start_partition_id:
                               type: [number, string]
                               title: Start partition ID
-                              description: Partition ID of the partition to start
+                              description: SCFW - Partition ID of the partition to start
+                              format: number
+                              template_value: 0
+                            meta_data_msel:
+                              type: [number, string]
+                              title: SM mSel Value
+                              description: >
+                                mSel value for System Manager (i.MX9). Only valid for CM33_0 (cpu_id=0).
+                                This value is passed via the mkimage msel parameter and stored in bits 23:16 of metadata.
+                              format: number
+                              template_value: 0
+                            meta_data_flags:
+                              type: [number, string]
+                              title: SM Flags
+                              description: >
+                                Flags value for System Manager (i.MX9). Only valid for CM33_0 (cpu_id=0).
+                                This value is passed via the mkimage flags parameter and stored in bits 31:24 of metadata.
                               format: number
                               template_value: 0
                             hash_type:
@@ -683,10 +710,10 @@ whole_ahab_image:
                         title: Super Root Key (SRK) table
                         description:
                           "Table containing the used SRK records. All SRKs must be of the same
-                          type. Supported signing algorithms are: RSA-PSS, ECDSA, Dilithium or SM2. Supported hash algorithms:
-                          sha256, sha384, sha512, sha3_256, sha3_384, sha3_512, sm3. Supported key sizes/curves: prime256v1, sec384r1, sec512r1,
-                          rsa2048, rsa4096, dilithium3, sm2. Certificate may be of Certificate Authority. Dilithium algorithms are supported just
-                          in new type of AHAB container"
+                          type. Supported signing algorithms are: RSA-PSS, ECDSA, ML-DSA, Dilithium or SM2. Supported hash algorithms:
+                          sha256, sha384, sha512, sha3_256, sha3_384, sha3_512, shake_128_256, shake_256_512, sm3. Supported key sizes/curves: prime256v1, sec384r1, sec512r1,
+                          rsa2048, rsa3072, rsa4096, dil3, dil5, mldsa65, mldsa87, sm2. Certificate may be of Certificate Authority. PQC algorithms are supported just
+                          in a new type of AHAB container"
                         minItems: 4
                         maxItems: 4
                         items:
@@ -880,3 +907,121 @@ ahab_certificate:
       description: "Hash algorithm used for SRK records. If not specified, default algorithm based on key type will be used."
       enum: *ahab_hash_algorithms
       template_value: default
+
+ahab_certificate_permission_data_ext:
+  type: object
+  description: Certificate container definition."
+  properties:
+    permission_data_ext:
+      type: [number, string]
+      title: Permission data extended
+      description: (Optional) Extended information for debug auth feature 96-bits
+      format: number
+      template_value: "0x00"
+
+ahab_blob:
+  type: object
+  template_title: Settings of AHAB Blob
+  required: [lifecycle, debug, key_id, cust_mk_sk, dek_key_size]
+  properties:
+    lifecycle:
+      type: string
+      title: Lifecycle State
+      description: |
+        Device lifecycle state for blob generation:
+        - fab: Fabrication state
+        - prov: Provisioning state
+        - nxp_fr: NXP Field Return state
+        - oem_open: OEM Open state
+        - oem_fr: OEM Field Return state
+        - oem_swc: OEM Software Closed state
+        - oem_locked: OEM Locked state
+        - oem_closed: OEM Closed state
+      enum:
+        [fab, prov, nxp_fr, oem_open, oem_fr, oem_swc, oem_locked, oem_closed]
+      template_value: oem_open
+    debug:
+      type: boolean
+      title: Debug Enable
+      description: Enable or disable debug functionality for the blob.
+      template_value: false
+    key_id:
+      type: [number, string]
+      title: Key Identifier
+      description: |
+        Unique key identifier (4 bytes maximum) used for blob generation.
+        This identifier must match the one used during key provisioning.
+      format: number
+      template_value: 12345
+    cust_mk_sk:
+      type: string
+      title: Customer Master Key
+      description: |
+        Customer master key (CUST_MK_SK) as hex string or path to file.
+        Must be 256 bits (32 bytes) in length. This key is used for
+        deriving the Key Encryption Key (KEK).
+      template_value: "0x0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF"
+    srkh0:
+      type: string
+      title: Super Root Key Hash 1
+      description: |
+        First Super Root Key Hash (SRKH) as hex string or path to file.
+        Must be 512 bits (64 bytes) in length. Used in key derivation process.
+        If not provided, zero hash will be used.
+      template_value: "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+    srkh1:
+      type: string
+      title: Super Root Key Hash 2
+      description: |
+        Second Super Root Key Hash (SRKH) as hex string or path to file.
+        Must be 512 bits (64 bytes) in length. Used in key derivation process.
+        If not provided, zero hash will be used.
+      template_value: "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+    dek:
+      type: string
+      title: Data Encryption Key
+      description: |
+        Data Encryption Key as hex string or path to file.
+        Size must match dek_key_size parameter. If not provided,
+        a random DEK will be generated.
+      template_value: "0x0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF"
+    dek_key_size:
+      type: number
+      title: DEK Key Size
+      description: |
+        Data Encryption Key size in bits. Supported sizes are:
+        - 128: 128-bit AES key
+        - 192: 192-bit AES key
+        - 256: 256-bit AES key
+      enum: [128, 192, 256]
+      template_value: 256
+  algorithm:
+    type: string
+    title: Encryption Algorithm
+    description: |
+      Encryption algorithm used for the blob:
+      - AES_CBC: AES in CBC mode
+    enum: [AES_CBC]
+    template_value: AES_CBC
+    mode:
+      type: number
+      title: Blob Mode
+      description: DEK blob mode configuration value.
+      template_value: 0
+    flags:
+      type: number
+      title: Blob Flags
+      description: |
+        Key blob configuration flags:
+        - 0x80: KEK (Key Encryption Key) flag
+        - 0x01: DEK (Data Encryption Key) flag
+        - 0x4: DEK (Data Encryption Key) static flag
+      template_value: 0x4
+    blob_key:
+      type: string
+      title: Blob Key
+      description: |
+        256-bit blob key as hex string or path to file.
+        If not provided, a random blob key will be generated.
+        Used for encrypting the DEK in AES-CCM mode.
+      template_value: "0x0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF"

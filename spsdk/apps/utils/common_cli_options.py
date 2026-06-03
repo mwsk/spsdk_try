@@ -24,6 +24,7 @@ import click
 import colorama
 from click_command_tree import _build_command_tree, _CommandWrapper
 
+from spsdk import SPSDK_LOG_LEVEL_TRACE
 from spsdk import __version__ as spsdk_version
 from spsdk.apps.utils import spsdk_logger
 from spsdk.apps.utils.interface_helper import load_interface_config
@@ -71,13 +72,12 @@ class FamilyChoice(click.Choice):
         self.all_families = choices
         super().__init__(choices=sorted(list(set(x.name for x in choices))), case_sensitive=False)
 
-    def to_info_dict(self) -> dict[str, Any]:
-        """Just prepare the dict with base info."""
-        info_dict = super().to_info_dict()
-        info_dict["choices"] = self.choices
+    def to_info_dict(self) -> dict[str, Any]:  # type: ignore[override]
+        """Prepare base Click choice metadata enriched with SPSDK-specific predecessor aliases."""
+        # Keep one extra key for SPSDK tooling while preserving Click's default keys.
+        info_dict = cast(dict[str, Any], super().to_info_dict())
         if self.predecessor_choices:
             info_dict["predecessor_choices"] = self.predecessor_choices
-        info_dict["case_sensitive"] = self.case_sensitive
         return info_dict
 
     def get_metavar(self, param: click.Parameter, *args: Any, **kwargs: Any) -> str:
@@ -228,6 +228,13 @@ def lpcusbsio_option() -> Callable[[FC], FC]:
 
         Optional USB device filtering formats:
         [usb,vid:pid|usb_path|serial_number]
+        \b
+        usb,vid:pid - Filter by USB Vendor ID and Product ID (hexadecimal)
+          Example: usb,0x1fc9:0x0090
+        usb,usb_path - Filter by USB device path
+          Example: usb,1-1.3.2
+        usb,serial_number - Filter by USB device serial number
+          Example: usb,ABCD1234
 
         Following serial interfaces are supported:
 
@@ -258,6 +265,13 @@ def lpcusbsio_option() -> Callable[[FC], FC]:
         - string with coma separated arguments i.e. spi1,0,15,1000,1
         - string with coma separated keyword arguments (the order may not be maintained) i.e.spi1,port=0,speed_kHz=1000,nirq_port=1,nirq_pin=7
         - string with combination of coma separated arguments and keyword arguments i.e.spi1,0,15,nirq_port=1,nirq_pin=7
+
+        \b
+        Complete examples with USB filtering:
+        - usb,0x1fc9:0x0090,spi - SPI interface filtered by USB VID:PID
+        - usb,1-1.1,i2c,0x10,100 - I2C interface filtered by USB path
+        - usb,ABCD1234,spi1,0,15,1000 - SPI1 interface filtered by USB serial number
+        - spi - SPI interface without USB filtering (auto-detect first device)
 
         """,
     )
@@ -410,6 +424,23 @@ def usbserial_option() -> Callable[[FC], FC]:
     )
 
 
+def uboot_prompt_option() -> Callable[[FC], FC]:
+    """Click decorator handling U-Boot prompt configuration.
+
+    Provides: `uboot_prompt: str` a u-boot prompt string.
+
+    :return: Click decorator.
+    """
+    return click.option(
+        "--uboot-prompt",
+        envvar="UBOOT_PROMPT",
+        help="Override default U-Boot serial prompt for ELE communication, using the option, or environment variable.",
+        type=str,
+        required=False,
+        show_envvar=True,
+    )
+
+
 def spsdk_use_json_option(options: FC) -> FC:
     """Use json click option decorator.
 
@@ -457,6 +488,13 @@ def spsdk_apps_common_options(options: FC) -> FC:
     options = click.help_option("--help")(options)
     options = click.version_option(spsdk_version, "--version")(options)
     options = click.option(
+        "-vvv",
+        "--trace",
+        "log_level",
+        flag_value=SPSDK_LOG_LEVEL_TRACE,
+        help="Display raw communication data (bytes, packets).",
+    )(options)
+    options = click.option(
         "-vv",
         "--debug",
         "log_level",
@@ -479,6 +517,7 @@ def spsdk_family_option(
     default: Optional[FamilyRevision] = None,
     help: Optional[str] = None,  # pylint: disable=redefined-builtin
     add_revision: bool = True,
+    **option_kwargs: Any,
 ) -> Callable:
     """Click decorator handling family selection.
 
@@ -489,6 +528,7 @@ def spsdk_family_option(
     :param default: Default selection, defaults to None (user selection is required)
     :param help: Customized help message, defaults to None
     :param add_revision: Add revision to the family name, defaults to True
+    :param option_kwargs: Option kwargs passed to family and revision option
     :return: Click decorator.
     """
     FAMILY_OPTION = "family"
@@ -529,6 +569,7 @@ def spsdk_family_option(
                 default="latest",
                 required=False,
                 help="Chip revision; if not specified, most recent one will be used",
+                **option_kwargs,
             )(func)
 
         wrapper = click.option(
@@ -538,6 +579,7 @@ def spsdk_family_option(
             default=default,
             required=False,  # will be validated in the wrapper method
             help=help or f"{'[required] ' if required else ''}Select the chip family.",
+            **option_kwargs,
         )(wrapper)
 
         return wrapper
@@ -951,12 +993,18 @@ def spsdk_mboot_interface(
                 "plugin": plugin,
                 "timeout": timeout,
             }
+            # Install logger with user-requested level before interface scan so
+            # that ping failures and connection attempts are properly logged.
+            spsdk_logger.install(level=kwargs.get("log_level") or logging.WARNING)
             try:
                 interface_params = load_interface_config(cli_params)
                 interface_cls = MbootProtocolBase.get_interface_class(interface_params.IDENTIFIER)
                 interface = interface_cls.scan_single(**interface_params.get_scan_args())
                 kwargs["interface"] = interface
-            except SPSDKAppError:
+            except SPSDKAppError as e:
+                logger.debug(
+                    f"Interface scan failed: {e}"
+                )  # pylint: disable=logging-fstring-interpolation
                 if required:
                     raise
                 kwargs["interface"] = None
@@ -998,6 +1046,7 @@ def spsdk_el2go_interface(
     fb_size: bool = True,
     usbpath: bool = True,
     usbserial: bool = True,
+    uboot_prompt: bool = True,
 ) -> Callable:
     """Click decorator handling EL2Go interface.
 
@@ -1026,6 +1075,7 @@ def spsdk_el2go_interface(
             fb_size: Optional[int] = None,
             usbpath: Optional[str] = None,
             usbserial: Optional[str] = None,
+            uboot_prompt: Optional[str] = None,
             **kwargs: Any,
         ) -> Any:
             # if --help is provided anywhere on command line, skip interface lookup
@@ -1052,7 +1102,14 @@ def spsdk_el2go_interface(
             try:
                 interface_params = load_interface_config(cli_params)
                 interface_handler = EL2GOInterfaceHandler.get_el2go_interface_handler(
-                    interface_params, family, device, fb_addr, fb_size, usbpath, usbserial
+                    interface_params,
+                    family,
+                    device,
+                    fb_addr,
+                    fb_size,
+                    usbpath,
+                    usbserial,
+                    uboot_prompt,
                 )
                 kwargs["interface"] = interface_handler
             except SPSDKError:
@@ -1070,6 +1127,7 @@ def spsdk_el2go_interface(
             usb_option: (usb, {"identify_by_family": True}),
             port_option: (port, {"baud_rate": MbootUARTInterface.default_baudrate}),
             el2go_interface_option: (device, {}),
+            uboot_prompt_option: (uboot_prompt, {}),
             fb_buffer_address: (fb_addr, {}),
             fb_buffer_size: (fb_size, {}),
             usbpath_option: (usbpath, {}),

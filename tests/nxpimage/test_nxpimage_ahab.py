@@ -18,6 +18,7 @@ generation, and re-signing workflows for AHAB-related operations in the SPSDK ec
 import filecmp
 import os
 import shutil
+import tempfile
 from typing import Optional, Tuple
 
 import pytest
@@ -26,10 +27,11 @@ from spsdk.apps import nxpimage
 from spsdk.crypto.dilithium import IS_DILITHIUM_SUPPORTED
 from spsdk.crypto.hash import EnumHashAlgorithm
 from spsdk.crypto.keys import IS_OSCCA_SUPPORTED
-from spsdk.image.ahab.ahab_blob import AhabBlob
+from spsdk.image.ahab.ahab_blob import AhabBlob, AhabBlobOffline
 from spsdk.image.ahab.ahab_data import FlagsSrkSet
 from spsdk.image.ahab.ahab_image import AHABImage
 from spsdk.image.ahab.signed_msg import MessageCommands, SignedMessage
+from spsdk.image.ahab.utils import ahab_sign_image
 from spsdk.image.bootable_image.bimg import BootableImage
 from spsdk.image.bootable_image.segments import SegmentAhab
 from spsdk.image.mem_type import MemoryType
@@ -45,6 +47,7 @@ from spsdk.utils.misc import (
     value_to_int,
 )
 from tests.cli_runner import CliRunner
+from tests.misc import compare_bin_files
 from tests.nxpimage.test_nxpimage_cert_block import process_config_file
 
 
@@ -87,6 +90,7 @@ def test_nxpimage_ahab_export(
         ("ctcm_cm33_signed_sb.yaml", None),
         ("ctcm_cm33_signed_sb_mx93.yaml", None),
         ("ctcm_cm33_signed_nand.yaml", None),
+        ("ctcm_cm33_signed_fastboot.yaml", None),
         ("ctcm_cm33_encrypted_img.yaml", None),
         ("ctcm_cm33_signed_rsa4096.yaml", "nxpele"),
         pytest.param(
@@ -638,10 +642,7 @@ def test_nxpimage_ahab_parse_sm2(
 
 @pytest.mark.parametrize(
     "config_file",
-    [
-        ("sm_return_lc.yaml"),
-        ("sm_key_exchange.yaml"),
-    ],
+    ["sm_return_lc.yaml", "sm_key_exchange.yaml", "sm_key_reprovisioning.yaml"],
 )
 def test_nxpimage_signed_message_export(
     cli_runner: CliRunner, tmpdir: str, data_dir: str, config_file: str
@@ -1281,7 +1282,7 @@ def test_nxpimage_ahab_fuses(cli_runner: CliRunner, tmpdir: str, data_dir: str) 
             "mx95",
             "ahab_mx95_dilithium3.bin",
             "sha3_256",
-            b"\x1b\xc3y\x12\xbb\xc3s\x97\x85\xc4\xc9[\x1a\x0e@gJ\x98\xd4\x15\xb5\xc6\x88\x92F|Q\x12\xf8\xfd\xfeu\xbey\xb1\xe7\xe6+@\x8c\xfbc?6\xa6\xd8&\xa5\x9c\xbd\xc1H;\x00\xb5\x84\xfe_\xf6\x85,\xec\xa2\x8a",
+            b"u4\xaf\xef\x9f\x86\x04\xd1\r\xf2\xefT\x99\x1c\xac\xe9\x81X, \xb5r\xf23&\x86\xe3w\xd1\xca\xd0\x146<\xcb\xcd\xf5v\xaf\xa2R\xf27\xf6\x15\xd1\n\xb5&\xfc\xc9\x8f\xb1\x86\x1f\xc9[r\xa7>\xc2S\xd5\x03",
             b"\x9d\xa6\xe7p\xd1`\xe6\x16v\xe8\xcb\x9d\xd1H\x90zY\x1e\xa5\\\x9b\x17\xc0\x87V\x1dk\x1e\xb1\x07\xcf-^\xc4hm5\xb2\x97\xfaV\xd7c\x01\xcaLA\xc1^\x08PE\xb8\x1c\xa7\x8bt\xa7m\xda\xfe\x94\xb7\xef",
             marks=pytest.mark.skipif(
                 not IS_DILITHIUM_SUPPORTED, reason="PQC support is not installed"
@@ -1497,3 +1498,273 @@ def test_nxpimage_ahab_sign(
                         assert (
                             len(srk_hash) == expected_hash_len
                         ), f"Container {i}, SRK {srk_id}: length {len(srk_hash)}, expected {expected_hash_len}"
+
+
+def test_nxpimage_ahab_sign_emmc(cli_runner: CliRunner, tmpdir: str, data_dir: str) -> None:
+    """Regression test for SPSDK-6189: ahab sign with --mem-type emmc must not corrupt the image.
+
+    The bug was in BootableImage.init_offset.setter, which incorrectly included dynamic
+    segments (full_image_offset=-1) in the min() calculation when finding the closest upper
+    segment boundary. For eMMC, the secondary_image_container_set has full_image_offset=-1.
+    When the incomplete image parse tried init_offset=0x8_000, the setter computed
+    min([0x8_000, -1]) = -1, causing all subsequent segment offset calculations to be off
+    and producing a non-bootable output image.
+
+    :param cli_runner: Runner for executing CLI commands in tests.
+    :param tmpdir: Temporary directory for test output files.
+    :param data_dir: Directory containing test data files.
+    """
+    with use_working_directory(data_dir):
+        # Create eMMC-format binary: 0x8000 bytes of padding followed by the AHAB container
+        serial_downloader_binary = load_binary(f"{data_dir}/ahab/test_img_for_sign.bin")
+        emmc_binary = b"\x00" * 0x8000 + serial_downloader_binary
+        input_file = f"{tmpdir}/test_emmc_input.bin"
+        output_file = f"{tmpdir}/test_emmc_signed.bin"
+
+        with open(input_file, "wb") as f:
+            f.write(emmc_binary)
+
+        config_file_path = f"{data_dir}/ahab/container_sign_config.yaml"
+        cmd = f"ahab sign -c {config_file_path} -b {input_file} --mem-type emmc -o {output_file}"
+        cli_runner.invoke(nxpimage.main, cmd.split(), expected_code=0)
+
+        assert os.path.exists(output_file), "Signed output file was not created"
+        signed_binary = load_binary(output_file)
+
+        # Verify the eMMC structure: first 0x8000 bytes must be the padding area,
+        # and the AHAB container must start at exactly 0x8000 (not at a corrupted offset).
+        assert len(signed_binary) >= 0x8000, "Output binary is too short to contain eMMC padding"
+        assert signed_binary[:8] == b"\x00" * 8, "eMMC padding area was corrupted"
+
+        # Verify the signed output can be parsed as a valid eMMC bootable image
+        family = FamilyRevision("mimx9352")
+        mem_type = MemoryType.from_label("emmc")
+        parsed_output = BootableImage.parse(signed_binary, family=family, mem_type=mem_type)
+        assert (
+            parsed_output.init_offset == 0
+        ), "Output image init_offset must be 0 for full eMMC image"
+
+        # Confirm the primary AHAB container is at exactly 0x8000 (not corrupted to 0x8001 etc.)
+        primary_segments = [s for s in parsed_output.segments if "primary" in s.NAME.label]
+        assert len(primary_segments) == 1, "Expected exactly one primary_image_container_set"
+        assert primary_segments[0].full_image_offset == 0x8000, (
+            f"AHAB container must be at 0x8000 in eMMC format, "
+            f"but found at 0x{primary_segments[0].full_image_offset:x}"
+        )
+
+
+@pytest.mark.skip(reason="not ready yet")
+def test_nxpimage_ahab_keyblob_export(cli_runner: CliRunner, tmpdir: str, data_dir: str) -> None:
+    """Test AHAB keyblob export functionality.
+
+    Verifies that the 'ahab keyblob export' command correctly generates an encrypted
+    keyblob binary from a YAML configuration file. Tests the complete keyblob generation
+    process including key derivation, encryption, and binary output creation.
+
+    :param cli_runner: CLI runner instance for executing nxpimage commands.
+    :param tmpdir: Temporary directory for storing generated keyblob files.
+    :param data_dir: Directory containing test data and configuration files.
+    """
+    with use_working_directory(data_dir):
+        config_file = f"{data_dir}/ahab/keyblobs/key_template.yaml"
+        output_file = f"{tmpdir}/ahab_blob.bin"
+
+        cmd = f"-vv ahab keyblob export -c {config_file} -o {output_file} --force"
+        result = cli_runner.invoke(nxpimage.main, cmd.split())
+
+        assert result.exit_code == 0, f"Command failed with output: {result.output}"
+        assert os.path.isfile(output_file), f"Output file not created: {output_file}"
+
+        # Verify the output file has expected structure (header + encrypted data)
+        keyblob_data = load_binary(output_file)
+        assert len(keyblob_data) == 88, "Keyblob invalid size"
+
+        fam = FamilyRevision("rt266x")
+        parsed_blob = AhabBlobOffline.parse(keyblob_data, fam)  # Skip header for parsing
+        assert parsed_blob is not None
+        parsed_blob.verify().validate()
+
+
+@pytest.mark.skip(reason="not ready yet")
+def test_nxpimage_ahab_keyblob_export_reference(
+    cli_runner: CliRunner, tmpdir: str, data_dir: str
+) -> None:
+    """Test AHAB keyblob export functionality.
+
+    Verifies that the 'ahab keyblob export' command correctly generates an encrypted
+    keyblob binary from a YAML configuration file. Tests the complete keyblob generation
+    process including key derivation, encryption, and binary output creation.
+
+    :param cli_runner: CLI runner instance for executing nxpimage commands.
+    :param tmpdir: Temporary directory for storing generated keyblob files.
+    :param data_dir: Directory containing test data and configuration files.
+    """
+    with use_working_directory(data_dir):
+        config_file = f"{data_dir}/ahab/keyblobs/key_template_reference.yaml"
+        output_file = f"{tmpdir}/ahab_blob.bin"
+        reference_binary = f"{data_dir}/ahab/keyblobs/encrypted_blob_reference.bin"
+
+        cmd = f"-vv ahab keyblob export -c {config_file} -o {output_file} --force"
+        result = cli_runner.invoke(nxpimage.main, cmd.split())
+
+        assert result.exit_code == 0, f"Command failed with output: {result.output}"
+        assert os.path.isfile(output_file), f"Output file not created: {output_file}"
+
+        # Verify the output file has expected structure (header + encrypted data)
+        keyblob_data = load_binary(output_file)
+        assert len(keyblob_data) == 88, "Keyblob invalid size"
+
+        fam = FamilyRevision("rt266x")
+        parsed_blob = AhabBlobOffline.parse(keyblob_data, fam)  # Skip header for parsing
+        assert parsed_blob is not None
+        parsed_blob.verify().validate()
+
+        # compare that the file is same as reference
+        compare_bin_files(reference_binary, keyblob_data)
+
+
+@pytest.mark.skip(reason="not ready yet")
+def test_nxpimage_ahab_keyblob_parse(cli_runner: CliRunner, tmpdir: str, data_dir: str) -> None:
+    """Test AHAB keyblob parsing functionality.
+
+    Verifies that the 'ahab keyblob parse' command correctly decrypts and parses
+    an encrypted keyblob binary file using the provided configuration. Tests the
+    complete keyblob decryption process and validates the extracted DEK.
+
+    :param cli_runner: CLI runner instance for executing nxpimage commands.
+    :param tmpdir: Temporary directory for storing parsed output files.
+    :param data_dir: Directory containing test data files.
+    """
+    with use_working_directory(data_dir):
+        keyblob_file = f"{data_dir}/ahab/keyblobs/encrypted_blob.bin"
+        config_file = f"{data_dir}/ahab/keyblobs/key_template.yaml"
+        output_dir = f"{tmpdir}/parsed"
+
+        cmd = f"ahab keyblob parse -b {keyblob_file} -c {config_file} -o {output_dir}"
+        result = cli_runner.invoke(nxpimage.main, cmd.split())
+
+        assert result.exit_code == 0, f"Command failed with output: {result.output}"
+        assert os.path.exists(output_dir), f"Output directory not created: {output_dir}"
+        assert os.path.isdir(output_dir), f"Output path is not a directory: {output_dir}"
+
+        # Verify DEK file was extracted
+        dek_file = os.path.join(output_dir, "decrypted_dek.bin")
+        if os.path.isfile(dek_file):
+            dek_data = load_binary(dek_file)
+            assert len(dek_data) in [16, 24, 32], f"Invalid DEK size: {len(dek_data)}"
+
+
+@pytest.mark.parametrize(
+    "family,config_file,input_binary,mem_type",
+    [
+        (
+            "mimx9352",
+            "ahab/container_sign_config.yaml",
+            "ahab/test_img_for_sign.bin",
+            "serial_downloader",
+        ),
+    ],
+)
+def test_nxpimage_ahab_sign_preserves_absent_fields(
+    data_dir: str,
+    family: str,
+    config_file: str,
+    input_binary: str,
+    mem_type: str,
+) -> None:
+    """Test that AHAB signing preserves container fields absent from the signing config.
+
+    When a field (e.g. sw_version, fuse_version) is not present in the signing
+    configuration, signing must not overwrite the value that was in the existing
+    container with a hard-coded default. Covers SPSDK-6570.
+
+    :param data_dir: Directory containing test data files.
+    :param family: Target NXP family name.
+    :param config_file: Path to the signing configuration file (relative to data_dir).
+    :param input_binary: Path to the input binary file (relative to data_dir).
+    :param mem_type: Memory type label for bootable image parsing.
+    """
+    with use_working_directory(data_dir):
+        binary_path = os.path.join(data_dir, input_binary)
+        config_path = os.path.join(data_dir, config_file)
+
+        # Load signing config and strip optional fields to simulate a minimal config
+        sign_config = Config.create_from_file(config_path)
+        for optional_field in ("fuse_version", "sw_version"):
+            sign_config.pop(optional_field, None)
+
+        # Parse original image, set a non-default sw_version on the OEM container
+        # so we can tell whether it was preserved or reset to 0
+        bimg = BootableImage.parse(load_binary(binary_path), family=FamilyRevision(family))
+        for segment in bimg.segments:
+            if isinstance(segment, SegmentAhab) and segment.ahab is not None:
+                for container in segment.ahab.ahab_containers:
+                    if container.flag_srk_set in (FlagsSrkSet.OEM, FlagsSrkSet.NONE):
+                        container.sw_version = 7
+                        container.fuse_version = 3
+
+        # Export the modified image so ahab_sign_image can read it from disk
+        with tempfile.NamedTemporaryFile(suffix=".bin", delete=False) as tmp:
+            tmp_path = tmp.name
+            tmp.write(bimg.export())
+
+        try:
+            signed_data, _ = ahab_sign_image(tmp_path, sign_config, mem_type, 0)
+        finally:
+            os.unlink(tmp_path)
+
+        # Verify that sw_version=7 and fuse_version=3 survived the signing step
+        signed_bimg = BootableImage.parse(signed_data, family=FamilyRevision(family))
+        for segment in signed_bimg.segments:
+            if isinstance(segment, SegmentAhab) and segment.ahab is not None:
+                for container in segment.ahab.ahab_containers:
+                    if container.flag_srk_set in (FlagsSrkSet.OEM, FlagsSrkSet.NONE):
+                        assert (
+                            container.sw_version == 7
+                        ), f"sw_version was overwritten: expected 7, got {container.sw_version}"
+                        assert (
+                            container.fuse_version == 3
+                        ), f"fuse_version was overwritten: expected 3, got {container.fuse_version}"
+
+
+@pytest.mark.skip(reason="not ready yet")
+def test_nxpimage_ahab_keyblob_export_parse_roundtrip(
+    cli_runner: CliRunner, tmpdir: str, data_dir: str
+) -> None:
+    """Test AHAB keyblob export and parse roundtrip functionality.
+
+    Verifies that a keyblob can be exported and then parsed back, with the
+    decrypted DEK matching the original DEK from the configuration. This tests
+    the complete encryption and decryption cycle.
+
+    :param cli_runner: CLI runner instance for executing nxpimage commands.
+    :param tmpdir: Temporary directory for test output files.
+    :param data_dir: Directory containing test data files.
+    """
+    with use_working_directory(data_dir):
+        config_file = f"{data_dir}/ahab/keyblobs/key_template.yaml"
+        exported_keyblob = f"{tmpdir}/exported_blob.bin"
+        parsed_output = f"{tmpdir}/parsed_roundtrip"
+
+        # Step 1: Export keyblob
+        export_cmd = f"-vv ahab keyblob export -c {config_file} -o {exported_keyblob} --force"
+        export_result = cli_runner.invoke(nxpimage.main, export_cmd.split())
+        assert export_result.exit_code == 0, f"Export failed: {export_result.output}"
+        assert os.path.isfile(exported_keyblob)
+
+        # Step 2: Parse the exported keyblob
+        parse_cmd = f"ahab keyblob parse -b {exported_keyblob} -c {config_file} -o {parsed_output}"
+        parse_result = cli_runner.invoke(nxpimage.main, parse_cmd.split())
+        assert parse_result.exit_code == 0, f"Parse failed: {parse_result.output}"
+
+        # Step 3: Verify the roundtrip
+        # Load original configuration to get original DEK
+
+        original_config = Config.create_from_file(config_file)
+        original_dek = original_config.load_symmetric_key("dek", expected_size=32)
+
+        # Load decrypted DEK from parsed output
+        dek_file = os.path.join(parsed_output, "decrypted_dek.bin")
+        if os.path.isfile(dek_file):
+            decrypted_dek = load_binary(dek_file)
+            assert decrypted_dek == original_dek, "Decrypted DEK does not match original"

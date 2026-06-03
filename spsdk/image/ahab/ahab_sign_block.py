@@ -31,8 +31,6 @@ from spsdk.image.ahab.ahab_certificate import (
 from spsdk.image.ahab.ahab_data import (
     CONTAINER_ALIGNMENT,
     RESERVED,
-    UINT16,
-    UINT32,
     AhabChipContainerConfig,
     AHABTags,
     FlagsSrkSet,
@@ -41,7 +39,8 @@ from spsdk.image.ahab.ahab_data import (
 from spsdk.image.ahab.ahab_signature import ContainerSignature
 from spsdk.image.ahab.ahab_srk import SRKRecordV2, SRKTable, SRKTableArray
 from spsdk.utils.config import Config
-from spsdk.utils.misc import align, bytes_to_print, load_binary, write_file
+from spsdk.utils.misc import UINT16, UINT32, align, bytes_to_print, load_binary, write_file
+from spsdk.utils.schema_validator import SPSDKErrorValidationFailed
 from spsdk.utils.verifier import Verifier, VerifierResult
 
 logger = logging.getLogger(__name__)
@@ -319,7 +318,7 @@ class SignatureBlock(HeaderContainer):
                 self.blob.export()
             )
 
-        return signature_block
+        return bytes(signature_block)
 
     def verify(self) -> Verifier:
         """Verify container signature block data.
@@ -588,7 +587,9 @@ class SignatureBlock(HeaderContainer):
         signature_block._blob_offset = blob_offset
         try:
             signature_block.srk_assets = (
-                SRKTable.parse(data[srk_table_offset:]) if srk_table_offset else None
+                SRKTable.parse(data[srk_table_offset:], chip_config.base)
+                if srk_table_offset
+                else None
             )
         except SPSDKParsingError:
             signature_block.srk_assets = None
@@ -707,7 +708,10 @@ class SignatureBlock(HeaderContainer):
         signature_block = cls(chip_config=chip_config)
         # SRK Table
         signature_block.srk_assets = (
-            SRKTable.load_from_config(config.get_config("srk_table"))
+            SRKTable.load_from_config(
+                config.get_config("srk_table"),
+                chip_config=chip_config.base,  # Pass base chip config
+            )
             if "srk_table" in config
             else None
         )
@@ -725,16 +729,16 @@ class SignatureBlock(HeaderContainer):
 
         if "certificate" in config:
             try:
-                cert_cfg = config.load_sub_config("certificate")
-                cert_cfg.check(
-                    get_ahab_certificate_class(chip_config.base.family).get_validation_schemas(
-                        family=chip_config.base.family
-                    ),
-                    check_unknown_props=True,
+                cert_cfg = config.load_sub_config(
+                    "certificate", target_klass=get_ahab_certificate_class(chip_config.base.family)
                 )
                 signature_block.certificate = get_ahab_certificate_class(
                     chip_config.base.family
                 ).load_from_config(cert_cfg)
+            except SPSDKErrorValidationFailed as exc:
+                raise SPSDKErrorValidationFailed(
+                    f"Failed to load certificate from configuration: {str(exc)}"
+                ) from exc
             except SPSDKError:
                 # this could be pre-exported binary certificate :-)
                 signature_block.certificate = get_ahab_certificate_class(
@@ -781,6 +785,19 @@ class SignatureBlock(HeaderContainer):
             cfg["blob"] = self.blob.get_config(data_path, index)
 
         return cfg
+
+    def get_signature_algorithm_info(self) -> str:
+        """Get signature algorithm information from the signature block.
+
+        Returns a string describing the signature algorithm(s) used in the signature block.
+        For signature blocks with SRK assets, it extracts the signing algorithm from SRK records.
+
+        :return: Comma-separated string of signature algorithm labels, or empty string if not available.
+        """
+        if not self.srk_assets or not self.srk_assets.srk_records:
+            return "None"
+
+        return self.srk_assets.srk_records[0].get_key_name()
 
 
 class SignatureBlockV2(HeaderContainer):
@@ -1060,7 +1077,7 @@ class SignatureBlockV2(HeaderContainer):
                 self.blob.export()
             )
 
-        return signature_block
+        return bytes(signature_block)
 
     def verify(self) -> Verifier:
         """Verify container signature block data.
@@ -1544,16 +1561,16 @@ class SignatureBlockV2(HeaderContainer):
         signature_block.certificate = None
         if "certificate" in config:
             try:
-                cert_cfg = config.load_sub_config("certificate")
-                cert_cfg.check(
-                    get_ahab_certificate_class(chip_config.base.family).get_validation_schemas(
-                        family=chip_config.base.family
-                    ),
-                    check_unknown_props=True,
+                cert_cfg = config.load_sub_config(
+                    "certificate", target_klass=get_ahab_certificate_class(chip_config.base.family)
                 )
                 signature_block.certificate = get_ahab_certificate_class(
                     chip_config.base.family
                 ).load_from_config(cert_cfg)
+            except SPSDKErrorValidationFailed as exc:
+                raise SPSDKErrorValidationFailed(
+                    f"Failed to load certificate from configuration: {str(exc)}"
+                ) from exc
             except SPSDKError:
                 # this could be pre-exported binary certificate :-)
                 signature_block.certificate = get_ahab_certificate_class(
@@ -1603,3 +1620,20 @@ class SignatureBlockV2(HeaderContainer):
             cfg["blob"] = self.blob.get_config(data_path, index)
 
         return cfg
+
+    def get_signature_algorithm_info(self) -> str:
+        """Get signature algorithm information from the signature block V2.
+
+        Returns a string describing the signature algorithm(s) used in the signature block.
+        For V2 signature blocks with multiple SRK tables, it extracts algorithms from all tables.
+
+        :return: Comma-separated string of signature algorithm labels, or empty string if not available.
+        """
+        if not self.srk_assets or not self.srk_assets._srk_tables:
+            return "None"
+
+        sig_algorithms = []
+        for srk_table in self.srk_assets._srk_tables:
+            sig_algorithms.append(srk_table.srk_records[0].get_key_name())
+
+        return ", ".join(sig_algorithms)

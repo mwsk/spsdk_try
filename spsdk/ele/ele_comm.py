@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2023-2025 NXP
+# Copyright 2023-2026 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -172,6 +172,7 @@ class EleMessageHandler:
         buspal: Optional[str] = None,
         lpcusbsio: Optional[str] = None,
         timeout: int = 5000,
+        uboot_prompt: Optional[str] = None,
     ) -> "EleMessageHandler":
         """Get ELE message handler for specified device and family.
 
@@ -190,9 +191,12 @@ class EleMessageHandler:
         :param buspal: BusPal interface configuration.
         :param lpcusbsio: LPCUSBSIO interface configuration.
         :param timeout: Communication timeout in milliseconds.
+        :param uboot_prompt: Custom U-Boot prompt for serial communication.
         :raises SPSDKError: When port is not specified for U-Boot serial device.
         :return: Configured ELE message handler instance.
         """
+        if isinstance(uboot_prompt, str):
+            UbootSerial.set_prompt(uboot_prompt)
         default_device = device or EleMessageHandler.get_ele_device(family)
         if default_device == EleDevice.UBOOT_FASTBOOT:
             db = get_db(family)
@@ -301,7 +305,7 @@ class EleMessageHandlerMBoot(EleMessageHandler):
         except SPSDKError as exc:
             raise SPSDKError(f"ELE Communication failed with mBoot: {str(exc)}") from exc
 
-        if not response or len(response) < 4 * msg.RESPONSE_HEADER_WORDS_COUNT:
+        if not response or len(response) < 4 * msg.response_header_words_count:
             raise SPSDKLengthError("ELE Message - Invalid response read-back operation.")
         # 4. Decode the response
         msg.decode_response(response)
@@ -451,7 +455,7 @@ class EleMessageHandlerUBoot(EleMessageHandler):
             raise SPSDKError(f"ELE Communication failed with UBoot: {str(exc)}") from exc
 
         if "Error" not in output:
-            if not response or len(response) < 4 * msg.RESPONSE_HEADER_WORDS_COUNT:
+            if not response or len(response) < 4 * msg.response_header_words_count:
                 raise SPSDKLengthError("ELE Message - Invalid response read-back operation.")
             # 3. Decode the response
             msg.decode_response(response)

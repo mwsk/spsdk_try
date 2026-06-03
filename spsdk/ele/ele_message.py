@@ -39,16 +39,11 @@ from spsdk.ele.ele_constants import (
 from spsdk.exceptions import SPSDKParsingError, SPSDKValueError
 from spsdk.image.ahab.signed_msg import SignedMessage
 from spsdk.utils.family import FamilyRevision
-from spsdk.utils.misc import Endianness, align, align_block
+from spsdk.utils.misc import LITTLE_ENDIAN, UINT8, UINT16, UINT32, Endianness, align, align_block
 from spsdk.utils.spsdk_enum import SpsdkEnum
 
 logger = logging.getLogger(__name__)
 
-LITTLE_ENDIAN = "<"
-UINT8 = "B"
-UINT16 = "H"
-UINT32 = "L"
-UINT64 = "Q"
 RESERVED = 0
 
 
@@ -116,6 +111,14 @@ class EleMessage:
         return self.COMMAND_HEADER_WORDS_COUNT + self.COMMAND_PAYLOAD_WORDS_COUNT
 
     @property
+    def response_header_words_count(self) -> int:
+        """Get the number of words if the response header.
+
+        :return: The number of 32-bit words in the response header.
+        """
+        return self.RESPONSE_HEADER_WORDS_COUNT
+
+    @property
     def has_command_data(self) -> bool:
         """Check if command has additional data.
 
@@ -177,7 +180,7 @@ class EleMessage:
 
         :return: Total number of words in the response message.
         """
-        return self.RESPONSE_HEADER_WORDS_COUNT + self.RESPONSE_PAYLOAD_WORDS_COUNT
+        return self.response_header_words_count + self.RESPONSE_PAYLOAD_WORDS_COUNT
 
     @property
     def has_response_data(self) -> bool:
@@ -340,7 +343,7 @@ class EleMessage:
             raise SPSDKParsingError(f"Message TAG in response is invalid: {hex(tag)}")
         if command != self.command:
             raise SPSDKParsingError(f"Message COMMAND in response is invalid: {hex(command)}")
-        if size not in range(self.RESPONSE_HEADER_WORDS_COUNT, self.response_words_count + 1):
+        if size not in range(self.response_header_words_count, self.response_words_count + 1):
             raise SPSDKParsingError(f"Message SIZE in response is invalid: {hex(size)}")
         if version != self.VERSION:
             raise SPSDKParsingError(f"Message VERSION in response is invalid: {hex(version)}")
@@ -2462,7 +2465,7 @@ class EleMessageSessionOpen(EleMessage):
             raise SPSDKParsingError(f"Message TAG in response is invalid: {hex(tag)}")
         if command != self.command:
             raise SPSDKParsingError(f"Message COMMAND in response is invalid: {hex(command)}")
-        if size not in range(self.RESPONSE_HEADER_WORDS_COUNT, self.response_words_count + 1):
+        if size not in range(self.response_header_words_count, self.response_words_count + 1):
             raise SPSDKParsingError(f"Message SIZE in response is invalid: {hex(size)}")
         if version != self.VERSION:
             raise SPSDKParsingError(f"Message VERSION in response is invalid: {hex(version)}")
@@ -2588,7 +2591,7 @@ class EleMessageSessionClose(EleMessage):
             raise SPSDKParsingError(f"Message TAG in response is invalid: {hex(tag)}")
         if command != self.command:
             raise SPSDKParsingError(f"Message COMMAND in response is invalid: {hex(command)}")
-        if size not in range(self.RESPONSE_HEADER_WORDS_COUNT, self.response_words_count + 1):
+        if size not in range(self.response_header_words_count, self.response_words_count + 1):
             raise SPSDKParsingError(f"Message SIZE in response is invalid: {hex(size)}")
         if version != self.VERSION:
             raise SPSDKParsingError(f"Message VERSION in response is invalid: {hex(version)}")
@@ -2666,7 +2669,7 @@ class EleMessageSabInit(EleMessage):
             raise SPSDKParsingError(f"Message TAG in response is invalid: {hex(tag)}")
         if command != self.command:
             raise SPSDKParsingError(f"Message COMMAND in response is invalid: {hex(command)}")
-        if size not in range(self.RESPONSE_HEADER_WORDS_COUNT, self.response_words_count + 1):
+        if size not in range(self.response_header_words_count, self.response_words_count + 1):
             raise SPSDKParsingError(f"Message SIZE in response is invalid: {hex(size)}")
         if version != self.VERSION:
             raise SPSDKParsingError(f"Message VERSION in response is invalid: {hex(version)}")
@@ -2822,7 +2825,7 @@ class EleMessageKeyStoreOpen(EleMessage):
             raise SPSDKParsingError(f"Message TAG in response is invalid: {hex(tag)}")
         if command != self.command:
             raise SPSDKParsingError(f"Message COMMAND in response is invalid: {hex(command)}")
-        if size not in range(self.RESPONSE_HEADER_WORDS_COUNT, self.response_words_count + 1):
+        if size not in range(self.response_header_words_count, self.response_words_count + 1):
             raise SPSDKParsingError(f"Message SIZE in response is invalid: {hex(size)}")
         if version != self.VERSION:
             raise SPSDKParsingError(f"Message VERSION in response is invalid: {hex(version)}")
@@ -2984,7 +2987,7 @@ class EleMessagePublicKeyExport(EleMessage):
             raise SPSDKParsingError(f"Message TAG in response is invalid: {hex(tag)}")
         if command != self.command:
             raise SPSDKParsingError(f"Message COMMAND in response is invalid: {hex(command)}")
-        if size not in range(self.RESPONSE_HEADER_WORDS_COUNT, self.response_words_count + 1):
+        if size not in range(self.response_header_words_count, self.response_words_count + 1):
             raise SPSDKParsingError(f"Message SIZE in response is invalid: {hex(size)}")
         if version != self.VERSION:
             raise SPSDKParsingError(f"Message VERSION in response is invalid: {hex(version)}")

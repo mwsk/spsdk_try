@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2021-2025 NXP
+# Copyright 2021-2026 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -22,7 +22,7 @@ from spsdk.crypto.hash import EnumHashAlgorithm, get_hash
 from spsdk.crypto.rng import random_bytes
 from spsdk.exceptions import SPSDKError, SPSDKNotImplementedError
 from spsdk.image.ahab.ahab_container import AHABContainerV2
-from spsdk.image.ahab.ahab_data import AHABSignHashAlgorithmV2, SignatureType, create_chip_config
+from spsdk.image.ahab.ahab_data import AHABSignHashAlgorithm, SignatureType, create_chip_config
 from spsdk.image.ahab.ahab_iae import ImageArrayEntryV2
 from spsdk.image.ahab.ahab_sign_block import SignatureBlockV2
 from spsdk.image.ahab.ahab_signature import ContainerSignature
@@ -328,6 +328,14 @@ class DevHsmSB4(DevHsm):
         self.info_print(" 3.3 Handling CUST_MK_SK/SBKEK keyblob")
         if cust_mk_sk_blob_found:
             self.info_print(" 3.3.1 CUST_MK_SK/SBKEK key blob found in configuration")
+            expected_position = self.get_keyblob_position()
+            if (
+                not isinstance(sb4_data.commands[expected_position], CmdLoadKeyBlob)
+                and not self._keyblob_pos_warning_logged
+            ):
+                expected_desc = "last" if expected_position == -1 else str(expected_position)
+                logger.debug(f"LoadKeyBlob command not found at expected {expected_desc} position.")
+                self._keyblob_pos_warning_logged = True
         elif self.cust_mk_sk:
             self.info_print(" 3.3.1 Injecting wrapped key")
 
@@ -381,7 +389,7 @@ class DevHsmSB4(DevHsm):
             .from_label("secure_binary_4")
             .tag,
             core_id=core_id.tag,
-            hash_type=AHABSignHashAlgorithmV2.from_label(EnumHashAlgorithm.SHA384.label.upper()),
+            hash_type=AHABSignHashAlgorithm.from_label(EnumHashAlgorithm.SHA384.label.upper()),
         )
         data_image = ImageArrayEntryV2(
             chip_config=ahab.chip_config,

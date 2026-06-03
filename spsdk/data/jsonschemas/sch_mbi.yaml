@@ -1,4 +1,4 @@
-# Copyright 2021-2025 NXP
+# Copyright 2021-2026 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -142,7 +142,6 @@ cert_block_v21:
       format: file
   required: [certBlock]
 
-
 ahab_sign_support:
   type: object
   title: AHAB Container format to add to ECC + PQC sign.
@@ -158,16 +157,6 @@ ahab_sign_support:
       type: [number, string]
       title: Used SRK
       description: Which key from SRK set is being used.
-      format: number
-      template_value: 0
-    fuse_version:
-      type: [number, string]
-      title: Fuse version
-      description:
-        The value must be equal or greater than the version stored in fuses or PFR
-        to provide proper rollback protection. For example, on the MCXN556s series, the fuse version is used for rollback protection,
-        where it is joined with the image version to create a firmware version 'fw_version = (imageVersion << 8) | (fuse_version)'.
-        During rollback protection, the firmware version is checked against 'SECURE_FW_VERSION' in the CFPA page.
       format: number
       template_value: 0
     signer:
@@ -289,7 +278,7 @@ ahab_sign_support_add_crc:
       type: boolean
       title: The additional CRC images check
       description:
-        If true, add additional CRC image that is computed from all data execution mage and optionally TrustZone.
+        If true, add additional CRC image that is computed from all data execution image and optionally TrustZone.
       template_value: false
 
 cert_block_vX:
@@ -456,6 +445,9 @@ image_type:
           NXP signed,
           NBU Signed,
           encrypted,
+          misr,
+          smr,
+          SMR,
         ]
       enum_template:
         ["plain", "crc", "signed", "signed-encrypted", "signed-nxp","nbu-signed"]
@@ -592,3 +584,15 @@ hse_lifecycle:
       description: "Defines the lifecycle state of the device: 'none' - default state with no lifecycle change, 'oem_prod' - OEM production state with increased security, 'in_field' - deployed state with highest security level and restricted debug access."
       enum: ["none", "oem_prod", "in_field"]
       template_value: "none"
+
+misr_seed:
+  type: object
+  title: MISR Seed Settings
+  description: "Configuration for MISR (Multiple Input Signature Register) seed value used in cryptographic operations"
+  properties:
+    misrSeed:
+      type: string
+      title: MISR Seed
+      description: "MISR seed value for cryptographic operations (16 bytes hexadecimal)."
+      template_value: "00000000000000000000000000000000"
+  required: [misrSeed]

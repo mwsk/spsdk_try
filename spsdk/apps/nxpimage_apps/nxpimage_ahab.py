@@ -27,8 +27,9 @@ from spsdk.apps.utils.common_cli_options import (
 from spsdk.apps.utils.utils import INT, SPSDKAppError, print_files, print_verifier_to_console
 from spsdk.crypto.signature_provider import get_signature_provider_from_config_str
 from spsdk.exceptions import SPSDKError
+from spsdk.image.ahab.ahab_blob import AhabBlobOffline
 from spsdk.image.ahab.ahab_certificate import AhabCertificate, get_ahab_certificate_class
-from spsdk.image.ahab.ahab_data import AhabTargetMemory, FlagsSrkSet
+from spsdk.image.ahab.ahab_data import AhabTargetMemory, DebugEnable, FlagsSrkSet, KeyblobLifeCycle
 from spsdk.image.ahab.ahab_image import AHABImage
 from spsdk.image.ahab.utils import (
     ahab_fix_signature_block_version,
@@ -37,6 +38,7 @@ from spsdk.image.ahab.utils import (
     ahab_update_keyblob,
 )
 from spsdk.image.bootable_image.bimg import BootableImage
+from spsdk.utils.binary_image import BinaryImage
 from spsdk.utils.config import Config
 from spsdk.utils.family import FamilyRevision
 from spsdk.utils.misc import get_printable_path, load_binary, load_hex_string, write_file
@@ -97,17 +99,24 @@ def ahab_export(config: Config) -> None:
     "--dek",
     type=str,
     required=False,
+    multiple=True,
     help=(
-        "Data encryption key, if it's specified, the parse method tries decrypt all encrypted images. "
-        "It could be specified as binary/HEX text file path or directly HEX string"
+        "Data encryption key. Supports two formats:\n"
+        "1. Legacy: Single DEK as binary/HEX text file path or HEX string (applies to all OEM containers)\n"
+        "2. New: 'cnt<index>=<value>' where value is binary/HEX text file path or HEX string "
+        "(e.g. cnt0=path/to/key.bin or cnt1=0x1234567890abcdef)\n"
+        "Can be specified multiple times for different containers.\n"
+        "Use 'nxpimage ahab info' command to get container IDs from the image."
     ),
 )
-def ahab_parse_command(family: FamilyRevision, binary: str, dek: str, output: str) -> None:
+def ahab_parse_command(
+    family: FamilyRevision, binary: str, dek: tuple[str, ...], output: str
+) -> None:
     """Parse AHAB Image into YAML configuration and binary images."""
     ahab_parse(family, binary, dek, output)
 
 
-def ahab_parse(family: FamilyRevision, binary: str, dek: str, output: str) -> None:
+def ahab_parse(family: FamilyRevision, binary: str, dek: tuple[str, ...], output: str) -> None:
     """Parse AHAB Image into YAML configuration and binary images."""
     data = load_binary(binary)
     parsed_folder = output
@@ -123,16 +132,36 @@ def ahab_parse(family: FamilyRevision, binary: str, dek: str, output: str) -> No
         f"Identified AHAB image for {ahab_image.chip_config.target_memory.memory_type.label} target"
     )
     logger.info(f"Parsed AHAB image memory map: {ahab_image.image_info().draw()}")
+
     if dek:
-        for container in ahab_image.ahab_containers:
+        dek_map = parse_dek_parameter(dek)
+
+        for container_idx, container in enumerate(ahab_image.ahab_containers):
             if container.flag_srk_set != FlagsSrkSet.NXP:
                 if container.signature_block and container.signature_block.blob:
-                    container.signature_block.blob.dek = load_hex_string(
-                        dek, container.signature_block.blob._size // 8
-                    )
-                    container.decrypt_data()
+                    # Determine which DEK to use
+                    dek_value = None
+                    if None in dek_map:
+                        # Legacy format - use for all containers
+                        dek_value = dek_map[None]
+                    elif container_idx in dek_map:
+                        # New format - use specific container DEK
+                        dek_value = dek_map[container_idx]
+
+                    if dek_value:
+                        container.signature_block.blob.dek = load_hex_string(
+                            dek_value, container.signature_block.blob._size // 8
+                        )
+                        container.decrypt_data()
+                    else:
+                        logger.info(
+                            f"No DEK specified for container {container_idx}, skipping decryption"
+                        )
                 else:
-                    logger.info("Nothing to decrypt, the container doesn't contains BLOB")
+                    logger.info(
+                        f"Container {container_idx} doesn't contain BLOB, nothing to decrypt"
+                    )
+
     write_file(
         ahab_image.get_config_yaml(parsed_folder), os.path.join(parsed_folder, "parsed_config.yaml")
     )
@@ -274,17 +303,24 @@ def ahab_get_template(family: FamilyRevision, output: str) -> None:
     "--dek",
     type=str,
     required=False,
+    multiple=True,
     help=(
-        "Data encryption key, if it's specified, the parse method tries decrypt all encrypted images. "
-        "It could be specified as binary/HEX text file path or directly HEX string"
+        "Data encryption key. Supports two formats:\n"
+        "1. Legacy: Single DEK as binary/HEX text file path or HEX string (applies to all OEM containers)\n"
+        "2. New: 'cnt<index>=<value>' where value is binary/HEX text file path or HEX string "
+        "(e.g. cnt0=path/to/key.bin or cnt1=0x1234567890abcdef)\n"
+        "Can be specified multiple times for different containers.\n"
+        "Use 'nxpimage ahab info' command to get container IDs from the image."
     ),
 )
-def ahab_verify_command(family: FamilyRevision, binary: str, dek: str, problems: bool) -> None:
+def ahab_verify_command(
+    family: FamilyRevision, binary: str, dek: tuple[str, ...], problems: bool
+) -> None:
     """Verify AHAB Image."""
     ahab_verify(family=family, binary=binary, dek=dek, problems=problems)
 
 
-def ahab_verify(family: FamilyRevision, binary: str, dek: str, problems: bool) -> None:
+def ahab_verify(family: FamilyRevision, binary: str, dek: tuple[str, ...], problems: bool) -> None:
     """Verify AHAB Image."""
     data = load_binary(binary)
     verifiers: list[Verifier] = []
@@ -318,11 +354,29 @@ def ahab_verify(family: FamilyRevision, binary: str, dek: str, problems: bool) -
             print_verifier_to_console(verifier, problems)
         raise SPSDKAppError("Verify failed")
 
-    for cnt in valid_image.ahab_containers:
-        if cnt.flag_srk_set != FlagsSrkSet.NXP and cnt.signature_block and cnt.signature_block.blob:
-            cnt.signature_block.blob.dek = (
-                load_hex_string(dek, cnt.signature_block.blob._size // 8) if dek else None
-            )
+    if dek:
+        dek_map = parse_dek_parameter(dek)
+
+        for container_idx, cnt in enumerate(valid_image.ahab_containers):
+            if (
+                cnt.flag_srk_set != FlagsSrkSet.NXP
+                and cnt.signature_block
+                and cnt.signature_block.blob
+            ):
+                # Determine which DEK to use
+                dek_value = None
+                if None in dek_map:
+                    # Legacy format - use for all containers
+                    dek_value = dek_map[None]
+                elif container_idx in dek_map:
+                    # New format - use specific container DEK
+                    dek_value = dek_map[container_idx]
+
+                cnt.signature_block.blob.dek = (
+                    load_hex_string(dek_value, cnt.signature_block.blob._size // 8)
+                    if dek_value
+                    else None
+                )
 
     if not problems:
         click.echo(valid_image.image_info().draw())
@@ -642,3 +696,200 @@ def ahab_cert_block_verify(family: FamilyRevision, binary: str, problems: bool) 
     click.echo(ver.draw(results))
 
     click.echo("Summary table of verifier results:\n" + ver.get_summary_table())
+
+
+@ahab_group.command(name="info", no_args_is_help=True)
+@spsdk_family_option(families=AHABImage.get_supported_families())
+@click.option(
+    "-b",
+    "--binary",
+    type=click.Path(exists=True, readable=True, resolve_path=True),
+    required=True,
+    help="Path to binary AHAB image to analyze.",
+)
+def ahab_info_command(family: FamilyRevision, binary: str) -> None:
+    """Display information about AHAB containers in the image."""
+    data = BinaryImage.load_binary_image(binary).export()
+
+    try:
+        ahab_image = ahab_parse_image(family=family, binary=data)
+    except SPSDKError as exc:
+        raise SPSDKAppError(f"Failed to parse AHAB image: {str(exc)}") from exc
+
+    click.echo(ahab_image.info())
+
+
+@ahab_group.group(name="keyblob", cls=CommandsTreeGroup)
+def ahab_keyblob_group() -> None:
+    """Group of sub-commands related to AHAB keyblob generation and management."""
+
+
+@ahab_keyblob_group.command(name="export", no_args_is_help=True)
+@spsdk_config_option(help="Path to YAML/JSON configuration file for keyblob generation.")
+@spsdk_output_option(force=True)
+def ahab_keyblob_export_command(config: Config, output: str) -> None:
+    """Generate AHAB keyblob from YAML/JSON configuration.
+
+    Creates an encrypted keyblob using offline key derivation that can be used
+    for AHAB container encryption. The keyblob follows the CKDF specification.
+
+    The configuration template files could be generated by subcommand 'get-template'.
+    """
+    ahab_keyblob_export(config, output)
+
+
+def ahab_keyblob_export(config: Config, output: str) -> None:
+    """Generate AHAB keyblob from configuration."""
+    try:
+        generator = AhabBlobOffline.load_from_config(config)
+        keyblob_with_header = generator.export()
+
+        write_file(keyblob_with_header, output, mode="wb")
+
+        logger.info(f"Generated keyblob: {len(keyblob_with_header)} bytes")
+        logger.info(f"Keyblob info:\n{generator}")
+        click.echo(f"Success. (AHAB Keyblob: {get_printable_path(output)} created.)")
+
+    except SPSDKError as exc:
+        raise SPSDKAppError(f"Failed to generate keyblob: {str(exc)}") from exc
+
+
+@ahab_keyblob_group.command(name="get-template", no_args_is_help=True)
+@spsdk_output_option(force=True)
+@spsdk_family_option(families=AhabBlobOffline.get_supported_families())
+def ahab_keyblob_get_template_command(output: str, family: FamilyRevision) -> None:
+    """Create template of keyblob configuration in YAML format.
+
+    The template file name is specified as argument of this command.
+    """
+    ahab_keyblob_get_template(output, family)
+
+
+def ahab_keyblob_get_template(output: str, family: FamilyRevision) -> None:
+    """Create template of keyblob configuration in YAML format."""
+    click.echo(f"Creating {get_printable_path(output)} template file.")
+    write_file(AhabBlobOffline.get_config_template(family), output)
+
+
+@ahab_keyblob_group.command(name="parse", no_args_is_help=True)
+@spsdk_config_option(
+    help="Path to YAML/JSON configuration file containing keyblob parameters for decryption."
+)
+@click.option(
+    "-b",
+    "--binary",
+    type=click.Path(exists=True, readable=True, resolve_path=True),
+    required=True,
+    help="Path to binary keyblob file to parse.",
+)
+@spsdk_output_option(directory=True)
+def ahab_keyblob_parse_command(config: Config, binary: str, output: str) -> None:
+    """Parse AHAB keyblob and extract DEK if possible.
+
+    Parses the keyblob header and attempts to decrypt the DEK if the customer
+    master key and other parameters are provided in the configuration file.
+    """
+    ahab_keyblob_parse(config, binary, output)
+
+
+def ahab_keyblob_parse(config: Config, binary: str, output: str) -> None:
+    """Parse AHAB keyblob and extract information."""
+    try:
+        keyblob_data = load_binary(binary)
+
+        if not os.path.exists(output):
+            os.makedirs(output, exist_ok=True)
+
+        # Parse keyblob using the AhabBlobOffline parser
+        family = config.get_family()
+        blob = AhabBlobOffline.parse(keyblob_data, family=family)
+
+        click.echo("Keyblob Header Analysis:")
+        click.echo(str(blob))
+
+        # Save components
+        write_file(blob.dek_keyblob[:32], os.path.join(output, "encrypted_blob_key.bin"), mode="wb")
+        write_file(blob.dek_keyblob[32:], os.path.join(output, "encrypted_dek.bin"), mode="wb")
+
+        # Try to decrypt if customer master key is provided in config
+        if "cust_mk_sk" in config:
+            try:
+                # Load decryption parameters from config
+                blob.customer_master_key = config.load_symmetric_key("cust_mk_sk", expected_size=32)
+                blob.lifecycle_state = KeyblobLifeCycle.from_label(
+                    config.get_str("lifecycle", "oem_open").lower()
+                )
+                blob.debug_enable = (
+                    DebugEnable.YES if config.get_bool("debug", False) else DebugEnable.NO
+                )
+                blob.srkh0 = config.load_symmetric_key("srkh0", expected_size=64)
+                blob.srkh1 = config.load_symmetric_key("srkh1", expected_size=64)
+                blob.key_identifier = config.get_int("key_id", blob.key_identifier)
+
+                # Decrypt keyblob
+                decrypted_dek = blob.decrypt_keyblob(keyblob_data)
+
+                click.echo("\nDecryption successful!")
+                click.echo(f"  DEK size: {len(decrypted_dek)} bytes")
+                click.echo(f"  DEK: {decrypted_dek.hex()}")
+
+                # Save decrypted DEK
+                write_file(decrypted_dek, os.path.join(output, "decrypted_dek.bin"), mode="wb")
+
+            except Exception as e:
+                click.echo(f"Decryption failed: {str(e)}", err=True)
+        else:
+            click.echo("\nNo customer master key provided in configuration - skipping decryption")
+
+        click.echo(f"\nSuccess. (AHAB Keyblob: {binary} has been parsed and stored into {output}.)")
+
+    except SPSDKError as exc:
+        raise SPSDKAppError(f"Failed to parse keyblob: {str(exc)}") from exc
+
+
+def parse_dek_parameter(dek_values: tuple[str, ...]) -> dict[Optional[int], str]:
+    """Parse DEK parameter values into a dictionary.
+
+    Supports both legacy format (single DEK for all containers) and new format
+    (cnt<index>=<value> for specific containers).
+
+    :param dek_values: Tuple of DEK parameter values from CLI
+    :return: Dictionary mapping container index to DEK value (None key for legacy format)
+    :raises SPSDKAppError: If the format is invalid
+    """
+    dek_map: dict[Optional[int], str] = {}
+
+    for dek_value in dek_values:
+        # Check if it's the new format: cnt<index>=<value>
+        if dek_value.startswith("cnt") and "=" in dek_value:
+            try:
+                key_part, value_part = dek_value.split("=", 1)
+                # Extract index from cnt<index>
+                index_str = key_part[3:]  # Remove 'cnt' prefix
+                container_index = int(index_str)
+
+                if container_index in dek_map:
+                    raise SPSDKAppError(
+                        f"Duplicate DEK specification for container {container_index}"
+                    )
+
+                dek_map[container_index] = value_part
+            except (ValueError, IndexError) as exc:
+                raise SPSDKAppError(
+                    f"Invalid DEK format: '{dek_value}'. "
+                    "Expected format: cnt<index>=<value> (e.g., cnt0=key.bin)"
+                ) from exc
+        else:
+            # Legacy format - applies to all containers
+            if None in dek_map:
+                raise SPSDKAppError(
+                    "Multiple legacy DEK values specified. Use new format (cnt<index>=<value>) "
+                    "for multiple containers."
+                )
+            if dek_map:
+                raise SPSDKAppError(
+                    "Cannot mix legacy DEK format with new format (cnt<index>=<value>)"
+                )
+            dek_map[None] = dek_value
+
+    return dek_map

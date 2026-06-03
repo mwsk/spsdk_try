@@ -1,5 +1,5 @@
 {
-  "cpu": "MIMX9131",
+  "cpu": "mimx9131",
   "groups": [
     {
       "group": {
@@ -1632,15 +1632,16 @@
               "description": "Override FlexSPI NOR Boot Selection",
               "values": [
                 {
-                  "name": "DISABLED",
+                  "name": "DO_NOT_OVERRIDE",
                   "value": 0,
                   "description": "Do not override",
                   "deprecated_names": [
+                    "DISABLED",
                     "0"
                   ]
                 },
                 {
-                  "name": "Override",
+                  "name": "OVERRIDE",
                   "value": 1,
                   "description": "Override"
                 }
@@ -1671,7 +1672,7 @@
                 {
                   "name": "OCTAL_MODE_MICRON",
                   "value": 2,
-                  "description": "Default Octal mode\u00a0(Micron, Nice to have)",
+                  "description": "Default Octal mode (Micron, Nice to have)",
                   "deprecated_names": [
                     "10"
                   ]
@@ -1870,10 +1871,10 @@
               "width": 1,
               "id": "fuse24-bit-16",
               "name": "SD_Loopback_Clock_Source_Sel",
-              "description": "SD Loopback clock Source Sel",
               "deprecated_names": [
                 "SD_Loopback_Clock_Source_Sel "
               ],
+              "description": "SD Loopback clock Source Sel",
               "values": [
                 {
                   "name": "THROUGH_PAD",
@@ -2189,10 +2190,11 @@
               "description": "BT FUSE SEL",
               "values": [
                 {
-                  "name": "DISABLED",
+                  "name": "NOT_PROGRAMMED",
                   "value": 0,
                   "description": "Boot fuses not programmed",
                   "deprecated_names": [
+                    "DISABLED",
                     "0"
                   ]
                 },
@@ -2218,10 +2220,11 @@
                   "description": "Disable"
                 },
                 {
-                  "name": "ENABLED",
+                  "name": "OVERRIDE_BOOT_PINS",
                   "value": 1,
                   "description": "Override Boot_Mode pins by boot mode fuses",
                   "deprecated_names": [
+                    "ENABLED",
                     "1"
                   ]
                 }
@@ -2236,7 +2239,7 @@
                 {
                   "name": "DISABLED",
                   "value": 0,
-                  "description": "Normal boot mode selection applies"
+                  "description": "Override all other Boot_Mode & Boot Mode Fuses and enter Serial Download is disabled"
                 },
                 {
                   "name": "ENABLED",
@@ -2378,24 +2381,36 @@
               "description": "SD Calibration Step",
               "values": [
                 {
-                  "name": "1_delay_cell",
+                  "name": "DELAY_CELL_1",
                   "value": 0,
-                  "description": "1 delay cell"
+                  "description": "1 delay cell",
+                  "deprecated_names": [
+                    "1_delay_cell"
+                  ]
                 },
                 {
-                  "name": "2_delay_cell",
+                  "name": "DELAY_CELL_2",
                   "value": 1,
-                  "description": "2 delay cell"
+                  "description": "2 delay cell",
+                  "deprecated_names": [
+                    "2_delay_cell"
+                  ]
                 },
                 {
-                  "name": "3_delay_cell",
+                  "name": "DELAY_CELL_3",
                   "value": 2,
-                  "description": "3 delay cell"
+                  "description": "3 delay cell",
+                  "deprecated_names": [
+                    "3_delay_cell"
+                  ]
                 },
                 {
-                  "name": "5_delay_cell",
+                  "name": "DELAY_CELL_5",
                   "value": 3,
-                  "description": "5 delay cell"
+                  "description": "5 delay cell",
+                  "deprecated_names": [
+                    "5_delay_cell"
+                  ]
                 }
               ]
             },
@@ -2564,7 +2579,7 @@
                 {
                   "name": "OVERRIDE_VAL_0",
                   "value": 0,
-                  "description": "Override value 0 for uSDHC pad settings (High bits)",
+                  "description": "The override value for uSDHC pad settings (High bits) - value 0",
                   "deprecated_names": [
                     "1111"
                   ]
@@ -2572,77 +2587,77 @@
                 {
                   "name": "OVERRIDE_VAL_1",
                   "value": 1,
-                  "description": "Override value 1 for uSDHC pad settings (High bits)"
+                  "description": "The override value for uSDHC pad settings (High bits) - value 1"
                 },
                 {
                   "name": "OVERRIDE_VAL_2",
                   "value": 2,
-                  "description": "Override value 2 for uSDHC pad settings (High bits)"
+                  "description": "The override value for uSDHC pad settings (High bits) - value 2"
                 },
                 {
                   "name": "OVERRIDE_VAL_3",
                   "value": 3,
-                  "description": "Override value 3 for uSDHC pad settings (High bits)"
+                  "description": "The override value for uSDHC pad settings (High bits) - value 3"
                 },
                 {
                   "name": "OVERRIDE_VAL_4",
                   "value": 4,
-                  "description": "Override value 4 for uSDHC pad settings (High bits)"
+                  "description": "The override value for uSDHC pad settings (High bits) - value 4"
                 },
                 {
                   "name": "OVERRIDE_VAL_5",
                   "value": 5,
-                  "description": "Override value 5 for uSDHC pad settings (High bits)"
+                  "description": "The override value for uSDHC pad settings (High bits) - value 5"
                 },
                 {
                   "name": "OVERRIDE_VAL_6",
                   "value": 6,
-                  "description": "Override value 6 for uSDHC pad settings (High bits)"
+                  "description": "The override value for uSDHC pad settings (High bits) - value 6"
                 },
                 {
                   "name": "OVERRIDE_VAL_7",
                   "value": 7,
-                  "description": "Override value 7 for uSDHC pad settings (High bits)"
+                  "description": "The override value for uSDHC pad settings (High bits) - value 7"
                 },
                 {
                   "name": "OVERRIDE_VAL_8",
                   "value": 8,
-                  "description": "Override value 8 for uSDHC pad settings (High bits)"
+                  "description": "The override value for uSDHC pad settings (High bits) - value 8"
                 },
                 {
                   "name": "OVERRIDE_VAL_9",
                   "value": 9,
-                  "description": "Override value 9 for uSDHC pad settings (High bits)"
+                  "description": "The override value for uSDHC pad settings (High bits) - value 9"
                 },
                 {
                   "name": "OVERRIDE_VAL_10",
                   "value": 10,
-                  "description": "Override value 10 for uSDHC pad settings (High bits)"
+                  "description": "The override value for uSDHC pad settings (High bits) - value 10"
                 },
                 {
                   "name": "OVERRIDE_VAL_11",
                   "value": 11,
-                  "description": "Override value 11 for uSDHC pad settings (High bits)"
+                  "description": "The override value for uSDHC pad settings (High bits) - value 11"
                 },
                 {
                   "name": "OVERRIDE_VAL_12",
                   "value": 12,
-                  "description": "Override value 12 for uSDHC pad settings (High bits)"
+                  "description": "The override value for uSDHC pad settings (High bits) - value 12"
                 },
                 {
                   "name": "OVERRIDE_VAL_13",
                   "value": 13,
-                  "description": "Override value 13 for uSDHC pad settings (High bits)"
+                  "description": "The override value for uSDHC pad settings (High bits) - value 13"
                 },
                 {
                   "name": "OVERRIDE_VAL_14",
                   "value": 14,
-                  "description": "Override value 14 for uSDHC pad settings (High bits)"
+                  "description": "The override value for uSDHC pad settings (High bits) - value 14"
                 },
                 {
                   "name": "OVERRIDE_VAL_15",
                   "value": 15,
-                  "description": "Override value 15 for uSDHC pad settings (High bits)"
+                  "description": "The override value for uSDHC pad settings (High bits) - value 15"
                 }
               ]
             },
@@ -3462,7 +3477,7 @@
                 {
                   "name": "01",
                   "value": 1,
-                  "description": "2 Redudant value"
+                  "description": "2 Redundant value"
                 },
                 {
                   "name": "SEARCH_COUNT_4",
@@ -3489,24 +3504,36 @@
               "description": "FlexSPI NAND Search Stride",
               "values": [
                 {
-                  "name": "64_pages",
+                  "name": "PAGES_64",
                   "value": 0,
-                  "description": "64 pages"
+                  "description": "64 pages",
+                  "deprecated_names": [
+                    "64_pages"
+                  ]
                 },
                 {
-                  "name": "128_pages",
+                  "name": "PAGES_128",
                   "value": 1,
-                  "description": "128 pages"
+                  "description": "128 pages",
+                  "deprecated_names": [
+                    "128_pages"
+                  ]
                 },
                 {
-                  "name": "256_pages",
+                  "name": "PAGES_256",
                   "value": 2,
-                  "description": "256 pages"
+                  "description": "256 pages",
+                  "deprecated_names": [
+                    "256_pages"
+                  ]
                 },
                 {
-                  "name": "32_pages",
+                  "name": "PAGES_32",
                   "value": 3,
-                  "description": "32 pages"
+                  "description": "32 pages",
+                  "deprecated_names": [
+                    "32_pages"
+                  ]
                 }
               ]
             },
@@ -4352,7 +4379,132 @@
                 {
                   "name": "DLL_DELAY_166",
                   "value": 166,
-                  "description": "The delay line value only for H"
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_LINE_167",
+                  "value": 167,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_LINE_168",
+                  "value": 168,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_LINE_169",
+                  "value": 169,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_LINE_170",
+                  "value": 170,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_LINE_171",
+                  "value": 171,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_LINE_172",
+                  "value": 172,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_LINE_173",
+                  "value": 173,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_LINE_174",
+                  "value": 174,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_LINE_175",
+                  "value": 175,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_LINE_176",
+                  "value": 176,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_LINE_177",
+                  "value": 177,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_LINE_178",
+                  "value": 178,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_LINE_179",
+                  "value": 179,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_LINE_180",
+                  "value": 180,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_LINE_181",
+                  "value": 181,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_LINE_182",
+                  "value": 182,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_LINE_183",
+                  "value": 183,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_LINE_184",
+                  "value": 184,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_LINE_185",
+                  "value": 185,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_LINE_186",
+                  "value": 186,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_LINE_187",
+                  "value": 187,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_LINE_188",
+                  "value": 188,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_LINE_189",
+                  "value": 189,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_LINE_190",
+                  "value": 190,
+                  "description": "FlexSPI_DLL_Value:"
+                },
+                {
+                  "name": "DELAY_LINE_MAX",
+                  "value": 255,
+                  "description": "Maximum delay line value for HyperFlash"
                 }
               ]
             },
@@ -4646,9 +4798,12 @@
                   "description": "14 cycles"
                 },
                 {
-                  "name": "15_cycles",
+                  "name": "CYCLES_15",
                   "value": 15,
-                  "description": "15 cycles"
+                  "description": "15 cycles",
+                  "deprecated_names": [
+                    "15_cycles"
+                  ]
                 }
               ]
             }
@@ -4862,6 +5017,11 @@
                   ]
                 },
                 {
+                  "name": "OFFSET_1024MB",
+                  "value": 10,
+                  "description": "Secondary boot flow is disabled"
+                },
+                {
                   "name": "EMMC_LAST_128MB",
                   "value": 254,
                   "description": "EMMC last 128 MB"
@@ -4883,12 +5043,12 @@
               "description": "A55 D Cache Disable",
               "values": [
                 {
-                  "name": "Enabled",
+                  "name": "ENABLED",
                   "value": 0,
                   "description": "Enabled"
                 },
                 {
-                  "name": "Disabled",
+                  "name": "DISABLED",
                   "value": 1,
                   "description": "Disabled"
                 }
@@ -5119,12 +5279,12 @@
                 {
                   "name": "DISABLED",
                   "value": 0,
-                  "description": "Disabled"
+                  "description": "WDOG4 Disabled"
                 },
                 {
                   "name": "ENABLED",
                   "value": 1,
-                  "description": "Enabled"
+                  "description": "WDOG4 Enabled"
                 }
               ]
             },
@@ -5623,9 +5783,12 @@
                   "description": "Secure debug disabled - spiden and sniden disabled, non-secure debug enabled"
                 },
                 {
-                  "name": "NONINVASIVE_ENABLED",
+                  "name": "SPIDEN_SNIDEN_NI_DIS",
                   "value": 13,
-                  "description": "Secure invasive and non-secure invasive debug disabled (spiden=1,sniden=1,dbgen=0,niden=1)"
+                  "description": "Secure invasive and non-secure invasive debug disabled (spiden=1,sniden=1,dbgen=0,niden=1)",
+                  "deprecated_names": [
+                    "NONINVASIVE_ENABLED"
+                  ]
                 },
                 {
                   "name": "NIDEN_ONLY_ENABLED",
@@ -5878,7 +6041,7 @@
                 {
                   "name": "DBGEN_DISABLED",
                   "value": 2,
-                  "description": "Debug disabled, non-invasive and secure debug enabled"
+                  "description": "Invasive debug disabled (spiden=0, sniden=0, dbgen=1, niden=0)"
                 },
                 {
                   "name": "NIDEN_DBGEN_DISABLED",
@@ -5898,12 +6061,12 @@
                 {
                   "name": "SNIDEN_DBGEN_DISABLED",
                   "value": 6,
-                  "description": "Secure non-invasive and debug disabled (spiden=0,sniden=1,dbgen=1,niden=0)"
+                  "description": "Secure non-invasive and invasive debug disabled (spiden=0, sniden=1, dbgen=1, niden=0)"
                 },
                 {
                   "name": "NS_DEBUG_DISABLED",
                   "value": 7,
-                  "description": "Only invasive debug enabled (spiden=0,sniden=1,dbgen=1,niden=1)"
+                  "description": "Secure non-invasive, invasive, and non-invasive debug disabled (spiden=0, sniden=1, dbgen=1, niden=1)"
                 },
                 {
                   "name": "SPIDEN_DISABLED",
@@ -5923,7 +6086,7 @@
                 {
                   "name": "SNIDEN_ENABLED_ONLY",
                   "value": 11,
-                  "description": "Only secure non-invasive debug enabled (spiden=1,sniden=0,dbgen=1,niden=1)",
+                  "description": "Secure invasive, invasive, and non-invasive debug disabled (spiden=1, sniden=0, dbgen=1, niden=1)",
                   "deprecated_names": [
                     "INVASIVE_NIDEN_DISABLED"
                   ]
@@ -5931,7 +6094,7 @@
                 {
                   "name": "SPIDEN_SNIDEN_DISABLED",
                   "value": 12,
-                  "description": "All secure debug disabled (spiden=1,sniden=1,dbgen=0,niden=0)",
+                  "description": "Secure invasive and secure non-invasive debug disabled (spiden=1, sniden=1, dbgen=0, niden=0)",
                   "deprecated_names": [
                     "SECURE_DEBUG_DISABLED"
                   ]
@@ -5939,7 +6102,7 @@
                 {
                   "name": "NONSECURE_NIDEN_ENABLED",
                   "value": 13,
-                  "description": "Secure and non-invasive debug disabled (spiden=1,sniden=1,dbgen=0,niden=1)",
+                  "description": "Secure invasive, secure non-invasive, and non-invasive debug disabled (spiden=1, sniden=1, dbgen=0, niden=1)",
                   "deprecated_names": [
                     "SECURE_NIDEN_DISABLED"
                   ]
@@ -5947,7 +6110,7 @@
                 {
                   "name": "NONSECURE_DBGEN_ENABLED",
                   "value": 14,
-                  "description": "Secure privileged invasive, secure non-invasive, and debug disabled",
+                  "description": "Secure invasive, secure non-invasive, and invasive debug disabled (spiden=1, sniden=1, dbgen=1, niden=0)",
                   "deprecated_names": [
                     "SECURE_DBGEN_DISABLED"
                   ]
@@ -6052,12 +6215,12 @@
                 {
                   "name": "DISABLED",
                   "value": 0,
-                  "description": "Global JTAG disable"
+                  "description": "Global JTAG disable is not active"
                 },
                 {
                   "name": "ENABLED",
                   "value": 1,
-                  "description": "Global JTAG enable"
+                  "description": "Global JTAG disable is active"
                 }
               ]
             },
@@ -6070,12 +6233,12 @@
                 {
                   "name": "DISABLED",
                   "value": 0,
-                  "description": "Password match mechanism for debug enable is active"
+                  "description": "Password match mechanism for debug enable is not disabled (mechanism is active)"
                 },
                 {
                   "name": "ENABLED",
                   "value": 1,
-                  "description": "Password match mechanism for debug enable is disabled"
+                  "description": "Password match mechanism for debug enable is disabled (mechanism is inactive)"
                 }
               ]
             },
@@ -6112,7 +6275,7 @@
                 {
                   "name": "DISABLED",
                   "value": 0,
-                  "description": "ELE Frequency detectors are enabled"
+                  "description": "Disable ELE Frequency detectors is disabled (detectors are enabled)"
                 },
                 {
                   "name": "ENABLED",
@@ -6222,12 +6385,12 @@
               "description": "DFT DISABLE",
               "values": [
                 {
-                  "name": "Enabled",
+                  "name": "ENABLED",
                   "value": 0,
                   "description": "Enabled"
                 },
                 {
-                  "name": "Disabled",
+                  "name": "DISABLED",
                   "value": 1,
                   "description": "Disabled"
                 }
@@ -7533,7 +7696,7 @@
         {
           "id": "fuse187",
           "name": "OTFAD1_KEY0",
-          "description": "On the Fly Decryption module Key bits  31 - 0",
+          "description": "On the Fly Decryption module Key bits 31 - 0",
           "index_int": "0x00BB",
           "lock": {
             "register_id": "fuse2",

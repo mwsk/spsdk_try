@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright 2024-2025 NXP
+# Copyright 2024-2026 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -19,7 +19,7 @@ from typing_extensions import Self
 from spsdk.exceptions import SPSDKConnectionError, SPSDKError
 from spsdk.utils.exceptions import SPSDKTimeoutError
 from spsdk.utils.interfaces.device.base import DeviceBase, logger
-from spsdk.utils.misc import split_data
+from spsdk.utils.misc import split_data, value_to_int
 
 
 class CANDevice(DeviceBase):
@@ -155,7 +155,7 @@ class CANDevice(DeviceBase):
         if not data:
             raise SPSDKTimeoutError("Timeout reading the message")
 
-        logger.debug(f"<{' '.join(f'{b:02x}' for b in data)}>")
+        logger.trace(f"<{' '.join(f'{b:02x}' for b in data)}>")
         return data
 
     def write(self, data: bytes, timeout: Optional[int] = None) -> None:
@@ -171,7 +171,7 @@ class CANDevice(DeviceBase):
         """
         if not self.device or not self.is_opened:
             raise SPSDKConnectionError("Device is not opened for writing.")
-        logger.debug(f"[{' '.join(f'{b:02x}' for b in data)}]")
+        logger.trace(f"[{' '.join(f'{b:02x}' for b in data)}]")
 
         try:
             from can.message import Message
@@ -195,7 +195,10 @@ class CANDevice(DeviceBase):
 
         :return: Formatted string with CAN interface details.
         """
-        return f"CAN interface: {self.interface}, channel: {self.channel}, bitrate: {self.bitrate} "
+        return (
+            f"CAN interface: {self.interface}, channel: {self.channel}"
+            f", bitrate: {self.bitrate} rxid: 0x{self.rxid:03X}, txid: 0x{self.txid:03X}"
+        )
 
     @classmethod
     def scan(
@@ -224,6 +227,8 @@ class CANDevice(DeviceBase):
             logger.debug(
                 f"Checking device: <Interface> {interface} <Channel> {channel} <Bitrate> {bitrate}"
             )
+            txid = value_to_int(txid) if txid else None
+            rxid = value_to_int(rxid) if rxid else None
             device = cls(interface, channel, bitrate, timeout, txid, rxid)
             device.open()
             device.close()

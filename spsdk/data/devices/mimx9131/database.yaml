@@ -98,6 +98,9 @@ features:
     containers_max_cnt: 3
     oem_images_max_cnt: 8
     container_types: [1] # Supported container types
+    fuses_0:
+      _name: "AHAB SRKH"
+      srkh: "__srk_hash" # SRK hash fuse
     core_ids:
       RESERVED: [1, "reserved", "Reserved Core ID"]
       CORTEX_A55: [2, "cortex-a55", "Cortex A55"]
@@ -117,6 +120,18 @@ features:
         V2X_PRIMARY: [0x0B, v2x_primary, V2X primary Image]
         V2X_SECONDARY: [0x0C, v2x_secondary, V2X secondary Image]
         V2X_ROM_PATCH: [0x0D, v2x_rom_patch, V2X rom patch Image]
+
+    signature_algorithms:
+      RSA: [0x21, "RSA", "RSA signature algorithm"]
+      RSA_PSS: [0x22, "RSA_PSS", "RSA PSS signature algorithm"]
+      ECDSA: [0x27, "ECDSA", "ECDSA signature algorithm"]
+      SM2: [0x28, "SM2", "SM2 signature algorithm"]
+
+    hash_algorithms:
+      SHA256: [0x00, "SHA256", "SHA-256 hash algorithm"]
+      SHA384: [0x01, "SHA384", "SHA-384 hash algorithm"]
+      SHA512: [0x02, "SHA512", "SHA-512 hash algorithm"]
+      SM3: [0x03, "SM3", "SM3 hash algorithm"]
 
     image_types_mapping:
       ele: [6]
@@ -179,6 +194,13 @@ features:
     test_address: 0x2048_0000
     dmbox_ap_ix: 0
 
+  # ======== FCB section ========
+  fcb:
+    mem_types:
+      flexspi_nor:
+        reg_spec: ../mimx9352/fcb_flexspi_nor.json
+        reg_spec_modification: ../../common/fcb_flexspi_nor_modification.yaml
+
   # ======== EdgeLock Enclave section ========
   ele: {}
 
@@ -196,6 +218,7 @@ features:
           #not_used: 0xC00
           primary_image_container_set: 0x1_000
           secondary_image_container_set: -1 # Just behind previous segment
+        image_pattern: ones
       emmc:
         segments:
           primary_image_container_set: 0x8_000

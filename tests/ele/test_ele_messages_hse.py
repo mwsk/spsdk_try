@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright 2025 NXP
+# Copyright 2025-2026 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
+
 """SPSDK ELE HSE message implementation tests.
 
 This module contains unit tests for HSE-specific EdgeLock Enclave (ELE)
@@ -12,17 +13,47 @@ and message encoding/decoding validation.
 """
 
 import os
+import shutil
 
 import pytest
 
-from spsdk.crypto.keys import PrivateKeyEcc, PrivateKeyRsa, PublicKeyEcc, PublicKeyRsa
+from spsdk.crypto.keys import PrivateKeyEcc, PrivateKeyRsa, PublicKeyEcc, PublicKeyRsa, load_key
+from spsdk.dat.sda import DebugAuthMode
+from spsdk.ele.ele_constants import HseResponseStatus, ResponseStatus
 from spsdk.ele.ele_message_hse import (
     EleMessageHse,
     EleMessageHseBootDataImageSign,
+    EleMessageHseBootDataImageVerify,
+    EleMessageHseFirmwareUpdate,
+    EleMessageHseGetAttr,
+    EleMessageHseGetKeyInfo,
+    EleMessageHseImportKey,
+    EleMessageHseSetAttr,
+    EleMessageHseSmrEntryErase,
+    EleMessageHseSmrEntryInstall,
+    EleMessageHseSmrVerify,
+    HseAccessMode,
+    HseSmrCipherParams,
+    HseSmrVerificationOptions,
     KeyImportPayload,
+    MuChannel,
+)
+from spsdk.ele.hse_attrs import (
+    AppDebugKeyAttributeHandler,
+    CapabilitiesAttributeHandler,
+    CapabilityIndex,
+    DebugAuthModeAttributeHandler,
+    EnablePublishKeyStoreRamToFlashAttributeHandler,
+    FwMemoryConfig,
+    FwVersionAttributeHandler,
+    HseAttributeHandler,
+    HseAttributeId,
+    HseAttributeType,
+    SecureLifecycle,
+    SecureLifecycleAttributeHandler,
 )
 from spsdk.exceptions import SPSDKValueError
-from spsdk.image.hse.common import HseKeyBits, KeyType
+from spsdk.image.hse.common import HseKeyBits, KeyCatalogId, KeyHandle, KeyType
 from spsdk.image.hse.key_info import (
     HseAesBlockModeMask,
     HseEccCurveId,
@@ -30,7 +61,9 @@ from spsdk.image.hse.key_info import (
     HseSmrFlags,
     KeyInfo,
 )
+from spsdk.utils.config import Config
 from spsdk.utils.family import FamilyRevision
+from spsdk.utils.misc import load_binary
 
 
 # Mock implementation of EleMessageHse for testing
@@ -53,9 +86,9 @@ class MockEleMessageHse(EleMessageHse):
 
         Returns a fixed 4-byte service descriptor used for testing purposes.
 
-        :return: Service descriptor as 4 zero bytes.
+        :return: Service descriptor as bytes (0x00, 0x01, 0x02, 0x03).
         """
-        return b"\x00\x00\x00\x00"
+        return b"\x00\x01\x02\x03"
 
 
 def test_ele_message_hse_boot_data_image_sign_init_invalid_tag_len() -> None:
@@ -128,10 +161,9 @@ def test_ele_message_hse_boot_data_image_sign_decode_response_data_invalid_tag_l
 def test_ele_message_hse_boot_data_image_sign_response_info() -> None:
     """Test response_info method of EleMessageHseBootDataImageSign.
 
-    This test verifies that the response_info method correctly formats output
-    based on tag length. Tests both scenarios: tag_len=16 (no IV) and
-    tag_len=28 (with IV), ensuring proper inclusion/exclusion of Initial Vector
-    information in the response.
+    This test verifies that the response_info method correctly formats output based on tag length.
+    Tests both scenarios: tag_len=16 (no IV) and tag_len=28 (with IV), ensuring proper
+    inclusion/exclusion of Initial Vector information in the response.
     """
     # Test with tag_len=16 (no IV)
     msg = EleMessageHseBootDataImageSign(img_addr=0x12345678, tag_len=16)
@@ -155,13 +187,23 @@ def test_ele_message_hse_boot_data_image_sign_response_info() -> None:
 
 @pytest.fixture
 def family() -> FamilyRevision:
-    """Return a family revision for testing."""
+    """Return a family revision for testing.
+
+    :return: Family revision instance configured for mcxe31b.
+    """
     return FamilyRevision("mcxe31b")
 
 
 @pytest.fixture
 def aes_key_info(family: FamilyRevision) -> KeyInfo:
-    """Create an AES key info for testing."""
+    """Create an AES key info for testing.
+
+    This function creates a KeyInfo object configured with AES encryption/decryption
+    capabilities, supporting CBC and GCM block modes for testing purposes.
+
+    :param family: The family revision to configure the key info for.
+    :return: Configured KeyInfo object with AES key settings for testing.
+    """
     return KeyInfo(
         family=family,
         key_flags=HseKeyFlags.USAGE_ENCRYPT | HseKeyFlags.USAGE_DECRYPT,
@@ -177,20 +219,34 @@ def aes_key_info(family: FamilyRevision) -> KeyInfo:
 
 @pytest.fixture
 def ecc_key_info(family: FamilyRevision) -> KeyInfo:
-    """Create an ECC key info for testing."""
+    """Create an ECC key info for testing.
+
+    This function creates a KeyInfo object configured with ECC key parameters
+    suitable for testing HSE (Hardware Security Engine) functionality.
+
+    :param family: The family revision to configure the key info for.
+    :return: Configured KeyInfo object with ECC key parameters for testing.
+    """
     return KeyInfo(
         family=family,
         key_flags=HseKeyFlags.USAGE_SIGN | HseKeyFlags.USAGE_VERIFY,
         key_type=KeyType.ECC_PAIR,
         smr_flags=HseSmrFlags.SMR_0,
         key_bit_len=HseKeyBits.KEY256_BITS,
-        specific_data={"eccCurveId": HseEccCurveId.SEC_SECP256R1.value},
+        specific_data={"eccCurveId": HseEccCurveId.SECP256R1.value},
     )
 
 
 @pytest.fixture
 def rsa_key_info(family: FamilyRevision) -> KeyInfo:
-    """Create an RSA key info for testing."""
+    """Create an RSA key info for testing.
+
+    This method creates a KeyInfo object configured with RSA key pair settings
+    suitable for testing purposes, including signing and verification capabilities.
+
+    :param family: The family revision for the key configuration.
+    :return: Configured KeyInfo object with RSA key pair settings for testing.
+    """
     return KeyInfo(
         family=family,
         key_flags=HseKeyFlags.USAGE_SIGN | HseKeyFlags.USAGE_VERIFY,
@@ -202,7 +258,13 @@ def rsa_key_info(family: FamilyRevision) -> KeyInfo:
 
 
 def test_key_import_payload_init_with_aes_key(aes_key_info: KeyInfo) -> None:
-    """Test initializing KeyImportPayload with an AES key."""
+    """Test initializing KeyImportPayload with an AES key.
+
+    Verifies that KeyImportPayload correctly handles AES key initialization by checking
+    key data storage, length calculations, offset positioning, and total payload size.
+
+    :param aes_key_info: Key information object containing AES key metadata and configuration.
+    """
     # Create a 256-bit AES key
     aes_key = bytes(32)  # 32 bytes = 256 bits
 
@@ -229,7 +291,13 @@ def test_key_import_payload_init_with_aes_key(aes_key_info: KeyInfo) -> None:
 
 
 def test_key_import_payload_init_with_invalid_aes_key(aes_key_info: KeyInfo) -> None:
-    """Test initializing KeyImportPayload with an invalid AES key."""
+    """Test initializing KeyImportPayload with an invalid AES key.
+
+    Verifies that KeyImportPayload constructor properly validates AES key length and raises
+    appropriate exception when provided with incorrectly sized key data.
+
+    :param aes_key_info: Key information object for AES key configuration.
+    """
     # Create an invalid AES key (wrong size)
     invalid_aes_key = bytes(20)  # Not a valid AES key size
 
@@ -241,7 +309,14 @@ def test_key_import_payload_init_with_invalid_aes_key(aes_key_info: KeyInfo) -> 
 def test_key_import_payload_init_with_ecc_public_key(
     tests_root_dir: str, ecc_key_info: KeyInfo
 ) -> None:
-    """Test initializing KeyImportPayload with an ECC public key."""
+    """Test initializing KeyImportPayload with an ECC public key.
+
+    Verifies that KeyImportPayload correctly handles ECC public key initialization by checking
+    key data structure, lengths, offsets, and total payload size.
+
+    :param tests_root_dir: Root directory path for test data files
+    :param ecc_key_info: ECC key information object containing key metadata
+    """
     # Create an ECC public key
     public_key = PublicKeyEcc.load(
         os.path.join(tests_root_dir, "_data/keys/ecc256/srk3_ecc256.pub")
@@ -272,7 +347,15 @@ def test_key_import_payload_init_with_ecc_public_key(
 def test_key_import_payload_init_with_ecc_private_key(
     tests_root_dir: str, ecc_key_info: KeyInfo
 ) -> None:
-    """Test initializing KeyImportPayload with an ECC private key."""
+    """Test initializing KeyImportPayload with an ECC private key.
+
+    Verifies that KeyImportPayload correctly handles ECC private key initialization,
+    including proper key data extraction, length calculation, offset computation,
+    and total payload size determination.
+
+    :param tests_root_dir: Root directory path containing test data files
+    :param ecc_key_info: ECC key information object containing key metadata
+    """
     # Create an ECC private key
     private_key = PrivateKeyEcc.load(
         os.path.join(tests_root_dir, "_data/keys/ecc256/srk3_ecc256.pem")
@@ -303,7 +386,15 @@ def test_key_import_payload_init_with_ecc_private_key(
 def test_key_import_payload_init_with_rsa_public_key(
     tests_root_dir: str, rsa_key_info: KeyInfo
 ) -> None:
-    """Test initializing KeyImportPayload with an RSA public key."""
+    """Test initializing KeyImportPayload with an RSA public key.
+
+    Verifies that KeyImportPayload correctly processes RSA public key data including
+    modulus and public exponent extraction, proper size calculations, and offset
+    computations for 2048-bit RSA keys.
+
+    :param tests_root_dir: Root directory path containing test data files
+    :param rsa_key_info: RSA key information object containing key metadata
+    """
     # Create an RSA public key
     public_key = PublicKeyRsa.load(
         os.path.join(tests_root_dir, "_data/keys/rsa2048/srk3_rsa2048.pub")
@@ -333,7 +424,15 @@ def test_key_import_payload_init_with_rsa_public_key(
 def test_key_import_payload_init_with_rsa_private_key(
     tests_root_dir: str, rsa_key_info: KeyInfo
 ) -> None:
-    """Test initializing KeyImportPayload with an RSA private key."""
+    """Test initializing KeyImportPayload with an RSA private key.
+
+    Verifies that KeyImportPayload correctly processes RSA private key data by checking
+    key data components (modulus, public exponent, private exponent), their lengths,
+    and memory offsets for proper key structure initialization.
+
+    :param tests_root_dir: Root directory path containing test data files
+    :param rsa_key_info: RSA key information object containing key metadata
+    """
     # Create an RSA private key
     private_key = PrivateKeyRsa.load(
         os.path.join(tests_root_dir, "_data/keys/rsa2048/srk3_rsa2048.pem")
@@ -364,7 +463,13 @@ def test_key_import_payload_init_with_rsa_private_key(
 
 
 def test_key_import_payload_export(aes_key_info: KeyInfo) -> None:
-    """Test exporting KeyImportPayload to binary."""
+    """Test exporting KeyImportPayload to binary.
+
+    Verifies that KeyImportPayload can be properly exported to binary format and that the
+    exported data contains the correct key information and key data in the expected order.
+
+    :param aes_key_info: AES key information structure containing key metadata.
+    """
     # Create a 256-bit AES key
     aes_key = bytes(32)  # 32 bytes = 256 bits
 
@@ -381,10 +486,895 @@ def test_key_import_payload_export(aes_key_info: KeyInfo) -> None:
 
 
 def test_key_import_payload_with_raw_bytes_no_key_type() -> None:
-    """Test KeyImportPayload with raw bytes but no key type."""
+    """Test KeyImportPayload with raw bytes but no key type.
+
+    Verifies that KeyImportPayload.convert_key() raises SPSDKValueError when attempting
+    to convert raw bytes without specifying the key type parameter.
+
+    :raises SPSDKValueError: When key type is not specified for raw bytes conversion.
+    """
     # Create a key without specifying key_type
     key = bytes(32)
 
     # Should raise an error when converting
     with pytest.raises(SPSDKValueError, match="Key type must be specified"):
         KeyImportPayload.convert_key(key)
+
+
+@pytest.mark.parametrize(
+    "key_info_file,key_file,key_import_command",
+    [
+        ("key_info_aes128.yaml", "aes128.bin", "key_import_aes_128.bin"),
+        ("key_info_ecc256_pub.yaml", "ecc256_pub.pem", "key_import_ecc256_pub.bin"),
+        ("key_info_rsa4096_pub.yaml", "rsa4096_pub.pem", "key_import_rsa4096_pub.bin"),
+    ],
+)
+def test_key_import_command_data(
+    data_dir: str,
+    tmpdir: str,
+    key_info_file: str,
+    key_file: str,
+    key_import_command: str,
+) -> None:
+    """Test AES key import functionality with HSE ELE message.
+
+    This test verifies the complete AES key import workflow by loading key information
+    from a YAML configuration file, reading the AES key binary data, creating a key
+    import payload, and generating the corresponding HSE import key command. The test
+    validates that the generated command data matches the expected binary output.
+
+    :param data_dir: Source directory containing test data files
+    :param tmpdir: Temporary directory for test file operations
+    :param key_info_file: YAML file containing key information configuration
+    :param key_file: Binary file containing the AES key data
+    :param key_import_command: Expected binary output file for command verification
+    """
+    shutil.copytree(os.path.join(data_dir), tmpdir, dirs_exist_ok=True)
+    key_info_obj = KeyInfo.load_from_config(
+        Config.create_from_file(os.path.join(tmpdir, key_info_file))
+    )
+    key = load_key(os.path.join(tmpdir, key_file))
+    payload = KeyImportPayload(key_info=key_info_obj, key=key)
+    key_handle = KeyHandle.from_attributes(KeyCatalogId.NVM, 1, 2)
+    cmd = EleMessageHseImportKey(key_handle=key_handle, payload=payload)
+    cmd.set_buffer_params(0x2040_1000, 0x1000)
+    assert cmd.command_data == load_binary(os.path.join(tmpdir, key_import_command))
+
+
+def test_export_command() -> None:
+    """Test the export_command method of MockEleMessageHse.
+
+    Verifies that the export_command method returns the expected hexadecimal
+    representation of the command data.
+
+    :raises AssertionError: If the exported command hex does not match expected value.
+    """
+    cmd = MockEleMessageHse()
+    assert cmd.export_command().hex() == "010000000000000000010203"
+
+
+@pytest.mark.parametrize(
+    "mu_channel,exported_bin",
+    [
+        (MuChannel.CHANNEL_0, "08104020"),
+        (MuChannel.CHANNEL_1, "081040201c104020"),
+        (MuChannel.CHANNEL_2, "101040202410402038104020"),
+    ],
+)
+def test_export(mu_channel: MuChannel, exported_bin: str) -> None:
+    """Test export functionality of MockEleMessageHse.
+
+    Verifies that the MockEleMessageHse can properly export binary data after setting
+    buffer parameters, comparing the exported hex output against expected binary data.
+
+    :param mu_channel: MU channel configuration for the mock ELE message.
+    :param exported_bin: Expected exported binary data in hexadecimal format.
+    """
+    cmd = MockEleMessageHse(mu_channel=mu_channel)
+    cmd.set_buffer_params(0x2040_1000, 0x1000)
+    assert cmd.export().hex() == exported_bin
+
+
+@pytest.mark.parametrize(
+    "mu_channel,words_count",
+    [
+        (MuChannel.CHANNEL_0, 1),
+        (MuChannel.CHANNEL_1, 2),
+        (MuChannel.CHANNEL_2, 3),
+    ],
+)
+def test_command_words_count(mu_channel: MuChannel, words_count: int) -> None:
+    """Test that command words count matches expected value for given MU channel.
+
+    Verifies that the MockEleMessageHse instance returns the correct command words count
+    based on the provided MU channel configuration.
+
+    :param mu_channel: MU channel configuration for the mock ELE message.
+    :param words_count: Expected number of command words for the given MU channel.
+    """
+    assert MockEleMessageHse(mu_channel=mu_channel).command_words_count == words_count
+
+
+@pytest.mark.parametrize(
+    "mu_channel,command_data",
+    [
+        (MuChannel.CHANNEL_0, "010000000000000000010203"),
+        (MuChannel.CHANNEL_1, "0200a50000000000010000000800000028000000010000000000000000010203"),
+        (
+            MuChannel.CHANNEL_2,
+            "0200a500000000000100000008000000280000000200a50000000000010000000800000028000000010000000000000000010203",
+        ),
+    ],
+)
+def test_command_data(mu_channel: MuChannel, command_data: str) -> None:
+    """Test command data generation and size calculation for ELE HSE message.
+
+    Verifies that the MockEleMessageHse correctly generates command data and calculates
+    its size based on the provided MU channel configuration.
+
+    :param mu_channel: MU channel configuration for the ELE message.
+    :param command_data: Expected command data as hexadecimal string.
+    """
+    cmd = MockEleMessageHse(mu_channel=mu_channel)
+    assert cmd.command_data.hex() == command_data
+    assert cmd.command_data_size == len(cmd.command_data)
+
+
+# HseAttributeId & HseAttributeType enums
+
+
+class TestHseAttributeId:
+    def test_all_members_accessible(self) -> None:
+        assert HseAttributeId.FW_VERSION.tag == 1
+        assert HseAttributeId.CAPABILITIES.tag == 2
+        assert HseAttributeId.DEBUG_AUTH_MODE.tag == 10
+        assert HseAttributeId.APP_DEBUG_KEY.tag == 11
+        assert HseAttributeId.SECURE_LIFECYCLE.tag == 12
+        assert HseAttributeId.ENABLE_PUBLISH_KEYSTORE_RAM_TO_FLASH.tag == 602
+
+    def test_from_tag(self) -> None:
+        assert HseAttributeId.from_tag(1) == HseAttributeId.FW_VERSION
+
+
+class TestHseAttributeType:
+    def test_labels(self) -> None:
+        assert HseAttributeType.READ_ONLY.label == "RO-ATTR"
+        assert HseAttributeType.ONE_TIME_PROGRAMMABLE.label == "OTP-ATTR"
+        assert HseAttributeType.NVM_READ_WRITE.label == "NVM-RW-ATTR"
+
+
+# HseAttributeHandler.get_attr_handler_cls
+
+
+class TestGetAttrHandlerCls:
+    def test_fw_version_handler(self) -> None:
+        cls = HseAttributeHandler.get_attr_handler_cls(HseAttributeId.FW_VERSION)
+        assert cls is FwVersionAttributeHandler
+
+    def test_capabilities_handler(self) -> None:
+        cls = HseAttributeHandler.get_attr_handler_cls(HseAttributeId.CAPABILITIES)
+        assert cls is CapabilitiesAttributeHandler
+
+    def test_debug_auth_mode_handler(self) -> None:
+        cls = HseAttributeHandler.get_attr_handler_cls(HseAttributeId.DEBUG_AUTH_MODE)
+        assert cls is DebugAuthModeAttributeHandler
+
+    def test_app_debug_key_handler(self) -> None:
+        cls = HseAttributeHandler.get_attr_handler_cls(HseAttributeId.APP_DEBUG_KEY)
+        assert cls is AppDebugKeyAttributeHandler
+
+    def test_secure_lifecycle_handler(self) -> None:
+        cls = HseAttributeHandler.get_attr_handler_cls(HseAttributeId.SECURE_LIFECYCLE)
+        assert cls is SecureLifecycleAttributeHandler
+
+    def test_unknown_id_raises(self) -> None:
+        # Patch tag to something unrecognised
+        with pytest.raises(SPSDKValueError):
+            HseAttributeHandler.get_attr_handler_cls.__func__(  # type: ignore[attr-defined]
+                HseAttributeHandler,  # type: ignore[arg-type]
+                type("X", (), {"tag": 9999, "__eq__": lambda s, o: False})(),  # type: ignore[arg-type]
+            )
+
+
+# FwVersionAttributeHandler
+
+
+class TestFwVersionAttributeHandler:
+    def _make(self) -> None:
+        return FwVersionAttributeHandler(  # type: ignore[return-value]
+            soc_type=1,
+            fw_type=2,
+            major=3,
+            minor=4,
+            patch=5,
+            fw_memory_config=FwMemoryConfig.FULL_MEMORY,
+        )
+
+    def test_is_readable(self) -> None:
+        assert FwVersionAttributeHandler.is_readable() is True
+
+    def test_is_not_writeable(self) -> None:
+        assert FwVersionAttributeHandler.is_writeable() is False
+
+    def test_get_size(self) -> None:
+        assert FwVersionAttributeHandler.get_size() > 0
+
+    def test_export_parse_roundtrip(self) -> None:
+        obj = self._make()  # type: ignore[func-returns-value]
+        data = obj.export()  # type: ignore[attr-defined]
+        parsed = FwVersionAttributeHandler.parse(data)
+        assert parsed.soc_type == 1
+        assert parsed.fw_type == 2
+        assert parsed.major == 3
+        assert parsed.minor == 4
+        assert parsed.patch == 5
+        assert parsed.fw_memory_config == FwMemoryConfig.FULL_MEMORY
+
+    def test_str(self) -> None:
+        s = str(self._make())  # type: ignore[func-returns-value]
+        assert "Firmware Version" in s
+        assert "SoC Type" in s
+
+    def test_repr(self) -> None:
+        r = repr(self._make())  # type: ignore[func-returns-value]
+        assert "FwVersion" in r
+
+    def test_to_dict(self) -> None:
+        d = self._make().to_dict()  # type: ignore[func-returns-value, attr-defined]
+        assert d["attr_id"] == HseAttributeId.FW_VERSION.label
+        assert "settings" in d
+
+    def test_size_property(self) -> None:
+        obj = self._make()  # type: ignore[func-returns-value]
+        assert obj.size == FwVersionAttributeHandler.get_size()  # type: ignore[attr-defined]
+
+    def test_ab_swap_memory_config(self) -> None:
+        obj = FwVersionAttributeHandler(1, 2, 1, 0, 0, FwMemoryConfig.AB_SWAP)
+        data = obj.export()
+        parsed = FwVersionAttributeHandler.parse(data)
+        assert parsed.fw_memory_config == FwMemoryConfig.AB_SWAP
+
+
+# CapabilitiesAttributeHandler
+
+
+class TestCapabilitiesAttributeHandler:
+    def test_empty_capabilities(self) -> None:
+        obj = CapabilitiesAttributeHandler([])
+        data = obj.export()
+        parsed = CapabilitiesAttributeHandler.parse(data)
+        assert parsed.capabilities == []
+
+    def test_with_capabilities(self) -> None:
+        caps = [CapabilityIndex.AES, CapabilityIndex.SHA2]
+        obj = CapabilitiesAttributeHandler(caps)
+        data = obj.export()
+        parsed = CapabilitiesAttributeHandler.parse(data)
+        assert CapabilityIndex.AES in parsed.capabilities
+        assert CapabilityIndex.SHA2 in parsed.capabilities
+
+    def test_str_empty(self) -> None:
+        s = str(CapabilitiesAttributeHandler([]))
+        assert "None" in s
+
+    def test_str_with_caps(self) -> None:
+        obj = CapabilitiesAttributeHandler([CapabilityIndex.AES])
+        assert "AES" in str(obj)
+
+    def test_repr_empty(self) -> None:
+        assert "Capabilities([])" in repr(CapabilitiesAttributeHandler([]))
+
+    def test_repr_with_caps(self) -> None:
+        r = repr(CapabilitiesAttributeHandler([CapabilityIndex.AES]))
+        assert "AES" in r
+
+    def test_to_dict(self) -> None:
+        d = CapabilitiesAttributeHandler([CapabilityIndex.AES]).to_dict()
+        assert d["attr_id"] == HseAttributeId.CAPABILITIES.label
+
+    def test_is_readable(self) -> None:
+        assert CapabilitiesAttributeHandler.is_readable() is True
+
+    def test_is_not_writeable(self) -> None:
+        assert CapabilitiesAttributeHandler.is_writeable() is False
+
+
+# EnablePublishKeyStoreRamToFlashAttributeHandler
+
+
+class TestEnablePublishKeyStoreRamToFlashAttributeHandler:
+    def test_parse_cfg_no(self) -> None:
+        handler = EnablePublishKeyStoreRamToFlashAttributeHandler(
+            EnablePublishKeyStoreRamToFlashAttributeHandler.ConfigValue.CFG_NO
+        )
+        data = handler.export()
+        parsed = EnablePublishKeyStoreRamToFlashAttributeHandler.parse(data)
+        assert (
+            parsed.config_value
+            == EnablePublishKeyStoreRamToFlashAttributeHandler.ConfigValue.CFG_NO
+        )
+
+    def test_str(self) -> None:
+        handler = EnablePublishKeyStoreRamToFlashAttributeHandler(
+            EnablePublishKeyStoreRamToFlashAttributeHandler.ConfigValue.CFG_NO
+        )
+        s = str(handler)
+        assert "Publish Key Store" in s
+
+    def test_repr(self) -> None:
+        handler = EnablePublishKeyStoreRamToFlashAttributeHandler(
+            EnablePublishKeyStoreRamToFlashAttributeHandler.ConfigValue.CFG_NO
+        )
+        r = repr(handler)
+        assert "PublishKeyStoreRamToFlash" in r
+
+    def test_to_dict(self) -> None:
+        handler = EnablePublishKeyStoreRamToFlashAttributeHandler(
+            EnablePublishKeyStoreRamToFlashAttributeHandler.ConfigValue.CFG_NO
+        )
+        d = handler.to_dict()
+        assert d["attr_id"] == HseAttributeId.ENABLE_PUBLISH_KEYSTORE_RAM_TO_FLASH.label
+
+    def test_is_readable(self) -> None:
+        assert EnablePublishKeyStoreRamToFlashAttributeHandler.is_readable() is True
+
+    def test_is_writeable(self) -> None:
+        assert EnablePublishKeyStoreRamToFlashAttributeHandler.is_writeable() is True
+
+
+# SecureLifecycleAttributeHandler
+
+
+class TestSecureLifecycleAttributeHandler:
+    def test_parse_roundtrip(self) -> None:
+        handler = SecureLifecycleAttributeHandler(SecureLifecycle.CUST_DEL)
+        data = handler.export()
+        parsed = SecureLifecycleAttributeHandler.parse(data)
+        assert parsed.lifecycle == SecureLifecycle.CUST_DEL
+
+    def test_str(self) -> None:
+        handler = SecureLifecycleAttributeHandler(SecureLifecycle.OEM_PROD)
+        s = str(handler)
+        assert "HSE Secure Lifecycle" in s
+        assert "OEM_PROD" in s
+
+    def test_repr(self) -> None:
+        handler = SecureLifecycleAttributeHandler(SecureLifecycle.IN_FIELD)
+        assert "SecureLifecycle" in repr(handler)
+
+    def test_to_dict(self) -> None:
+        handler = SecureLifecycleAttributeHandler(SecureLifecycle.CUST_DEL)
+        d = handler.to_dict()
+        assert d["attr_id"] == HseAttributeId.SECURE_LIFECYCLE.label
+
+    def test_otp_advance_is_readable(self) -> None:
+        assert SecureLifecycleAttributeHandler.is_readable() is True
+
+    def test_otp_advance_is_writeable(self) -> None:
+        assert SecureLifecycleAttributeHandler.is_writeable() is True
+
+
+# AppDebugKeyAttributeHandler
+
+
+class TestAppDebugKeyAttributeHandler:
+    _VALID_KEY = bytes(range(16))  # 0x00..0x0f – not all-zeros, not all-0xFF
+
+    def test_parse_as_hash(self) -> None:
+        handler = AppDebugKeyAttributeHandler(self._VALID_KEY, is_hash=True)
+        # export() uses a struct format "<16B" which requires unpacked bytes
+        from struct import pack
+
+        data = pack("<16B", *handler.data)
+        parsed = AppDebugKeyAttributeHandler.parse(data)
+        assert parsed.is_hash is True
+        assert parsed.key_hash == self._VALID_KEY
+
+    def test_write_key_rejects_all_zeros(self) -> None:
+        with pytest.raises(SPSDKValueError):
+            AppDebugKeyAttributeHandler(b"\x00" * 16, is_hash=False)
+
+    def test_write_key_rejects_all_ff(self) -> None:
+        with pytest.raises(SPSDKValueError):
+            AppDebugKeyAttributeHandler(b"\xff" * 16, is_hash=False)
+
+    def test_invalid_length(self) -> None:
+        with pytest.raises(SPSDKValueError):
+            AppDebugKeyAttributeHandler(b"\x01" * 10)
+
+    def test_debug_key_property_returns_none_for_hash(self) -> None:
+        h = AppDebugKeyAttributeHandler(self._VALID_KEY, is_hash=True)
+        assert h.debug_key is None
+
+    def test_key_hash_property_returns_none_for_key(self) -> None:
+        h = AppDebugKeyAttributeHandler(self._VALID_KEY, is_hash=False)
+        assert h.key_hash is None
+
+    def test_str_hash(self) -> None:
+        h = AppDebugKeyAttributeHandler(self._VALID_KEY, is_hash=True)
+        s = str(h)
+        assert "hash" in s.lower() or "Hash" in s
+
+    def test_str_key(self) -> None:
+        h = AppDebugKeyAttributeHandler(self._VALID_KEY, is_hash=False)
+        s = str(h)
+        assert "key" in s.lower() or "Key" in s
+
+    def test_repr_hash(self) -> None:
+        h = AppDebugKeyAttributeHandler(self._VALID_KEY, is_hash=True)
+        assert "hash" in repr(h)
+
+    def test_repr_key(self) -> None:
+        h = AppDebugKeyAttributeHandler(self._VALID_KEY, is_hash=False)
+        assert "key" in repr(h)
+
+    def test_to_dict_hash(self) -> None:
+        h = AppDebugKeyAttributeHandler(self._VALID_KEY, is_hash=True)
+        d = h.to_dict()
+        assert "key_hash" in d["settings"]
+
+    def test_to_dict_key(self) -> None:
+        h = AppDebugKeyAttributeHandler(self._VALID_KEY, is_hash=False)
+        d = h.to_dict()
+        assert "debug_key" in d["settings"]
+
+    def test_parse_short_data_raises(self) -> None:
+        with pytest.raises(SPSDKValueError):
+            AppDebugKeyAttributeHandler.parse(b"\x01" * 5)
+
+
+# DebugAuthModeAttributeHandler
+
+
+class TestDebugAuthModeAttributeHandler:
+    def test_parse_roundtrip(self) -> None:
+        handler = DebugAuthModeAttributeHandler(DebugAuthMode.PASSWORD)
+        data = handler.export()
+        parsed = DebugAuthModeAttributeHandler.parse(data)
+        assert parsed.mode == DebugAuthMode.PASSWORD
+
+    def test_challenge_response_mode(self) -> None:
+        handler = DebugAuthModeAttributeHandler(DebugAuthMode.CHALLENGE_RESPONSE)
+        data = handler.export()
+        parsed = DebugAuthModeAttributeHandler.parse(data)
+        assert parsed.mode == DebugAuthMode.CHALLENGE_RESPONSE
+
+    def test_str(self) -> None:
+        s = str(DebugAuthModeAttributeHandler(DebugAuthMode.PASSWORD))
+        assert "Debug Authentication Mode" in s
+
+    def test_repr(self) -> None:
+        r = repr(DebugAuthModeAttributeHandler(DebugAuthMode.CHALLENGE_RESPONSE))
+        assert "DebugAuthMode" in r
+
+    def test_to_dict(self) -> None:
+        d = DebugAuthModeAttributeHandler(DebugAuthMode.PASSWORD).to_dict()
+        assert d["attr_id"] == HseAttributeId.DEBUG_AUTH_MODE.label
+
+
+# EleMessageHse base – properties and export
+
+
+class ConcreteHseMsg(EleMessageHse):
+    """Minimal concrete EleMessageHse for testing the abstract base."""
+
+    CMD = 0x01
+    CMD_DESCRIPTOR_FORMAT = "<I"
+
+    def get_srv_descriptor(self) -> bytes:
+        return b"\x00\x01\x02\x03"
+
+
+class TestEleMessageHseBase:
+    def test_service_id(self) -> None:
+        msg = ConcreteHseMsg()
+        assert isinstance(msg.service_id, int)
+
+    def test_service_index(self) -> None:
+        msg = ConcreteHseMsg()
+        assert 0 <= msg.service_index <= 255
+
+    def test_service_class_index(self) -> None:
+        msg = ConcreteHseMsg()
+        assert 0 <= msg.service_class_index <= 255
+
+    def test_service_cancelable(self) -> None:
+        msg = ConcreteHseMsg()
+        assert isinstance(msg.service_cancelable, bool)
+
+    def test_service_version(self) -> None:
+        msg = ConcreteHseMsg()
+        assert isinstance(msg.service_version, int)
+
+    def test_descriptor_size(self) -> None:
+        msg = ConcreteHseMsg()
+        assert msg.descriptor_size > 0
+
+    def test_len(self) -> None:
+        msg = ConcreteHseMsg()
+        assert len(msg) > 0
+
+    def test_export_command(self) -> None:
+        msg = ConcreteHseMsg()
+        data = msg.export_command()
+        assert isinstance(data, bytes)
+        assert len(data) > 0
+
+    def test_command_data(self) -> None:
+        msg = ConcreteHseMsg()
+        assert isinstance(msg.command_data, bytes)
+
+    def test_command_data_size(self) -> None:
+        msg = ConcreteHseMsg()
+        assert msg.command_data_size > 0
+
+    def test_response_header_words_count(self) -> None:
+        msg = ConcreteHseMsg()
+        assert msg.response_header_words_count == 1
+
+    def test_response_header_words_count_channel1(self) -> None:
+        msg = ConcreteHseMsg(mu_channel=MuChannel.CHANNEL_1)
+        assert msg.response_header_words_count == 2
+
+    def test_command_words_count(self) -> None:
+        msg = ConcreteHseMsg()
+        assert msg.command_words_count == 1
+
+    def test_decode_response_ok(self) -> None:
+        msg = ConcreteHseMsg()
+        ok_status = HseResponseStatus.OK.tag
+        response = ok_status.to_bytes(4, "little") + b"\x00" * 12
+        msg.decode_response(response)
+        assert msg.status == ResponseStatus.ELE_SUCCESS_IND.tag
+
+    def test_decode_response_failure(self) -> None:
+        msg = ConcreteHseMsg()
+        fail_status = HseResponseStatus.GENERAL_ERROR.tag
+        response = fail_status.to_bytes(4, "little") + b"\x00" * 12
+        msg.decode_response(response)
+        assert msg.status == ResponseStatus.ELE_FAILURE_IND.tag
+
+    def test_response_status_string_success(self) -> None:
+        msg = ConcreteHseMsg()
+        msg.status = ResponseStatus.ELE_SUCCESS_IND.tag
+        s = msg.response_status()
+        assert "SUCCESS" in s.upper() or "success" in s.lower()
+
+    def test_response_status_string_failure(self) -> None:
+        msg = ConcreteHseMsg()
+        msg.status = ResponseStatus.ELE_FAILURE_IND.tag
+        msg.indication = HseResponseStatus.GENERAL_ERROR.tag
+        s = msg.response_status()
+        assert "FAILURE" in s.upper() or "failure" in s.lower()
+
+    def test_export(self) -> None:
+        msg = ConcreteHseMsg()
+        data = msg.export()
+        assert isinstance(data, bytes)
+        assert len(data) == 4
+
+    def test_export_channel1_includes_two_addresses(self) -> None:
+        msg = ConcreteHseMsg(mu_channel=MuChannel.CHANNEL_1)
+        data = msg.export()
+        assert len(data) == 8  # 2 x 4 bytes
+
+
+# EleMessageHseGetAttr
+
+
+class TestEleMessageHseGetAttr:
+    def test_init_fw_version(self) -> None:
+        msg = EleMessageHseGetAttr(HseAttributeId.FW_VERSION)
+        assert msg.attr_value is None
+        assert msg.response_data_size > 0
+
+    def test_get_srv_descriptor(self) -> None:
+        msg = EleMessageHseGetAttr(HseAttributeId.FW_VERSION)
+        desc = msg.get_srv_descriptor()
+        assert isinstance(desc, bytes)
+
+    def test_decode_response_data(self) -> None:
+        msg = EleMessageHseGetAttr(HseAttributeId.FW_VERSION)
+        # Build valid FwVersionAttributeHandler data
+        sample = FwVersionAttributeHandler(1, 2, 1, 0, 0, FwMemoryConfig.FULL_MEMORY)
+        msg.decode_response_data(sample.export())
+        assert msg.attr_value is not None
+
+    def test_info_no_value(self) -> None:
+        msg = EleMessageHseGetAttr(HseAttributeId.FW_VERSION)
+        assert "No attribute" in msg.info()
+
+    def test_info_with_value(self) -> None:
+        msg = EleMessageHseGetAttr(HseAttributeId.FW_VERSION)
+        sample = FwVersionAttributeHandler(1, 2, 1, 0, 0, FwMemoryConfig.FULL_MEMORY)
+        msg.decode_response_data(sample.export())
+        info = msg.info()
+        assert "Firmware" in info
+
+    def test_all_attr_ids(self) -> None:
+        for attr_id in [
+            HseAttributeId.FW_VERSION,
+            HseAttributeId.CAPABILITIES,
+            HseAttributeId.DEBUG_AUTH_MODE,
+            HseAttributeId.APP_DEBUG_KEY,
+            HseAttributeId.SECURE_LIFECYCLE,
+            HseAttributeId.ENABLE_PUBLISH_KEYSTORE_RAM_TO_FLASH,
+        ]:
+            msg = EleMessageHseGetAttr(attr_id)
+            assert msg.response_data_size > 0
+
+
+# EleMessageHseSetAttr
+
+
+class TestEleMessageHseSetAttr:
+    def test_init(self) -> None:
+        msg = EleMessageHseSetAttr(HseAttributeId.SECURE_LIFECYCLE, value_addr=0x20000000)
+        assert msg.response_data_size == 0
+
+    def test_get_srv_descriptor(self) -> None:
+        msg = EleMessageHseSetAttr(HseAttributeId.SECURE_LIFECYCLE, value_addr=0x20000000)
+        desc = msg.get_srv_descriptor()
+        assert isinstance(desc, bytes)
+
+    def test_decode_response_data(self) -> None:
+        msg = EleMessageHseSetAttr(HseAttributeId.SECURE_LIFECYCLE)
+        msg.decode_response_data(b"")  # should do nothing, no exception
+
+
+# EleMessageHseFirmwareUpdate
+
+
+class TestEleMessageHseFirmwareUpdate:
+    def test_one_pass(self) -> None:
+        msg = EleMessageHseFirmwareUpdate(
+            access_mode=EleMessageHseFirmwareUpdate.HseAccessMode.ONE_PASS,
+            fw_file_addr=0x30000000,
+        )
+        assert msg.response_data_size == 0
+
+    def test_start_requires_valid_stream_length(self) -> None:
+        with pytest.raises(SPSDKValueError):
+            EleMessageHseFirmwareUpdate(
+                access_mode=EleMessageHseFirmwareUpdate.HseAccessMode.START,
+                fw_file_addr=0x30000000,
+                stream_length=10,  # < 64
+            )
+
+    def test_start_valid(self) -> None:
+        msg = EleMessageHseFirmwareUpdate(
+            access_mode=EleMessageHseFirmwareUpdate.HseAccessMode.START,
+            fw_file_addr=0x30000000,
+            stream_length=128,
+        )
+        desc = msg.get_srv_descriptor()
+        assert isinstance(desc, bytes)
+
+    def test_response_info_success(self) -> None:
+        msg = EleMessageHseFirmwareUpdate(
+            access_mode=EleMessageHseFirmwareUpdate.HseAccessMode.ONE_PASS,
+            fw_file_addr=0x30000000,
+        )
+        msg.status = ResponseStatus.ELE_SUCCESS_IND.tag
+        assert "successful" in msg.response_info()
+
+    def test_response_info_failure(self) -> None:
+        msg = EleMessageHseFirmwareUpdate(
+            access_mode=EleMessageHseFirmwareUpdate.HseAccessMode.ONE_PASS,
+            fw_file_addr=0x30000000,
+        )
+        msg.status = ResponseStatus.ELE_FAILURE_IND.tag
+        assert "failed" in msg.response_info()
+
+    def test_update_access_mode_valid_stream(self) -> None:
+        msg = EleMessageHseFirmwareUpdate(
+            access_mode=EleMessageHseFirmwareUpdate.HseAccessMode.UPDATE,
+            fw_file_addr=0x30000000,
+            stream_length=64,
+        )
+        assert msg.access_mode == EleMessageHseFirmwareUpdate.HseAccessMode.UPDATE
+
+
+# EleMessageHseBootDataImageVerify
+
+
+class TestEleMessageHseBootDataImageVerify:
+    def test_init(self) -> None:
+        msg = EleMessageHseBootDataImageVerify(img_addr=0x10000)
+        assert msg.response_data_size == 0
+
+    def test_get_srv_descriptor(self) -> None:
+        msg = EleMessageHseBootDataImageVerify(img_addr=0x10000)
+        desc = msg.get_srv_descriptor()
+        assert isinstance(desc, bytes)
+
+    def test_response_info_success(self) -> None:
+        msg = EleMessageHseBootDataImageVerify(img_addr=0x10000)
+        msg.status = ResponseStatus.ELE_SUCCESS_IND.tag
+        assert "successful" in msg.response_info()
+
+    def test_response_info_failure(self) -> None:
+        msg = EleMessageHseBootDataImageVerify(img_addr=0x10000)
+        msg.status = ResponseStatus.ELE_FAILURE_IND.tag
+        assert "failed" in msg.response_info()
+
+
+# EleMessageHseGetKeyInfo
+
+
+class TestEleMessageHseGetKeyInfo:
+    def _make_handle(self):  # type: ignore[no-untyped-def]
+        return KeyHandle(0)  # Use raw handle value
+
+    def test_init(self) -> None:
+        msg = EleMessageHseGetKeyInfo(key_handle=self._make_handle())  # type: ignore[func-returns-value, arg-type]
+        assert msg.response_data_size > 0
+
+    def test_get_srv_descriptor(self) -> None:
+        msg = EleMessageHseGetKeyInfo(key_handle=self._make_handle())  # type: ignore[func-returns-value, arg-type]
+        desc = msg.get_srv_descriptor()
+        assert isinstance(desc, bytes)
+
+    def test_response_info_failure(self) -> None:
+        msg = EleMessageHseGetKeyInfo(key_handle=self._make_handle())  # type: ignore[func-returns-value, arg-type]
+        msg.status = ResponseStatus.ELE_FAILURE_IND.tag
+        assert "Failed" in msg.response_info()
+
+
+# EleMessageHseSmrEntryInstall
+
+
+class TestEleMessageHseSmrEntryInstall:
+    def test_init(self) -> None:
+        msg = EleMessageHseSmrEntryInstall(
+            access_mode=HseAccessMode.ONE_PASS,
+            entry_index=0,
+        )
+        assert msg.response_data_size == 0
+
+    def test_get_srv_descriptor(self) -> None:
+        msg = EleMessageHseSmrEntryInstall(
+            access_mode=HseAccessMode.ONE_PASS,
+            entry_index=0,
+            smr_entry_addr=0x20000000,
+            smr_data_addr=0x20001000,
+        )
+        desc = msg.get_srv_descriptor()
+        assert isinstance(desc, bytes)
+
+    def test_get_srv_descriptor_missing_entry_addr_raises(self) -> None:
+        msg = EleMessageHseSmrEntryInstall(
+            access_mode=HseAccessMode.ONE_PASS,
+            entry_index=0,
+            smr_data_addr=0x20001000,
+        )
+        with pytest.raises(SPSDKValueError):
+            msg.get_srv_descriptor()
+
+    def test_get_srv_descriptor_missing_data_addr_raises(self) -> None:
+        msg = EleMessageHseSmrEntryInstall(
+            access_mode=HseAccessMode.ONE_PASS,
+            entry_index=0,
+            smr_entry_addr=0x20000000,
+        )
+        with pytest.raises(SPSDKValueError):
+            msg.get_srv_descriptor()
+
+    def test_response_info_success(self) -> None:
+        msg = EleMessageHseSmrEntryInstall(access_mode=HseAccessMode.ONE_PASS, entry_index=2)
+        msg.status = ResponseStatus.ELE_SUCCESS_IND.tag
+        info = msg.response_info()
+        assert "2" in info and "successful" in info
+
+    def test_response_info_failure(self) -> None:
+        msg = EleMessageHseSmrEntryInstall(access_mode=HseAccessMode.ONE_PASS, entry_index=0)
+        msg.status = ResponseStatus.ELE_FAILURE_IND.tag
+        assert "failed" in msg.response_info()
+
+    def test_with_cipher_params(self) -> None:
+        cipher = HseSmrCipherParams(iv_addr=0x1000, gmac_tag_addr=0x2000)
+        msg = EleMessageHseSmrEntryInstall(
+            access_mode=HseAccessMode.ONE_PASS,
+            entry_index=0,
+            smr_entry_addr=0x20000000,
+            smr_data_addr=0x20001000,
+            cipher_params=cipher,
+        )
+        desc = msg.get_srv_descriptor()
+        assert isinstance(desc, bytes)
+
+
+# EleMessageHseSmrVerify
+
+
+class TestEleMessageHseSmrVerify:
+    def test_init_valid(self) -> None:
+        msg = EleMessageHseSmrVerify(entry_index=0)
+        assert msg.response_data_size == 0
+
+    def test_invalid_entry_index_raises(self) -> None:
+        with pytest.raises(SPSDKValueError):
+            EleMessageHseSmrVerify(entry_index=8)
+
+    def test_get_srv_descriptor(self) -> None:
+        msg = EleMessageHseSmrVerify(entry_index=3)
+        desc = msg.get_srv_descriptor()
+        assert isinstance(desc, bytes)
+
+    def test_response_info_success(self) -> None:
+        msg = EleMessageHseSmrVerify(entry_index=1)
+        msg.status = ResponseStatus.ELE_SUCCESS_IND.tag
+        info = msg.response_info()
+        assert "1" in info and "successful" in info
+
+    def test_response_info_failure(self) -> None:
+        msg = EleMessageHseSmrVerify(entry_index=0)
+        msg.status = ResponseStatus.ELE_FAILURE_IND.tag
+        assert "failed" in msg.response_info()
+
+    def test_no_load_option(self) -> None:
+        msg = EleMessageHseSmrVerify(entry_index=0, options=HseSmrVerificationOptions.NO_LOAD)
+        desc = msg.get_srv_descriptor()
+        assert isinstance(desc, bytes)
+
+
+# EleMessageHseSmrEntryErase
+
+
+class TestEleMessageHseSmrEntryErase:
+    def test_init_valid(self) -> None:
+        msg = EleMessageHseSmrEntryErase(entry_index=0)
+        assert msg.response_data_size == 0
+
+    def test_invalid_entry_index_raises(self) -> None:
+        with pytest.raises(SPSDKValueError):
+            EleMessageHseSmrEntryErase(entry_index=8)
+
+    def test_get_srv_descriptor(self) -> None:
+        msg = EleMessageHseSmrEntryErase(entry_index=2)
+        desc = msg.get_srv_descriptor()
+        assert isinstance(desc, bytes)
+
+    def test_response_info_success(self) -> None:
+        msg = EleMessageHseSmrEntryErase(entry_index=2)
+        msg.status = ResponseStatus.ELE_SUCCESS_IND.tag
+        assert "2" in msg.response_info() and "successful" in msg.response_info()
+
+    def test_response_info_failure(self) -> None:
+        msg = EleMessageHseSmrEntryErase(entry_index=0)
+        msg.status = ResponseStatus.ELE_FAILURE_IND.tag
+        assert "failed" in msg.response_info()
+
+
+# MuChannel – multi-channel export/command sizes
+
+
+class TestMuChannel:
+    def test_channel_2_export_has_3_addresses(self) -> None:
+        msg = ConcreteHseMsg(mu_channel=MuChannel.CHANNEL_2)
+        data = msg.export()
+        # Each channel adds 4 bytes, so channel 2 -> 3 * 4 = 12
+        assert len(data) == 12
+
+    def test_channel_0_command_data_size_no_padding(self) -> None:
+        msg0 = ConcreteHseMsg(mu_channel=MuChannel.CHANNEL_0)
+        msg1 = ConcreteHseMsg(mu_channel=MuChannel.CHANNEL_1)
+        assert msg1.command_data_size > msg0.command_data_size
+
+
+# EleMessageHseBootDataImageSign – signature property
+
+
+class TestBootDataImageSignSignature:
+    def test_signature_no_iv(self) -> None:
+        msg = EleMessageHseBootDataImageSign(img_addr=0x1000, tag_len=16)
+        msg.gmac_value = b"\xab" * 16
+        sig = msg.signature
+        assert sig == b"\xab" * 16
+
+    def test_signature_with_iv(self) -> None:
+        msg = EleMessageHseBootDataImageSign(img_addr=0x1000, tag_len=28)
+        msg.initial_vector = b"\x01" * 12
+        msg.gmac_value = b"\x02" * 16
+        sig = msg.signature
+        assert sig == b"\x01" * 12 + b"\x02" * 16

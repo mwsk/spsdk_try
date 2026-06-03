@@ -1598,14 +1598,14 @@
         {
           "id": "field038",
           "name": "FLASH_REMAP_SIZE",
-          "description": "Flash Remap Size",
+          "description": "Flash remap size",
           "offset_int": "0x0038",
           "default_value_int": "0"
         },
         {
           "id": "field03C",
           "name": "FLASH_REMAP_OFFSET",
-          "description": "Flash Remap Offset",
+          "description": "Flash remap offset",
           "offset_int": "0x003C",
           "default_value_int": "0"
         },
@@ -2155,7 +2155,7 @@
                   "description": "NO_RESET(O/QSPI device reset pin is not connected or available.)"
                 },
                 {
-                  "name": "ENABLE_RESET",
+                  "name": "EN_RESET",
                   "value": 1,
                   "description": "EN_RESET(O/QSPI device reset pin is connected to a GPIO (QSPI_RESET_PIN).)"
                 }
@@ -3500,7 +3500,7 @@
         {
           "id": "field1F0",
           "name": "CMPA_CMAC0",
-          "description": "cmpa cmac",
+          "description": "CMPA CMAC[31:0]",
           "offset_int": "0x01F0",
           "access": "RO",
           "default_value_int": "0"
@@ -3508,7 +3508,7 @@
         {
           "id": "field1F4",
           "name": "CMPA_CMAC1",
-          "description": "CMPA CMAC1",
+          "description": "CMPA CMAC[63:32]",
           "offset_int": "0x01F4",
           "access": "RO",
           "default_value_int": "0"
@@ -3516,7 +3516,7 @@
         {
           "id": "field1F8",
           "name": "CMPA_CMAC2",
-          "description": "CMPA CMAC2",
+          "description": "CMPA CMAC[95:64]",
           "offset_int": "0x01F8",
           "access": "RO",
           "default_value_int": "0"
@@ -3524,7 +3524,7 @@
         {
           "id": "field1FC",
           "name": "CMPA_CMAC3",
-          "description": "CMPA CMAC3",
+          "description": "CMPA CMAC[127:96] / CRC32 [31:0]",
           "offset_int": "0x01FC",
           "access": "RO",
           "default_value_int": "0"

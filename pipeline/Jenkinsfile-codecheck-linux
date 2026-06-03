@@ -12,6 +12,10 @@ pipeline {
         timeout(time: 1, unit: 'HOURS', activity: true)   // timeout on whole pipeline job
     }
 
+    environment {
+        PYTEST_ADDOPTS = "--no-cov"
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -25,11 +29,31 @@ pipeline {
                     ])
             }
         }
-        stage('Codecheck') {
-            steps {
-                withVenv(
-                    'tox --recreate -e py310,py313 -- --info-check gitcov'
-                )
+        stage('Parallel') {
+            parallel {
+                stage('Codecheck') {
+                    steps {
+                        withVenv(
+                            'tox --recreate -e py310,py313'
+                        )
+                    }
+                }
+                stage('Docs Build') {
+                    agent { label 'linux-spsdk || mac' }
+                    steps {
+                        checkout([
+                            $class: 'GitSCM',
+                            branches: scm.branches,
+                            doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
+                            extensions: scm.extensions + [[$class: 'CloneOption', noTags: false, reference: '', shallow: false]],
+                            submoduleCfg: [],
+                            userRemoteConfigs: scm.userRemoteConfigs
+                        ])
+                        withVenv(
+                            'uv pip install ".[all]" -r docs/requirements.txt && cd docs && make html SPHINXOPTS="-W --keep-going"'
+                        )
+                    }
+                }
             }
         }
     }

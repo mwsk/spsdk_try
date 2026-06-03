@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2022-2025 NXP
+# Copyright 2022-2026 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -70,18 +70,30 @@ def family_info(family: Optional[FamilyRevision], peripheral: Optional[str] = No
     families = [family] if family else MemoryConfig.get_supported_families()
     peripherals = [peripheral] if peripheral else MemoryConfig.PERIPHERALS
 
+    # Filter out peripherals that have N/A for all displayed families
+    active_peripherals = [
+        p for p in peripherals if any(MemoryConfig.get_peripheral_instances(f, p) for f in families)
+    ]
+
+    # Filter out families that have N/A for all active peripherals
+    active_families = [
+        f
+        for f in families
+        if any(MemoryConfig.get_peripheral_instances(f, p) for p in active_peripherals)
+    ]
+
     # ####### Print all peripheral information ##############
     click.echo("List of all supported peripherals and its instances:")
     table_p_header = ["#", "Family"]
-    table_p_header.extend(peripherals)
+    table_p_header.extend(active_peripherals)
     table_p = prettytable.PrettyTable(table_p_header)
     table_p.set_style(prettytable.TableStyle.DOUBLE_BORDER)
-    for i, f in enumerate(families):
+    for i, f in enumerate(active_families):
         row = [
             colorama.Fore.YELLOW + str(i) + colorama.Style.RESET_ALL,
             colorama.Fore.GREEN + str(f) + colorama.Style.RESET_ALL,
         ]
-        for p in peripherals:
+        for p in active_peripherals:
             row.append(_get_instance_val(MemoryConfig.get_peripheral_instances(f, p)))
         table_p.add_row(row)
     click.echo(table_p)
@@ -250,7 +262,6 @@ def export(config: Config) -> MemoryConfig:
     :param config: Memory Configuration dictionary.
     """
     # Validate base items in config
-    MemoryConfig.pre_check_config(config)
     memcfg = MemoryConfig.load_from_config(config)
     logger.info(f"Family:     {memcfg.family}")
     logger.info(f"Peripheral: {memcfg.peripheral}")

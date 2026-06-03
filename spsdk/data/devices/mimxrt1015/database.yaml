@@ -1,4 +1,4 @@
-# Copyright 2023-2025 NXP
+# Copyright 2023-2026 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -109,6 +109,7 @@ features:
         segments:
           fcb: 0x0000
           hab_container: 0x1000
+        image_pattern: ones
       flexspi_nand:
         segments:
           hab_container: 0x400

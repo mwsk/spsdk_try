@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2020-2025 NXP
+# Copyright 2020-2026 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -253,10 +253,11 @@ def store_key(file_name: str, key: bytes, reverse: bool = False) -> None:
     """
     write_file(key.hex(), file_name + ".txt", mode="w")
     if reverse:  # reverse binary order
-        key = bytearray(key)
-        key.reverse()
-        key = bytes(key)
-    write_file(key, file_name + ".bin", mode="wb")
+        key_mutable = bytearray(key)
+        key_mutable.reverse()
+        write_file(key_mutable, file_name + ".bin", mode="wb")
+    else:
+        write_file(key, file_name + ".bin", mode="wb")
 
 
 def filepath_from_config(
@@ -295,18 +296,20 @@ def progress_bar(
     """Creates a progress bar and return callback function for updating the progress bar.
 
     :param suppress: Suppress the progress bar creation; return an empty callback, defaults to False
-    :param progress_bar_params: Standard parameters for click.progressbar
+    :param progress_bar_params: Standard parameters for progress bar (e.g., label)
     :yield: Callback for updating the progress bar
     """
     if suppress:
         yield lambda _x, _y: None
     else:
-        with click.progressbar(length=100, **progress_bar_params) as p_bar:  # type: ignore
+        from spsdk.utils.progress_bar import ProgressBarManager
+
+        label = str(progress_bar_params.get("label", "Progress"))
+
+        with ProgressBarManager() as manager:
 
             def progress(step: int, total_steps: int) -> None:
-                per_step = 100 / total_steps
-                increment = step * per_step - p_bar.pos
-                p_bar.update(round(increment))
+                manager.update(label, total_steps, step)
 
             yield progress
 

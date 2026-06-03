@@ -8,18 +8,19 @@
 """Module for importing and handling HSE key information."""
 
 import struct
-from enum import IntEnum, IntFlag
+from copy import deepcopy
+from enum import IntEnum
 from typing import Any, Dict, List, Optional
 
 from typing_extensions import Self
 
-from spsdk.exceptions import SPSDKParsingError
+from spsdk.exceptions import SPSDKParsingError, SPSDKValueError
 from spsdk.image.hse.common import HseKeyBits, KeyType
 from spsdk.utils.abstract_features import FeatureBaseClass
 from spsdk.utils.config import Config
 from spsdk.utils.database import DatabaseManager, get_schema_file
-from spsdk.utils.family import FamilyRevision, update_validation_schema_family
-from spsdk.utils.spsdk_enum import SpsdkEnum
+from spsdk.utils.family import FamilyRevision, get_db, update_validation_schema_family
+from spsdk.utils.spsdk_enum import SpsdkIntFlag
 
 
 class HseKeyGroupOwner(IntEnum):
@@ -30,7 +31,7 @@ class HseKeyGroupOwner(IntEnum):
     OEM = 2  # The key groups owned by OWNER_OEM. This applies only for NVM key groups.
 
 
-class HseKeyFlags(IntFlag):
+class HseKeyFlags(SpsdkIntFlag):
     """HSE Key Flags.
 
     The key flags specifies the operations or restrictions that can be apply to a key.
@@ -69,7 +70,7 @@ class HseKeyFlags(IntFlag):
     ACCESS_MASK = ACCESS_WRITE_PROT | ACCESS_DEBUG_PROT | ACCESS_EXPORTABLE
 
 
-class HseSmrFlags(IntFlag):
+class HseSmrFlags(SpsdkIntFlag):
     """HSE SMR Flags.
 
     A set of flags that define which secure memory region (SMR),
@@ -114,13 +115,13 @@ class HseEccCurveId(IntEnum):
     """HSE ECC Curve IDs."""
 
     NONE = 0
-    SEC_SECP256R1 = 1
-    SEC_SECP384R1 = 2
-    SEC_SECP521R1 = 3
-    BRAINPOOL_P256R1 = 4
-    BRAINPOOL_P320R1 = 5
-    BRAINPOOL_P384R1 = 6
-    BRAINPOOL_P512R1 = 7
+    SECP256R1 = 1
+    SECP384R1 = 2
+    SECP521R1 = 3
+    BRAINPOOLP256R1 = 4
+    BRAINPOOLP320R1 = 5
+    BRAINPOOLP384R1 = 6
+    BRAINPOOLP512R1 = 7
     ED25519 = 9
     CURVE25519 = 10
     ED448 = 11
@@ -130,7 +131,7 @@ class HseEccCurveId(IntEnum):
     USER_CURVE3 = 103
 
 
-class HseAesBlockModeMask(IntFlag):
+class HseAesBlockModeMask(SpsdkIntFlag):
     """HSE AES Block Mode Mask.
 
     The values represent the cipher mode flags that an AES key can take.
@@ -157,6 +158,7 @@ class KeyInfo(FeatureBaseClass):
     FEATURE = DatabaseManager.HSE
     SUB_FEATURE = "key_import"
     FORMAT = "<HHLLBBBB"
+    CONFIG_TITLE = "Key info configuration"
 
     # Maximum key counter value
     MAX_KEY_COUNTER_VALUE = 0xFFFFFFFE
@@ -210,9 +212,7 @@ class KeyInfo(FeatureBaseClass):
         ):
             specific_byte = self.specific_data.get("pubExponentSize", 0) & 0xFF
         elif self.key_type == KeyType.AES.tag:
-            specific_byte = (
-                self.specific_data.get("aesBlockModeMask", HseAesBlockModeMask(0)).value & 0xFF
-            )
+            specific_byte = self.specific_data.get("aesBlockModeMask", 0) & 0xFF
         return bytes([specific_byte])
 
     @classmethod
@@ -327,17 +327,6 @@ class KeyInfo(FeatureBaseClass):
                 flags.append(flag)
         return flags
 
-    def get_smr_flags(self) -> List[HseSmrFlags]:
-        """Get the list of SMR indices that are set in the SMR flags.
-
-        :return: List of SMR indices (0-31)
-        """
-        smr_flags_list = []
-        for flag in HseSmrFlags:
-            if self.smr_flags & flag:
-                smr_flags_list.append(flag)
-        return smr_flags_list
-
     def __str__(self) -> str:
         """Format the key info for display.
 
@@ -359,7 +348,7 @@ class KeyInfo(FeatureBaseClass):
         ret += f"Key Bit Length: {self.key_bit_len}\n"
         ret += f"Key Counter: {self.key_counter}\n"
 
-        smr_flags = self.get_smr_flags()
+        smr_flags = self.smr_flags.to_list()
         if smr_flags:
             smr_flag_names = [flag.name or f"unknown: {flag.value}" for flag in smr_flags]
             ret += f"SMR Flags: 0x{self.smr_flags:08X} (SMRs: {', '.join(smr_flag_names)})\n"
@@ -407,18 +396,10 @@ class KeyInfo(FeatureBaseClass):
         key_counter = int(config.get_int("keyCounter", 0))
 
         # Extract key flags
-        key_flags_list = config.get_list("keyFlags", [])
-        key_flags = HseKeyFlags(0)
-        for flag_str in key_flags_list:
-            key_flag = HseKeyFlags[flag_str]
-            key_flags |= key_flag
+        key_flags = HseKeyFlags.from_list(config.get_list("keyFlags", []))
 
         # Extract SMR flags
-        smr_flags_list: list[int] = config.get_list("smrFlags", [])
-        smr_flags = HseSmrFlags(0)
-        for flag_int in smr_flags_list:
-            smr_flag = HseSmrFlags[f"SMR_{flag_int}"]
-            smr_flags |= smr_flag
+        smr_flags = HseSmrFlags.from_list([f"SMR_{smr}" for smr in config.get_list("smrFlags", [])])
 
         # Extract specific data
         specific_data = {}
@@ -441,16 +422,21 @@ class KeyInfo(FeatureBaseClass):
                 KeyType.RSA_PUB_EXT,
             ):
                 exp_size = specific_config.get_int("pubExponentSize")
+                rsa_pub_exp_max = get_db(family=FamilyRevision.load_from_config(config)).get_int(
+                    DatabaseManager.HSE, "rsa_pub_exponent_max_size"
+                )
+                if exp_size > rsa_pub_exp_max:
+                    raise SPSDKValueError(
+                        f"pubExponentSize {exp_size} exceeds maximum allowed {rsa_pub_exp_max} bytes"
+                        f" for this device (HSE-B supports max 8 bytes, HSE-H/M supports max 16 bytes)."
+                    )
                 specific_data["pubExponentSize"] = exp_size
 
             # Handle AES block mode mask
             if "aesBlockModeMask" in specific_config and key_type == KeyType.AES:
-                block_modes = specific_config.get_list("aesBlockModeMask")
-                block_mode_mask = 0
-                for mode_str in block_modes:
-                    mode = HseAesBlockModeMask[mode_str]
-                    block_mode_mask |= mode
-                specific_data["aesBlockModeMask"] = block_mode_mask
+                specific_data["aesBlockModeMask"] = HseAesBlockModeMask.from_list(
+                    specific_config.get_list("aesBlockModeMask")
+                ).value
 
         return cls(
             family=FamilyRevision.load_from_config(config),
@@ -549,11 +535,41 @@ class KeyInfo(FeatureBaseClass):
         :param family: Family revision for which the validation schema should be generated.
         :return: List of validation schemas.
         """
-        schemas = get_schema_file(DatabaseManager.HSE)
+        schemas = deepcopy(get_schema_file(DatabaseManager.HSE))
         family_schema = get_schema_file("general")["family"]
+        family_schema["main_title"] = cls.CONFIG_TITLE
         update_validation_schema_family(
             sch=family_schema["properties"], devices=cls.get_supported_families(), family=family
         )
+        available_types = KeyType.get_available_types(family)
+        available_type_labels = [kt.label for kt in available_types]
+        schemas["key_info"]["properties"]["keyType"]["enum"] = [
+            label
+            for label in schemas["key_info"]["properties"]["keyType"]["enum"]
+            if label in available_type_labels
+        ]
+        smr_regions_count = get_db(family=family).get_int(DatabaseManager.HSE, "smr_regions_count")
+        schemas["key_info"]["properties"]["smrFlags"]["maxItems"] = smr_regions_count
+        schemas["key_info"]["properties"]["smrFlags"]["enum_template"] = list(
+            range(smr_regions_count)
+        )
+        schemas["key_info"]["properties"]["smrFlags"]["items"]["maximum"] = smr_regions_count - 1
+        rsa_pub_exp_max = get_db(family=family).get_int(
+            DatabaseManager.HSE, "rsa_pub_exponent_max_size"
+        )
+        rsa_specific = next(
+            (
+                s
+                for s in schemas["key_info"]["properties"]["specificData"]["oneOf"]
+                if "pubExponentSize" in s.get("properties", {})
+            ),
+            None,
+        )
+        if rsa_specific is not None:
+            rsa_specific["properties"]["pubExponentSize"]["maximum"] = rsa_pub_exp_max
+            rsa_specific["properties"]["pubExponentSize"][
+                "description"
+            ] = f"Size of RSA public exponent in bytes (maximum {rsa_pub_exp_max} for this device)."
         return [family_schema, schemas["key_info"]]
 
     @classmethod
@@ -570,14 +586,3 @@ class KeyInfo(FeatureBaseClass):
         """
         schemas = cls.get_validation_schemas(family)
         return cls._get_config_template(family, schemas)
-
-
-class KeyFormat(SpsdkEnum):
-    """HSE Key Format (applicable for ECC keys only).
-
-    Defines the format of ECC public keys used in HSE operations.
-    """
-
-    RAW = (0, "RAW", "Raw ECC public key: X || Y")
-    UNCOMPRESSED = (1, "UNCOMPRESSED", "Standard ECC uncompressed public key: 0x04 || X || Y")
-    COMPRESSED = (2, "COMPRESSED", "Standard ECC compressed public key: 0x02/0x03 || X")

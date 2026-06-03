@@ -27,7 +27,52 @@
               "width": 3
             },
             {
-              "width": 3
+              "width": 3,
+              "id": "fuse0-bits-6-8",
+              "name": "HSW_CFG_LOCK",
+              "description": "Hardware and Software Configuration Lock",
+              "values": [
+                {
+                  "name": "UNLOCKED",
+                  "value": 0,
+                  "description": "Unlocked (fuses can be read, sensed, burned or over-ridden in the corresponding OTP shadow register)"
+                },
+                {
+                  "name": "WP",
+                  "value": 1,
+                  "description": "Write Protect, the controlled field can not be burned"
+                },
+                {
+                  "name": "OP",
+                  "value": 2,
+                  "description": "Over-ride Protect, the controlled field shadow registers can not be over-written"
+                },
+                {
+                  "name": "OP_WP",
+                  "value": 3,
+                  "description": "Over-ride + Write Protect, the controlled field can not be overridden nor burned"
+                },
+                {
+                  "name": "RP",
+                  "value": 4,
+                  "description": "Read Protect, the controlled field can be sensed only, but can't be read from shadow registers"
+                },
+                {
+                  "name": "RP_WP",
+                  "value": 5,
+                  "description": "Read + Write Protect, the controlled field can be sensed, overridden, but can't be read nor burned"
+                },
+                {
+                  "name": "RP_OP",
+                  "value": 6,
+                  "description": "Read + Over-ride Protect, the controlled field can be sensed, burned, but can't be read nor over-written"
+                },
+                {
+                  "name": "ALL_LOCKS",
+                  "value": 7,
+                  "description": "The controlled field can't be read, sensed, burned or overridden in corresponding OTP shadow register"
+                }
+              ]
             },
             {
               "width": 3
@@ -788,7 +833,10 @@
               ]
             },
             {
-              "width": 3
+              "width": 3,
+              "id": "fuse8-bits-12-14",
+              "name": "ELE_OEM_PQC_SRKH_LOCK",
+              "description": "OEM PQC hash of public keys "
             },
             {
               "width": 1
@@ -1869,15 +1917,16 @@
               "description": "Override FlexSPI NOR Boot Selection",
               "values": [
                 {
-                  "name": "DISABLED",
+                  "name": "DO_NOT_OVERRIDE",
                   "value": 0,
                   "description": "Do not override",
                   "deprecated_names": [
+                    "DISABLED",
                     "0"
                   ]
                 },
                 {
-                  "name": "Override",
+                  "name": "OVERRIDE",
                   "value": 1,
                   "description": "Override"
                 }
@@ -1908,7 +1957,7 @@
                 {
                   "name": "OCTAL_MICRON",
                   "value": 2,
-                  "description": "Default Octal mode\u00a0(Micron, Nice to have)",
+                  "description": "Default Octal mode (Micron, Nice to have)",
                   "deprecated_names": [
                     "10"
                   ]
@@ -2217,10 +2266,11 @@
               "description": "Boot frequency / voltage select[1]",
               "values": [
                 {
-                  "name": "SEE_BT_FREQ_SEL",
+                  "name": "SEE_BOOT_CFG0",
                   "value": 0,
                   "description": "See BT_FREQ_SEL BOOT_CFG0[28]",
                   "deprecated_names": [
+                    "SEE_BT_FREQ_SEL",
                     "0"
                   ]
                 },
@@ -2487,15 +2537,19 @@
               "description": "Force boot from fuse",
               "values": [
                 {
-                  "name": "Disable",
+                  "name": "DISABLED",
                   "value": 0,
-                  "description": "Disable"
+                  "description": "Disable",
+                  "deprecated_names": [
+                    "Disable"
+                  ]
                 },
                 {
-                  "name": "ENABLED",
+                  "name": "OVERRIDE_BY_FUSES",
                   "value": 1,
                   "description": "Override Boot_Mode pins by boot mode fuses",
                   "deprecated_names": [
+                    "ENABLED",
                     "1"
                   ]
                 }
@@ -2838,77 +2892,77 @@
                 {
                   "name": "LEVEL_1",
                   "value": 1,
-                  "description": "Pad setting level 1"
+                  "description": "PAD setting configuration value 1"
                 },
                 {
                   "name": "LEVEL_2",
                   "value": 2,
-                  "description": "Pad setting level 2"
+                  "description": "PAD setting configuration value 2"
                 },
                 {
                   "name": "LEVEL_3",
                   "value": 3,
-                  "description": "Pad setting level 3"
+                  "description": "PAD setting configuration value 3"
                 },
                 {
                   "name": "LEVEL_4",
                   "value": 4,
-                  "description": "Pad setting level 4"
+                  "description": "PAD setting configuration value 4"
                 },
                 {
                   "name": "LEVEL_5",
                   "value": 5,
-                  "description": "Pad setting level 5"
+                  "description": "PAD setting configuration value 5"
                 },
                 {
                   "name": "LEVEL_6",
                   "value": 6,
-                  "description": "Pad setting level 6"
+                  "description": "PAD setting configuration value 6"
                 },
                 {
                   "name": "LEVEL_7",
                   "value": 7,
-                  "description": "Pad setting level 7"
+                  "description": "PAD setting configuration value 7"
                 },
                 {
                   "name": "LEVEL_8",
                   "value": 8,
-                  "description": "Pad setting level 8"
+                  "description": "PAD setting configuration value 8"
                 },
                 {
                   "name": "LEVEL_9",
                   "value": 9,
-                  "description": "Pad setting level 9"
+                  "description": "PAD setting configuration value 9"
                 },
                 {
                   "name": "LEVEL_10",
                   "value": 10,
-                  "description": "Pad setting level 10"
+                  "description": "PAD setting configuration value 10"
                 },
                 {
                   "name": "LEVEL_11",
                   "value": 11,
-                  "description": "Pad setting level 11"
+                  "description": "PAD setting configuration value 11"
                 },
                 {
                   "name": "LEVEL_12",
                   "value": 12,
-                  "description": "Pad setting level 12"
+                  "description": "PAD setting configuration value 12"
                 },
                 {
                   "name": "LEVEL_13",
                   "value": 13,
-                  "description": "Pad setting level 13"
+                  "description": "PAD setting configuration value 13"
                 },
                 {
                   "name": "LEVEL_14",
                   "value": 14,
-                  "description": "Pad setting level 14"
+                  "description": "PAD setting configuration value 14"
                 },
                 {
                   "name": "LEVEL_15",
                   "value": 15,
-                  "description": "Pad setting level 15"
+                  "description": "PAD setting configuration value 15"
                 }
               ]
             },
@@ -2977,312 +3031,312 @@
                 {
                   "name": "DELAY_STEP_1",
                   "value": 1,
-                  "description": "DLL delay step 1"
+                  "description": "MMC DLL delay step 1"
                 },
                 {
                   "name": "DELAY_002",
                   "value": 2,
-                  "description": "Delay setting 2"
+                  "description": "MMC DLL delay step 2"
                 },
                 {
                   "name": "DELAY_003",
                   "value": 3,
-                  "description": "Delay setting 3"
+                  "description": "MMC DLL delay step 3"
                 },
                 {
                   "name": "DELAY_004",
                   "value": 4,
-                  "description": "Delay setting 4"
+                  "description": "MMC DLL delay step 4"
                 },
                 {
                   "name": "DELAY_005",
                   "value": 5,
-                  "description": "Delay setting 5"
+                  "description": "MMC DLL delay step 5"
                 },
                 {
                   "name": "DELAY_6",
                   "value": 6,
-                  "description": "Delay setting 6"
+                  "description": "MMC DLL delay step 6"
                 },
                 {
                   "name": "DELAY_7",
                   "value": 7,
-                  "description": "Delay setting 7"
+                  "description": "MMC DLL delay step 7"
                 },
                 {
                   "name": "DELAY_8",
                   "value": 8,
-                  "description": "Delay setting 8"
+                  "description": "MMC DLL delay step 8"
                 },
                 {
                   "name": "DELAY_9",
                   "value": 9,
-                  "description": "Delay setting 9"
+                  "description": "MMC DLL delay step 9"
                 },
                 {
                   "name": "DELAY_010",
                   "value": 10,
-                  "description": "Delay setting 10"
+                  "description": "MMC DLL delay step 10"
                 },
                 {
                   "name": "DELAY_11",
                   "value": 11,
-                  "description": "Delay setting 11"
+                  "description": "MMC DLL delay step 11"
                 },
                 {
                   "name": "DELAY_12",
                   "value": 12,
-                  "description": "Delay setting 12"
+                  "description": "MMC DLL delay step 12"
                 },
                 {
                   "name": "DELAY_13",
                   "value": 13,
-                  "description": "Delay setting 13"
+                  "description": "MMC DLL delay step 13"
                 },
                 {
                   "name": "DELAY_14",
                   "value": 14,
-                  "description": "Delay setting 14"
+                  "description": "MMC DLL delay step 14"
                 },
                 {
                   "name": "DELAY_STEP_15",
                   "value": 15,
-                  "description": "DLL delay step 15"
+                  "description": "MMC DLL delay step 15"
                 },
                 {
                   "name": "DELAY_016",
                   "value": 16,
-                  "description": "Delay setting 16"
+                  "description": "MMC DLL delay step 16"
                 },
                 {
                   "name": "DELAY_17",
                   "value": 17,
-                  "description": "Delay setting 17"
+                  "description": "MMC DLL delay step 17"
                 },
                 {
                   "name": "DELAY_18",
                   "value": 18,
-                  "description": "Delay setting 18"
+                  "description": "MMC DLL delay step 18"
                 },
                 {
                   "name": "DELAY_19",
                   "value": 19,
-                  "description": "Delay setting 19"
+                  "description": "MMC DLL delay step 19"
                 },
                 {
                   "name": "DELAY_20",
                   "value": 20,
-                  "description": "Delay setting 20"
+                  "description": "MMC DLL delay step 20"
                 },
                 {
                   "name": "DELAY_21",
                   "value": 21,
-                  "description": "Delay setting 21"
+                  "description": "MMC DLL delay step 21"
                 },
                 {
                   "name": "DELAY_22",
                   "value": 22,
-                  "description": "Delay setting 22"
+                  "description": "MMC DLL delay step 22"
                 },
                 {
                   "name": "DELAY_23",
                   "value": 23,
-                  "description": "Delay setting 23"
+                  "description": "MMC DLL delay step 23"
                 },
                 {
                   "name": "DELAY_24",
                   "value": 24,
-                  "description": "Delay setting 24"
+                  "description": "MMC DLL delay step 24"
                 },
                 {
                   "name": "DELAY_25",
                   "value": 25,
-                  "description": "Delay setting 25"
+                  "description": "MMC DLL delay step 25"
                 },
                 {
                   "name": "DELAY_26",
                   "value": 26,
-                  "description": "Delay setting 26"
+                  "description": "MMC DLL delay step 26"
                 },
                 {
                   "name": "DELAY_27",
                   "value": 27,
-                  "description": "Delay setting 27"
+                  "description": "MMC DLL delay step 27"
                 },
                 {
                   "name": "DELAY_28",
                   "value": 28,
-                  "description": "Delay setting 28"
+                  "description": "MMC DLL delay step 28"
                 },
                 {
                   "name": "DELAY_29",
                   "value": 29,
-                  "description": "Delay setting 29"
+                  "description": "MMC DLL delay step 29"
                 },
                 {
                   "name": "DELAY_30",
                   "value": 30,
-                  "description": "Delay setting 30"
+                  "description": "MMC DLL delay step 30"
                 },
                 {
                   "name": "DELAY_STEP_31",
                   "value": 31,
-                  "description": "DLL delay step 31"
+                  "description": "MMC DLL delay step 31"
                 },
                 {
                   "name": "DELAY_032",
                   "value": 32,
-                  "description": "Delay setting 32"
+                  "description": "MMC DLL delay step 32"
                 },
                 {
                   "name": "DELAY_33",
                   "value": 33,
-                  "description": "Delay setting 33"
+                  "description": "MMC DLL delay step 33"
                 },
                 {
                   "name": "DELAY_34",
                   "value": 34,
-                  "description": "Delay setting 34"
+                  "description": "MMC DLL delay step 34"
                 },
                 {
                   "name": "DELAY_35",
                   "value": 35,
-                  "description": "Delay setting 35"
+                  "description": "MMC DLL delay step 35"
                 },
                 {
                   "name": "DELAY_36",
                   "value": 36,
-                  "description": "Delay setting 36"
+                  "description": "MMC DLL delay step 36"
                 },
                 {
                   "name": "DELAY_37",
                   "value": 37,
-                  "description": "Delay setting 37"
+                  "description": "MMC DLL delay step 37"
                 },
                 {
                   "name": "DELAY_38",
                   "value": 38,
-                  "description": "Delay setting 38"
+                  "description": "MMC DLL delay step 38"
                 },
                 {
                   "name": "DELAY_39",
                   "value": 39,
-                  "description": "Delay setting 39"
+                  "description": "MMC DLL delay step 39"
                 },
                 {
                   "name": "DELAY_40",
                   "value": 40,
-                  "description": "Delay setting 40"
+                  "description": "MMC DLL delay step 40"
                 },
                 {
                   "name": "DELAY_41",
                   "value": 41,
-                  "description": "Delay setting 41"
+                  "description": "MMC DLL delay step 41"
                 },
                 {
                   "name": "DELAY_42",
                   "value": 42,
-                  "description": "Delay setting 42"
+                  "description": "MMC DLL delay step 42"
                 },
                 {
                   "name": "DELAY_43",
                   "value": 43,
-                  "description": "Delay setting 43"
+                  "description": "MMC DLL delay step 43"
                 },
                 {
                   "name": "DELAY_44",
                   "value": 44,
-                  "description": "Delay setting 44"
+                  "description": "MMC DLL delay step 44"
                 },
                 {
                   "name": "DELAY_45",
                   "value": 45,
-                  "description": "Delay setting 45"
+                  "description": "MMC DLL delay step 45"
                 },
                 {
                   "name": "DELAY_46",
                   "value": 46,
-                  "description": "Delay setting 46"
+                  "description": "MMC DLL delay step 46"
                 },
                 {
                   "name": "DELAY_47",
                   "value": 47,
-                  "description": "Delay setting 47"
+                  "description": "MMC DLL delay step 47"
                 },
                 {
                   "name": "DELAY_48",
                   "value": 48,
-                  "description": "Delay setting 48"
+                  "description": "MMC DLL delay step 48"
                 },
                 {
                   "name": "DELAY_49",
                   "value": 49,
-                  "description": "Delay setting 49"
+                  "description": "MMC DLL delay step 49"
                 },
                 {
                   "name": "DELAY_50",
                   "value": 50,
-                  "description": "Delay setting 50"
+                  "description": "MMC DLL delay step 50"
                 },
                 {
                   "name": "DELAY_51",
                   "value": 51,
-                  "description": "Delay setting 51"
+                  "description": "MMC DLL delay step 51"
                 },
                 {
                   "name": "DELAY_52",
                   "value": 52,
-                  "description": "Delay setting 52"
+                  "description": "MMC DLL delay step 52"
                 },
                 {
                   "name": "DELAY_53",
                   "value": 53,
-                  "description": "Delay setting 53"
+                  "description": "MMC DLL delay step 53"
                 },
                 {
                   "name": "DELAY_54",
                   "value": 54,
-                  "description": "Delay setting 54"
+                  "description": "MMC DLL delay step 54"
                 },
                 {
                   "name": "DELAY_55",
                   "value": 55,
-                  "description": "Delay setting 55"
+                  "description": "MMC DLL delay step 55"
                 },
                 {
                   "name": "DELAY_56",
                   "value": 56,
-                  "description": "Delay setting 56"
+                  "description": "MMC DLL delay step 56"
                 },
                 {
                   "name": "DELAY_57",
                   "value": 57,
-                  "description": "Delay setting 57"
+                  "description": "MMC DLL delay step 57"
                 },
                 {
                   "name": "DELAY_58",
                   "value": 58,
-                  "description": "Delay setting 58"
+                  "description": "MMC DLL delay step 58"
                 },
                 {
                   "name": "DELAY_59",
                   "value": 59,
-                  "description": "Delay setting 59"
+                  "description": "MMC DLL delay step 59"
                 },
                 {
                   "name": "DELAY_60",
                   "value": 60,
-                  "description": "Delay setting 60"
+                  "description": "MMC DLL delay step 60"
                 },
                 {
                   "name": "DELAY_61",
                   "value": 61,
-                  "description": "Delay setting 61"
+                  "description": "MMC DLL delay step 61"
                 },
                 {
                   "name": "DELAY_62",
                   "value": 62,
-                  "description": "Delay setting 62"
+                  "description": "MMC DLL delay step 62"
                 },
                 {
                   "name": "DELAY_MID",
@@ -3292,317 +3346,317 @@
                 {
                   "name": "DELAY_064",
                   "value": 64,
-                  "description": "Delay setting 64"
+                  "description": "MMC DLL delay step 64"
                 },
                 {
                   "name": "DELAY_65",
                   "value": 65,
-                  "description": "Delay setting 65"
+                  "description": "MMC DLL delay step 65"
                 },
                 {
                   "name": "DELAY_66",
                   "value": 66,
-                  "description": "Delay setting 66"
+                  "description": "MMC DLL delay step 66"
                 },
                 {
                   "name": "DELAY_67",
                   "value": 67,
-                  "description": "Delay setting 67"
+                  "description": "MMC DLL delay step 67"
                 },
                 {
                   "name": "DELAY_68",
                   "value": 68,
-                  "description": "Delay setting 68"
+                  "description": "MMC DLL delay step 68"
                 },
                 {
                   "name": "DELAY_69",
                   "value": 69,
-                  "description": "Delay setting 69"
+                  "description": "MMC DLL delay step 69"
                 },
                 {
                   "name": "DELAY_70",
                   "value": 70,
-                  "description": "Delay setting 70"
+                  "description": "MMC DLL delay step 70"
                 },
                 {
                   "name": "DELAY_71",
                   "value": 71,
-                  "description": "Delay setting 71"
+                  "description": "MMC DLL delay step 71"
                 },
                 {
                   "name": "DELAY_72",
                   "value": 72,
-                  "description": "Delay setting 72"
+                  "description": "MMC DLL delay step 72"
                 },
                 {
                   "name": "DELAY_73",
                   "value": 73,
-                  "description": "Delay setting 73"
+                  "description": "MMC DLL delay step 73"
                 },
                 {
                   "name": "DELAY_74",
                   "value": 74,
-                  "description": "Delay setting 74"
+                  "description": "MMC DLL delay step 74"
                 },
                 {
                   "name": "DELAY_75",
                   "value": 75,
-                  "description": "Delay setting 75"
+                  "description": "MMC DLL delay step 75"
                 },
                 {
                   "name": "DELAY_76",
                   "value": 76,
-                  "description": "Delay setting 76"
+                  "description": "MMC DLL delay step 76"
                 },
                 {
                   "name": "DELAY_77",
                   "value": 77,
-                  "description": "Delay setting 77"
+                  "description": "MMC DLL delay step 77"
                 },
                 {
                   "name": "DELAY_78",
                   "value": 78,
-                  "description": "Delay setting 78"
+                  "description": "MMC DLL delay step 78"
                 },
                 {
                   "name": "DELAY_79",
                   "value": 79,
-                  "description": "Delay setting 79"
+                  "description": "MMC DLL delay step 79"
                 },
                 {
                   "name": "DELAY_80",
                   "value": 80,
-                  "description": "Delay setting 80"
+                  "description": "MMC DLL delay step 80"
                 },
                 {
                   "name": "DELAY_81",
                   "value": 81,
-                  "description": "Delay setting 81"
+                  "description": "MMC DLL delay step 81"
                 },
                 {
                   "name": "DELAY_82",
                   "value": 82,
-                  "description": "Delay setting 82"
+                  "description": "MMC DLL delay step 82"
                 },
                 {
                   "name": "DELAY_83",
                   "value": 83,
-                  "description": "Delay setting 83"
+                  "description": "MMC DLL delay step 83"
                 },
                 {
                   "name": "DELAY_84",
                   "value": 84,
-                  "description": "Delay setting 84"
+                  "description": "MMC DLL delay step 84"
                 },
                 {
                   "name": "DELAY_85",
                   "value": 85,
-                  "description": "Delay setting 85"
+                  "description": "MMC DLL delay step 85"
                 },
                 {
                   "name": "DELAY_86",
                   "value": 86,
-                  "description": "Delay setting 86"
+                  "description": "MMC DLL delay step 86"
                 },
                 {
                   "name": "DELAY_87",
                   "value": 87,
-                  "description": "Delay setting 87"
+                  "description": "MMC DLL delay step 87"
                 },
                 {
                   "name": "DELAY_88",
                   "value": 88,
-                  "description": "Delay setting 88"
+                  "description": "MMC DLL delay step 88"
                 },
                 {
                   "name": "DELAY_89",
                   "value": 89,
-                  "description": "Delay setting 89"
+                  "description": "MMC DLL delay step 89"
                 },
                 {
                   "name": "DELAY_90",
                   "value": 90,
-                  "description": "Delay setting 90"
+                  "description": "MMC DLL delay step 90"
                 },
                 {
                   "name": "DELAY_91",
                   "value": 91,
-                  "description": "Delay setting 91"
+                  "description": "MMC DLL delay step 91"
                 },
                 {
                   "name": "DELAY_92",
                   "value": 92,
-                  "description": "Delay setting 92"
+                  "description": "MMC DLL delay step 92"
                 },
                 {
                   "name": "DELAY_93",
                   "value": 93,
-                  "description": "Delay setting 93"
+                  "description": "MMC DLL delay step 93"
                 },
                 {
                   "name": "DELAY_94",
                   "value": 94,
-                  "description": "Delay setting 94"
+                  "description": "MMC DLL delay step 94"
                 },
                 {
                   "name": "DELAY_STEP_95",
                   "value": 95,
-                  "description": "DLL delay step 95"
+                  "description": "MMC DLL delay step 95"
                 },
                 {
                   "name": "DELAY_096",
                   "value": 96,
-                  "description": "Delay setting 96"
+                  "description": "MMC DLL delay step 96"
                 },
                 {
                   "name": "DELAY_97",
                   "value": 97,
-                  "description": "Delay setting 97"
+                  "description": "MMC DLL delay step 97"
                 },
                 {
                   "name": "DELAY_98",
                   "value": 98,
-                  "description": "Delay setting 98"
+                  "description": "MMC DLL delay step 98"
                 },
                 {
                   "name": "DELAY_99",
                   "value": 99,
-                  "description": "Delay setting 99"
+                  "description": "MMC DLL delay step 99"
                 },
                 {
                   "name": "DELAY_100",
                   "value": 100,
-                  "description": "Delay setting 100"
+                  "description": "MMC DLL delay step 100"
                 },
                 {
                   "name": "DELAY_101",
                   "value": 101,
-                  "description": "Delay setting 101"
+                  "description": "MMC DLL delay step 101"
                 },
                 {
                   "name": "DELAY_102",
                   "value": 102,
-                  "description": "Delay setting 102"
+                  "description": "MMC DLL delay step 102"
                 },
                 {
                   "name": "DELAY_103",
                   "value": 103,
-                  "description": "Delay setting 103"
+                  "description": "MMC DLL delay step 103"
                 },
                 {
                   "name": "DELAY_104",
                   "value": 104,
-                  "description": "Delay setting 104"
+                  "description": "MMC DLL delay step 104"
                 },
                 {
                   "name": "DELAY_105",
                   "value": 105,
-                  "description": "Delay setting 105"
+                  "description": "MMC DLL delay step 105"
                 },
                 {
                   "name": "DELAY_106",
                   "value": 106,
-                  "description": "Delay setting 106"
+                  "description": "MMC DLL delay step 106"
                 },
                 {
                   "name": "DELAY_107",
                   "value": 107,
-                  "description": "Delay setting 107"
+                  "description": "MMC DLL delay step 107"
                 },
                 {
                   "name": "DELAY_108",
                   "value": 108,
-                  "description": "Delay setting 108"
+                  "description": "MMC DLL delay step 108"
                 },
                 {
                   "name": "DELAY_109",
                   "value": 109,
-                  "description": "Delay setting 109"
+                  "description": "MMC DLL delay step 109"
                 },
                 {
                   "name": "DELAY_110",
                   "value": 110,
-                  "description": "Delay setting 110"
+                  "description": "MMC DLL delay step 110"
                 },
                 {
                   "name": "DELAY_STEP_111",
                   "value": 111,
-                  "description": "DLL delay step 111"
+                  "description": "MMC DLL delay step 111"
                 },
                 {
                   "name": "DELAY_112",
                   "value": 112,
-                  "description": "Delay setting 112"
+                  "description": "MMC DLL delay step 112"
                 },
                 {
                   "name": "DELAY_113",
                   "value": 113,
-                  "description": "Delay setting 113"
+                  "description": "MMC DLL delay step 113"
                 },
                 {
                   "name": "DELAY_114",
                   "value": 114,
-                  "description": "Delay setting 114"
+                  "description": "MMC DLL delay step 114"
                 },
                 {
                   "name": "DELAY_115",
                   "value": 115,
-                  "description": "Delay setting 115"
+                  "description": "MMC DLL delay step 115"
                 },
                 {
                   "name": "DELAY_116",
                   "value": 116,
-                  "description": "Delay setting 116"
+                  "description": "MMC DLL delay step 116"
                 },
                 {
                   "name": "DELAY_117",
                   "value": 117,
-                  "description": "Delay setting 117"
+                  "description": "MMC DLL delay step 117"
                 },
                 {
                   "name": "DELAY_118",
                   "value": 118,
-                  "description": "Delay setting 118"
+                  "description": "MMC DLL delay step 118"
                 },
                 {
                   "name": "DELAY_119",
                   "value": 119,
-                  "description": "Delay setting 119"
+                  "description": "MMC DLL delay step 119"
                 },
                 {
                   "name": "DELAY_120",
                   "value": 120,
-                  "description": "Delay setting 120"
+                  "description": "MMC DLL delay step 120"
                 },
                 {
                   "name": "DELAY_121",
                   "value": 121,
-                  "description": "Delay setting 121"
+                  "description": "MMC DLL delay step 121"
                 },
                 {
                   "name": "DELAY_122",
                   "value": 122,
-                  "description": "Delay setting 122"
+                  "description": "MMC DLL delay step 122"
                 },
                 {
                   "name": "DELAY_123",
                   "value": 123,
-                  "description": "Delay setting 123"
+                  "description": "MMC DLL delay step 123"
                 },
                 {
                   "name": "DELAY_124",
                   "value": 124,
-                  "description": "Delay setting 124"
+                  "description": "MMC DLL delay step 124"
                 },
                 {
                   "name": "DELAY_125",
                   "value": 125,
-                  "description": "Delay setting 125"
+                  "description": "MMC DLL delay step 125"
                 },
                 {
                   "name": "DELAY_126",
                   "value": 126,
-                  "description": "Delay setting 126"
+                  "description": "MMC DLL delay step 126"
                 },
                 {
                   "name": "DELAY_MAX",
@@ -4606,7 +4660,127 @@
                 {
                   "name": "DELAY_166",
                   "value": 166,
-                  "description": "The delay line value only for H"
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_167",
+                  "value": 167,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_168",
+                  "value": 168,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_169",
+                  "value": 169,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_170",
+                  "value": 170,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_171",
+                  "value": 171,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_172",
+                  "value": 172,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_173",
+                  "value": 173,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_174",
+                  "value": 174,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_175",
+                  "value": 175,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_176",
+                  "value": 176,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_177",
+                  "value": 177,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_178",
+                  "value": 178,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_179",
+                  "value": 179,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_180",
+                  "value": 180,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_181",
+                  "value": 181,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_182",
+                  "value": 182,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_183",
+                  "value": 183,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_184",
+                  "value": 184,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_185",
+                  "value": 185,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_186",
+                  "value": 186,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_187",
+                  "value": 187,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_188",
+                  "value": 188,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_189",
+                  "value": 189,
+                  "description": "The delay line value only for HyperFlash"
+                },
+                {
+                  "name": "DELAY_190",
+                  "value": 190,
+                  "description": "FlexSPI_DLL_Value:"
                 }
               ]
             },
@@ -5012,14 +5186,20 @@
               "description": "FLEXSPI NOR AUTO PROBE type",
               "values": [
                 {
-                  "name": "DISABLED",
+                  "name": "QUADSPI_NOR",
                   "value": 0,
-                  "description": "QuadSPI NOR and OctalSPI NOR auto probe disabled"
+                  "description": "QuadSPI NOR and OctalSPI NOR auto probe disabled",
+                  "deprecated_names": [
+                    "DISABLED"
+                  ]
                 },
                 {
-                  "name": "ENABLED",
+                  "name": "MXIC_OCTAL",
                   "value": 1,
-                  "description": "OctalSPI NOR auto probe enabled (MxicOctal, MicronOctal, AdestoOctal)"
+                  "description": "OctalSPI NOR auto probe enabled (MxicOctal, MicronOctal, AdestoOctal)",
+                  "deprecated_names": [
+                    "ENABLED"
+                  ]
                 }
               ]
             },
@@ -5177,6 +5357,11 @@
                   "deprecated_names": [
                     "512_MB"
                   ]
+                },
+                {
+                  "name": "DISABLED",
+                  "value": 10,
+                  "description": "Secondary boot flow is disabled"
                 },
                 {
                   "name": "EMMC_LAST_128MB",

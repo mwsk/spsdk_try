@@ -1,6 +1,7 @@
 asn1crypto<2,>=1.2
 bincopy<21,>=17.14.5
 bitstring<5,>=3.1
+chardet<6 # remove once https://github.com/psf/requests/issues/7223 is fixed
 click-command-tree<2
 click-option-group<1,>=0.3.0
 click!=8.1.4,!=8.3,<9,>=7.1
@@ -27,7 +28,7 @@ ruamel.yaml.clib!=0.2.13,!=0.2.15,<1  # 0.2.13: missing header files for build, 
 setuptools_scm<10
 setuptools<81,>75
 sly<1
-spsdk-mcu-link<1,>=0.3.2
+spsdk-mcu-link<1,>=0.6.9
 spsdk-pyocd<1,>=0.2.0
 typing-extensions<5
 x690<2,>=1.0

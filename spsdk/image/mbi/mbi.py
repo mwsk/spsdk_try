@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2019-2025 NXP
+# Copyright 2019-2026 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -21,8 +21,10 @@ from typing import Any, Callable, Optional, Type, Union
 
 from typing_extensions import Self
 
-from spsdk.exceptions import SPSDKParsingError, SPSDKValueError
-from spsdk.image.cert_block.cert_blocks import CertBlockV1, CertBlockV21, CertBlockVx
+from spsdk.exceptions import SPSDKError, SPSDKParsingError, SPSDKValueError
+from spsdk.image.cert_block.cert_block_v1 import CertBlockV1
+from spsdk.image.cert_block.cert_block_v21 import CertBlockV21
+from spsdk.image.cert_block.cert_block_vx import CertBlockVx
 from spsdk.image.exceptions import SPSDKUnsupportedImageType
 from spsdk.image.mbi import mbi_mixin
 from spsdk.image.mbi.mbi_data import MAP_AUTHENTICATIONS, MAP_IMAGE_TARGETS, MbiImageTypeEnum
@@ -31,7 +33,8 @@ from spsdk.utils.binary_image import BinaryImage
 from spsdk.utils.config import Config
 from spsdk.utils.database import DatabaseManager, get_schema_file
 from spsdk.utils.family import FamilyRevision, get_db, update_validation_schema_family
-from spsdk.utils.misc import get_key_by_val, write_file
+from spsdk.utils.misc import align, get_key_by_val, write_file
+from spsdk.utils.verifier import Verifier, VerifierResult
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +85,7 @@ class MasterBootImage(FeatureBaseClass):
     IMAGE_TYPE = MbiImageTypeEnum.PLAIN_IMAGE
     IMAGE_TARGET = "load_to_ram"
     IMAGE_AUTHENTICATIONS = "plain"
+    IMAGE_ALIGNMENT: int
 
     app: Optional[bytes]
     app_table: Optional[mbi_mixin.MultipleImageTable]
@@ -124,8 +128,9 @@ class MasterBootImage(FeatureBaseClass):
         for target in images.keys():
             for authentication in images[target]:
                 cls_name = images[target][authentication]
+                template_key = f"{family.name}_{target}_{authentication}"
 
-                ret[f"{family.name}_{target}_{authentication}"] = (
+                ret[template_key] = (
                     cls.create_mbi_class(cls_name, family),
                     MAP_IMAGE_TARGETS["targets"][target][0],
                     MAP_AUTHENTICATIONS[authentication][0],
@@ -147,15 +152,15 @@ class MasterBootImage(FeatureBaseClass):
                                            is not supported for the specified family.
         :return: MBI Class type for the specified configuration.
         """
-        # Validate needed configuration to recognize MBI class
+        family = FamilyRevision.load_from_config(config)
+        db = get_db(family)
+
         image_type = config.get("outputImageExecutionTarget", "Non-specified image type")
         if image_type not in cls.IMAGE_TYPES:
             raise SPSDKUnsupportedImageType(
                 f"Unsupported image type: {image_type}, cannot get MBI class."
             )
 
-        family = FamilyRevision.load_from_config(config)
-        db = get_db(family)
         try:
             target = get_key_by_val(
                 config["outputImageExecutionTarget"], MAP_IMAGE_TARGETS["targets"]
@@ -252,7 +257,7 @@ class MasterBootImage(FeatureBaseClass):
             None,
         )
         if not auth:
-            raise ValueError(f"Name {name} does not contain any known authentication type.")
+            raise SPSDKValueError(f"Name {name} does not contain any known authentication type.")
         target = next(
             (
                 MAP_IMAGE_TARGETS["targets"][target_identifier][0]
@@ -266,7 +271,7 @@ class MasterBootImage(FeatureBaseClass):
             None,
         )
         if not target:
-            raise ValueError(f"Name {name} does not contain any known target type.")
+            raise SPSDKValueError(f"Name {name} does not contain any known target type.")
         return auth, target
 
     @classmethod
@@ -341,6 +346,7 @@ class MasterBootImage(FeatureBaseClass):
         # Check if all needed class instance members are available (validation of class due to mixin problems)
         self.family = family
         self.dek: Optional[str] = None
+        self.parsed_elements: dict[str, Any] = {}
         for k_arg, v_arg in kwargs.items():
             setattr(self, k_arg, v_arg)
 
@@ -364,7 +370,7 @@ class MasterBootImage(FeatureBaseClass):
             mixin_len = base.mix_len(self)  # type: ignore
             ret += mixin_len
             logger.debug(f"Mixin {base.__name__} length: {mixin_len}, total: {ret}")
-        return ret
+        return align(ret, self.IMAGE_ALIGNMENT)
 
     @property
     def total_length_for_cert_block(self) -> int:
@@ -455,25 +461,23 @@ class MasterBootImage(FeatureBaseClass):
             name="MBI Image",
             description=f"MBI Image: {self.IMAGE_TYPE.description} for {self.family}",
         )
-        # 1: Validate the input data
-        self.validate()
-        # 2: Collect all input data into raw image
+        # 1: Collect all input data into raw image
         raw_image = self.collect_data()
         if DEBUG_TRACE_ENABLE:
             write_file(raw_image.export(), "export_1_collect.bin", mode="wb")
-        # 3: Optionally encrypt the image
+        # 2: Optionally encrypt the image
         encrypted_image = self.encrypt(raw_image, False)
         if DEBUG_TRACE_ENABLE:
             write_file(encrypted_image.export(), "export_2_encrypt.bin", mode="wb")
-        # 4: Optionally do some post encrypt image updates
+        # 3: Optionally do some post encrypt image updates
         encrypted_image = self.post_encrypt(encrypted_image, False)
         if DEBUG_TRACE_ENABLE:
             write_file(encrypted_image.export(), "export_3_post_encrypt.bin", mode="wb")
-        # 5: Optionally sign image
+        # 4: Optionally sign image
         signed_image = self.sign(encrypted_image, False)
         if DEBUG_TRACE_ENABLE:
             write_file(signed_image.export(), "export_4_signed.bin", mode="wb")
-        # 6: Finalize image
+        # 5: Finalize image
         final_image = self.finalize(signed_image, False)
         if DEBUG_TRACE_ENABLE:
             write_file(final_image.export(), "export_5_finalized.bin", mode="wb")
@@ -528,6 +532,7 @@ class MasterBootImage(FeatureBaseClass):
         if mbi_cls_type is None:
             raise SPSDKParsingError("Unsupported MBI type detected.")
         mbi_cls = mbi_cls_type(family=family)
+        mbi_cls.parsed_elements["original_data"] = data
         mbi_cls.dek = dek
 
         # 2: Parse individual mixins what is possible
@@ -593,7 +598,7 @@ class MasterBootImage(FeatureBaseClass):
 
         cfg_values["family"] = self.family.name
         cfg_values["revision"] = self.family.revision
-        cfg_values["masterBootOutputFile"] = f"mbi_{self.family.name}_{target}_{authentication}.bin"
+        cfg_values["masterBootOutputFile"] = f"mbi_{self.family.name}_{authentication}.bin"
         cfg_values["outputImageExecutionTarget"] = target
         cfg_values["outputImageAuthenticationType"] = authentication
 
@@ -630,6 +635,7 @@ class MasterBootImage(FeatureBaseClass):
             schema_family["properties"], cls.get_supported_families(), family
         )
         schemas.append(schema_family)
+
         schema_image_type = schema_cfg["image_type"]
         schema_image_type["properties"]["outputImageExecutionTarget"][
             "template_value"
@@ -638,9 +644,11 @@ class MasterBootImage(FeatureBaseClass):
             "template_value"
         ] = cls.IMAGE_AUTHENTICATIONS
         images: dict[str, dict[str, str]] = get_db(family).get_dict(DatabaseManager.MBI, "images")
+
         schema_image_type["properties"]["outputImageExecutionTarget"]["enum_template"] = [
             MAP_IMAGE_TARGETS["targets"][target][0] for target in images.keys()
         ]
+
         authentication_types = []
         for target in images.keys():
             for authentication in images[target]:
@@ -649,6 +657,7 @@ class MasterBootImage(FeatureBaseClass):
             set(authentication_types)
         )
         schemas.append(schema_image_type)
+
         schemas.append(schema_cfg["output_file"])
         for base in cls._get_mixins():
             schemas.extend(base.mix_get_validation_schemas(family))
@@ -663,8 +672,22 @@ class MasterBootImage(FeatureBaseClass):
 
         :raises SPSDKError: If any mixin validation fails or image settings are invalid.
         """
+        verifier = self.verify()
+        if verifier.has_errors:
+            raise SPSDKError(verifier.draw(results=[VerifierResult.ERROR], colorize=False))
+
+    def verify(self) -> Verifier:
+        """Verify the image.
+
+        Collects verification data from all mixins and returns a Verifier object
+        that can be used to verify the image integrity and authenticity.
+
+        :return: Verifier object containing verification data from all mixins.
+        """
+        verifier = Verifier(name=f"MBI-{self.family.name}-{self.IMAGE_TYPE}-{self.IMAGE_TARGET}")
         for base in self._get_mixins():
-            base.mix_validate(self)  # type: ignore
+            verifier.add_child(base.mix_verify(self))  # type: ignore
+        return verifier
 
     def __repr__(self) -> str:
         """Return string representation of MBI object.

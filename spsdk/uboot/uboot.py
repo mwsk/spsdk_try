@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2023-2025 NXP
+# Copyright 2023-2026 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
+
 """SPSDK U-Boot communication interface implementation.
 
 This module provides communication interfaces for interacting with U-Boot bootloader
 through different protocols including serial and fastboot connections.
 """
 
-import logging
 import os
 from tempfile import NamedTemporaryFile
 from types import TracebackType
@@ -19,12 +19,13 @@ from typing import Optional, Type
 from hexdump import restore
 from serial import Serial, SerialException
 
+from spsdk import get_logger
 from spsdk.crypto.crc import CrcAlg, from_crc_algorithm
 from spsdk.exceptions import SPSDKConnectionError, SPSDKError, SPSDKIndexError
 from spsdk.uboot.spsdk_uuu import SPSDKUUU
 from spsdk.utils.misc import align, change_endianness, split_data
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class UbootSerial:
@@ -63,7 +64,9 @@ class UbootSerial:
         Establishes serial communication with U-Boot bootloader, optionally interrupting
         the autoboot sequence to gain control of the boot process.
 
-        :param port: Serial port identifier (e.g., 'COM1' on Windows, '/dev/ttyUSB0' on Linux).
+        :param port: Serial port identifier, optionally with baudrate in 'port,baudrate'
+            format (e.g. '/dev/ttyUSB0,115200'). When the baudrate is embedded in the port
+            string it takes precedence over the ``baudrate`` parameter.
         :param timeout: Communication timeout in seconds, defaults to 1.
         :param baudrate: Serial communication baud rate, defaults to 115200.
         :param crc: Enable CRC calculation for data integrity, defaults to True.
@@ -71,6 +74,9 @@ class UbootSerial:
         :param interrupt_autoboot: Enable automatic interruption of U-Boot autoboot sequence,
             defaults to True.
         """
+        if "," in port:
+            port, baudrate_str = port.split(",", 1)
+            baudrate = int(baudrate_str, 0)
         self.port = port
         self.baudrate = baudrate
         self.timeout = timeout
@@ -78,6 +84,26 @@ class UbootSerial:
         self.retries = retries
         self.open(interrupt_autoboot)
         self.crc = crc
+
+    @classmethod
+    def set_prompt(cls, prompt: str) -> None:
+        """Set the U-Boot prompt at class level.
+
+        Allows customization of the U-Boot command prompt.
+
+        :param prompt: The prompt string to set (e.g., "=> ").
+        :raises SPSDKError: If prompt is not a string or cannot be encoded.
+        """
+        if not isinstance(prompt, str):
+            raise SPSDKError(f"U-Boot prompt must be a string, got {type(prompt)}")
+        if not prompt:
+            logger.warning("Trying to set empty U-Boot prompt")
+            return
+        logger.debug(f"Overriding U-Boot prompt to {prompt}")
+        try:
+            cls.PROMPT = prompt.encode(UbootSerial.ENCODING)
+        except UnicodeEncodeError as e:
+            raise SPSDKError(f"Failed to encode prompt: {e}") from e
 
     def calc_crc(self, data: bytes, address: int, count: int) -> None:
         """Calculate CRC from the data.
@@ -233,7 +259,7 @@ class UbootSerial:
         """
         output = self._device.read(length)
         decoded_output = output.decode(encoding=self.ENCODING)
-        logger.debug(f"Uboot READ <- {decoded_output}")
+        logger.trace(f"Uboot READ <- {decoded_output}")
         return decoded_output
 
     def read_output(self) -> str:
@@ -256,7 +282,7 @@ class UbootSerial:
         :param data: ASCII decoded data to write to the CLI interface.
         :param no_exit: Flag to indicate whether to expect exit code or not.
         """
-        logger.debug(f"Uboot WRITE -> {data}")
+        logger.trace(f"Uboot WRITE -> {data}")
         if self.LINE_FEED not in data:
             data += self.LINE_FEED
         data_bytes = bytes(data, encoding=self.ENCODING)
@@ -277,7 +303,7 @@ class UbootSerial:
         md_command = f"md.b {hex(address)} {hex(count)}"
         self.write(md_command)
         hexdump_str = self.LINE_FEED.join(self.read_output().splitlines()[1:-1])
-        logger.debug(f"read_memory:\n{md_command}\n{hexdump_str}")
+        logger.trace(f"read_memory:\n{md_command}\n{hexdump_str}")
         data = restore(hexdump_str)
         self.calc_crc(data, address, count)
 
@@ -296,7 +322,7 @@ class UbootSerial:
         start_address = address
         for splitted_data in split_data(data, self.DATA_BYTES_SPLIT):
             mw_command = f"mw.l {hex(address)} {change_endianness(splitted_data).hex()}"
-            logger.debug(f"write_memory: {mw_command}")
+            logger.trace(f"write_memory: {mw_command}")
             self.write(mw_command)
             address += len(splitted_data)
             self.read_output()
@@ -383,6 +409,10 @@ class UbootFastboot:
         communication until reopened.
         """
         self.is_opened = False
+
+    def __del__(self) -> None:
+        """Destructor to ensure Fastboot is disable to possibly use serial console again."""
+        self.uuu.disable_fastboot_output()
 
     def __enter__(self) -> "UbootFastboot":
         """Enter the runtime context for UbootFastboot.
@@ -473,7 +503,7 @@ class UbootFastboot:
             line for line in output.splitlines() if len(line) == self.HEXDUMP_LINE_LENGTH
         ]
         hexdump_str = self.LINE_FEED.join(filtered_lines)
-        logger.debug(f"read_memory:\n{md_command!r}\n{hexdump_str}")
+        logger.trace(f"read_memory:\n{md_command!r}\n{hexdump_str}")
         data = restore(hexdump_str)
         if self.crc:
             self.calc_crc(data, address, count)

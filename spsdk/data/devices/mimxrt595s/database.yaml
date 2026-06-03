@@ -1,4 +1,4 @@
-# Copyright 2023-2025 NXP
+# Copyright 2023-2026 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -55,6 +55,14 @@ features:
 
   # ======== Fuses description section ========
   fuses:
+    inverted_regs:
+      fuse95: fuse104 # DCFG_CC_SOCU -> DCFG_CC_SOCU_AP
+    computed_fields:
+      fuse95: # DCFG_CC_SOCU
+        fuse95-bit-31: comalg_dcfg_cc_socu_test_en # DEV_TEST_EN
+        fuse95-bits-0-7: comalg_dcfg_cc_socu_crc8 # CRC8
+      fuse100: # DCFG_CC_SOCU_NS
+        fuse100-bits-0-7: comalg_dcfg_cc_socu_crc8 # CRC8
     grouped_registers:
       - uid: otfad_kek_seed
         name: OTFAD_KEK_SEED
@@ -242,6 +250,7 @@ features:
           keystore: 0x0800
           mbi: 0x1000
         remap_align: 0x40000 # 256 KB
+        image_pattern: ones
       sd:
         segments:
           mbi: 0x1000
@@ -273,15 +282,7 @@ features:
       ]
 
   # ======== Shadow registers section ========
-  shadow_regs:
-    inverted_regs:
-      fuse95: fuse104 # DCFG_CC_SOCU -> DCFG_CC_SOCU_AP
-    computed_fields:
-      fuse95: # DCFG_CC_SOCU
-        fuse95-bit-31: comalg_dcfg_cc_socu_test_en # DEV_TEST_EN
-        fuse95-bits-0-7: comalg_dcfg_cc_socu_crc8 # CRC8
-      fuse100: # DCFG_CC_SOCU_NS
-        fuse100-bits-0-7: comalg_dcfg_cc_socu_crc8 # CRC8
+  shadow_regs: {}
 
   # ======== Trust Zone section ========
   tz:

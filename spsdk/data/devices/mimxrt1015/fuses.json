@@ -362,33 +362,25 @@
           "id": "fuse1",
           "name": "LOT_NO_ENC1",
           "description": "NXP-wide unique, encoded LOT ID STD II/SJC CHALLENGE/ Unique ID",
+          "offset_int": "0x0410",
           "deprecated_names": [
             "LOT_NO_ENC[42:11]"
           ],
-          "offset_int": "0x0410",
           "index_int": "0x0001",
           "lock": {
             "register_id": "fuse0",
             "write_lock_int": "0x0001",
             "operation_lock_int": "0x0002"
-          },
-          "bitfields": [
-            {
-              "width": 32,
-              "id": "fuse1-bits-0-31",
-              "name": "LOT_NO_ENC[42:11]",
-              "description": "NXP-wide unique, encoded LOT ID STD II/SJC CHALLENGE/ Unique ID"
-            }
-          ]
+          }
         },
         {
           "id": "fuse2",
           "name": "LOT_NO_ENC0_WAFER_COORD",
           "description": "NXP-wide unique, encoded LOT ID STD II/SJC CHALLENGE/ Unique ID",
+          "offset_int": "0x0420",
           "deprecated_names": [
             "LOT_NO_ENC[10:0]"
           ],
-          "offset_int": "0x0420",
           "index_int": "0x0002",
           "lock": {
             "register_id": "fuse0",
@@ -425,11 +417,11 @@
         {
           "id": "fuse3",
           "name": "SI_REV",
-          "description": "Fuse SI_REV",
+          "description": "Fuse SI_REV[3:0]",
+          "offset_int": "0x0430",
           "deprecated_names": [
             "SI_REV[3:0]"
           ],
-          "offset_int": "0x0430",
           "index_int": "0x0003",
           "lock": {
             "register_id": "fuse0",
@@ -802,10 +794,10 @@
               "width": 1,
               "id": "fuse6-bit-1",
               "name": "SEC_CONFIG1",
-              "description": "Security Configuration",
               "deprecated_names": [
                 "SEC_CONFIG[1]"
               ],
+              "description": "Security Configuration (with SEC_CONFIG[0])",
               "values": [
                 {
                   "name": "Open",
@@ -886,10 +878,10 @@
               "width": 4,
               "id": "fuse6-bits-8-11",
               "name": "SDRAM_CONFIG",
-              "description": "TBD  (SDRAM config options)",
               "deprecated_names": [
                 "SDRAM_CONFIG[7:0]"
-              ]
+              ],
+              "description": "TBD (SDRAM config options)"
             },
             {
               "width": 2,
@@ -941,7 +933,7 @@
               "width": 1,
               "id": "fuse6-bit-16",
               "name": "FORCE_INTERNAL_BOOT",
-              "description": "Once been blown, the external BT_MODE[1:0] pins will be ignored, BootROM will take Boot Mode as “internal boot”.",
+              "description": "Once been blown, the external BT_MODE[1:0] pins will be ignored, BootROM will take Boot Mode as \"internal boot\".",
               "values": [
                 {
                   "name": "0",
@@ -1126,7 +1118,7 @@
               "width": 1,
               "id": "fuse6-bit-27",
               "name": "JTAG_HEO",
-              "description": "JTAG HAB Enable Override. Disallows HAB JTAG enabling. The HAB may normally enable JTAG debugging by means of the HAB_JDE-bit in the OCOTP  SCS register. The JTAG_HEO-bit can override this behavior",
+              "description": "JTAG HAB Enable Override. Disallows HAB JTAG enabling. The HAB may normally enable JTAG debugging by means of the HAB_JDE-bit in the OCOTP SCS register. The JTAG_HEO-bit can override this behavior",
               "values": [
                 {
                   "name": "0",
@@ -1261,7 +1253,7 @@
               "width": 1,
               "id": "fuse7-bit-3",
               "name": "Disable SDMMC Manufacture mode",
-              "description": "The fuse bit is used to disable ROM feature “SD/MMC Manufacturing Mode”.",
+              "description": "The fuse bit is used to disable ROM feature \"SD/MMC Manufacturing Mode\".",
               "values": [
                 {
                   "name": "Enable",
@@ -1369,7 +1361,7 @@
               "width": 1,
               "id": "fuse7-bit-9",
               "name": "USDHC_IOMUX_SION_BIT_ENABLE",
-              "description": "The fuse bit is used for ROM to enable SION bit  for MUX control register.",
+              "description": "The fuse bit is used for ROM to enable SION bit for MUX control register.",
               "values": [
                 {
                   "name": "Disable",
@@ -1411,7 +1403,7 @@
               "width": 1,
               "id": "fuse7-bit-12",
               "name": "USDHC_PAD_PULL_DOWN",
-              "description": "The fuse bit is used for ROM to enable pull down bit for SD pads. ",
+              "description": "The fuse bit is used for ROM to enable pull down bit for SD pads.",
               "values": [
                 {
                   "name": "no action",
@@ -1429,7 +1421,7 @@
               "width": 1,
               "id": "fuse7-bit-13",
               "name": "Override HYS bit for SD-MMC pads",
-              "description": "Once this fuse be blown, the [HYS] bit of  IOMUXC_SW_PAD_CTL_PAD_SDx_CLK(x is the SD port which the ROM boot from), IOMUXC_SW_PAD_CTL_PAD_SDx_CMD, IOMUXC_SW_PAD_CTL_PAD_SDx_DAT0-n(n will be 0, 3, or 7, depends on the bus width selected) will be set.   ",
+              "description": "Once this fuse be blown, the [HYS] bit of IOMUXC_SW_PAD_CTL_PAD_SDx_CLK(x is the SD port which the ROM boot from), IOMUXC_SW_PAD_CTL_PAD_SDx_CMD, IOMUXC_SW_PAD_CTL_PAD_SDx_DAT0-n(n will be 0, 3, or 7, depends on the bus width selected) will be set.",
               "values": [
                 {
                   "name": "0",
@@ -1447,7 +1439,7 @@
               "width": 1,
               "id": "fuse7-bit-14",
               "name": "eMMC 4.4 - RESET TO PRE-IDLE STATE",
-              "description": "Once this fuse be blown, the CMD0 with argument 0xf0f0f0f0 will be sent to put the eMMC card into pre-IDLE state so that eMMC card’s fast boot can work properly.\nThis is useful for the warm boot, such as boot due to the WDOG reset.",
+              "description": "Once this fuse be blown, the CMD0 with argument 0xf0f0f0f0 will be sent to put the eMMC card into pre-IDLE state so that eMMC card's fast boot can work properly.\nThis is useful for the warm boot, such as boot due to the WDOG reset.",
               "values": [
                 {
                   "name": "0",
@@ -1740,19 +1732,19 @@
               "width": 16,
               "id": "fuse15-bits-0-15",
               "name": "USB_VID",
-              "description": "USB VID",
               "deprecated_names": [
                 "USB_VID[31:0]"
-              ]
+              ],
+              "description": "USB VID"
             },
             {
               "width": 16,
               "id": "fuse15-bits-16-31",
               "name": "USB_PID",
-              "description": "USB PID",
               "deprecated_names": [
                 "USB_PID[31:0]"
-              ]
+              ],
+              "description": "USB PID"
             }
           ]
         }
@@ -1944,34 +1936,26 @@
           "id": "fuse32",
           "name": "SJC_RESP0",
           "description": "Response reference value for the secure JTAG controller",
+          "offset_int": "0x0600",
           "deprecated_names": [
             "SJC_RESP[31:0]"
           ],
-          "offset_int": "0x0600",
           "index_int": "0x0020",
           "lock": {
             "register_id": "fuse0",
             "write_lock_int": "0x0040",
             "read_lock_int": "0x0040",
             "operation_lock_int": "0x0040"
-          },
-          "bitfields": [
-            {
-              "width": 32,
-              "id": "fuse32-bits-0-31",
-              "name": "SJC_RESP[31:0]",
-              "description": "Response reference value for the secure JTAG controller"
-            }
-          ]
+          }
         },
         {
           "id": "fuse33",
           "name": "SJC_RESP1",
           "description": "Response reference value for the secure JTAG controller",
+          "offset_int": "0x0610",
           "deprecated_names": [
             "SJC_RESP[55:32]"
           ],
-          "offset_int": "0x0610",
           "index_int": "0x0021",
           "lock": {
             "register_id": "fuse0",
@@ -2003,33 +1987,25 @@
           "id": "fuse34",
           "name": "MAC1_ADDR1",
           "description": "Ethernet MAC Address",
+          "offset_int": "0x0620",
           "deprecated_names": [
             "MAC1_ADDR[47:16]"
           ],
-          "offset_int": "0x0620",
           "index_int": "0x0022",
           "lock": {
             "register_id": "fuse0",
             "write_lock_int": "0x0100",
             "operation_lock_int": "0x0200"
-          },
-          "bitfields": [
-            {
-              "width": 32,
-              "id": "fuse34-bits-0-31",
-              "name": "MAC1_ADDR[47:16]",
-              "description": "Ethernet MAC Address"
-            }
-          ]
+          }
         },
         {
           "id": "fuse35",
           "name": "MAC1_ADDR0",
           "description": "Ethernet MAC Address",
+          "offset_int": "0x0630",
           "deprecated_names": [
             "MAC1_ADDR[15:0]"
           ],
-          "offset_int": "0x0630",
           "index_int": "0x0023",
           "lock": {
             "register_id": "fuse0",
@@ -2243,7 +2219,7 @@
               "width": 4,
               "id": "fuse45-bits-8-11",
               "name": "READ_RETRY_SEQ_ID",
-              "description": "Choose Read Retry Sequence ",
+              "description": "Choose Read Retry Sequence",
               "values": [
                 {
                   "name": "0000",
@@ -2450,25 +2426,25 @@
               "width": 8,
               "id": "fuse46-bits-0-7",
               "name": "BOOT_CONFIG_MISC0",
-              "description": "boot configuration misc "
+              "description": "boot configuration misc"
             },
             {
               "width": 8,
               "id": "fuse46-bits-8-15",
               "name": "BOOT_CONFIG_MISC1",
-              "description": "boot configuration misc "
+              "description": "boot configuration misc"
             },
             {
               "width": 8,
               "id": "fuse46-bits-16-23",
               "name": "BOOT_CONFIG_MISC2",
-              "description": "boot configuration misc "
+              "description": "boot configuration misc"
             },
             {
               "width": 8,
               "id": "fuse46-bits-24-31",
               "name": "BOOT_CONFIG_MISC3",
-              "description": "boot configuration misc "
+              "description": "boot configuration misc"
             }
           ]
         },

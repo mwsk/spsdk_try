@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2019-2025 NXP
+# Copyright 2019-2026 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
+
 """SPSDK SB3.1 secure boot file command implementations.
 
 This module provides command classes and utilities for creating and managing
@@ -21,9 +22,10 @@ from typing import Mapping, Type, Union
 from typing_extensions import Self
 
 from spsdk.crypto.crc import CrcAlg, from_crc_algorithm
-from spsdk.exceptions import SPSDKError, SPSDKValueError
+from spsdk.exceptions import SPSDKError, SPSDKKeyError, SPSDKValueError
 from spsdk.sbfile.sb31.constants import EnumCmdTag
 from spsdk.utils.abstract import BaseClass
+from spsdk.utils.binary_image import BinaryImage
 from spsdk.utils.config import Config
 from spsdk.utils.family import FamilyRevision, get_db
 from spsdk.utils.misc import (
@@ -271,6 +273,7 @@ class CmdLoadBase(BaseCmd):
         self.compressed = False
         self.crc = 0
         self.check_size = 0
+        self.original_data = data  # Store original data for backward compatibility
 
         if compress:
             compressed_data = self._compress_data(data=data)
@@ -278,9 +281,12 @@ class CmdLoadBase(BaseCmd):
             if len(compressed_data) + 16 < len(data):
                 self.compressed = True
                 self.crc = self._calc_crc(data=data)
-                self.check_size = len(data)
+                self.check_size = len(data)  # Original uncompressed size
                 self.compressed_data = compressed_data
+                # Use compressed data as the actual data to export
+                data = compressed_data
 
+        # Initialize with the actual data size (compressed if compression was used)
         super().__init__(address=address, length=len(data))
         self.memory_id = memory_id
         self.data = data
@@ -378,7 +384,11 @@ class CmdLoadBase(BaseCmd):
         """
         msg = f"{self.CMD_TAG.label}: "
         if self.HAS_MEMORY_ID_BLOCK:
-            msg += f"Address=0x{self.address:08X}, Length={self.length}, Memory ID={self.memory_id}"
+            # Show original size for clarity when compressed
+            size_info = f"Length={self.length}"
+            if self.compressed:
+                size_info += f" (compressed from {self.check_size})"
+            msg += f"Address=0x{self.address:08X}, {size_info}, Memory ID={self.memory_id}"
         else:
             msg += f"Address=0x{self.address:08X}, Length={self.length}"
         return msg
@@ -393,10 +403,10 @@ class CmdLoadBase(BaseCmd):
 
         :param data: Command data bytes to be parsed.
         :return: Tuple containing (address, length, data, cmd_tag, memory_id, is_compressed, crc,
-                 check_size) where address is target address, length is data length, data is the
-                 payload (decompressed if needed), cmd_tag is command tag, memory_id is memory
-                 identifier, is_compressed indicates if data was compressed, crc is checksum
-                 value, and check_size is expected decompressed size.
+                 check_size) where address is target address, length is data length (compressed size
+                 if compressed, original size otherwise), data is the payload (decompressed if needed),
+                 cmd_tag is command tag, memory_id is memory identifier, is_compressed indicates if
+                 data was compressed, crc is checksum value, and check_size is expected decompressed size.
         :raises SPSDKError: If TAG is invalid, padding is incorrect, CRC verification fails,
                            size verification fails, or LZMA decompression fails.
         """
@@ -440,6 +450,7 @@ class CmdLoadBase(BaseCmd):
                     )
 
                 # Replace compressed data with decompressed data
+                # Note: length still contains compressed size for backward compatibility
                 load_data = decompressed_data
             except lzma.LZMAError as exc:
                 raise SPSDKError(f"Failed to decompress LZMA data: {str(exc)}") from exc
@@ -457,12 +468,24 @@ class CmdLoadBase(BaseCmd):
         :return: Command instance
         :raises SPSDKError: Invalid cmd_tag was found
         """
-        address, _, data, cmd_tag, memory_id, is_compressed, _, _ = cls._extract_data(data)
+        address, _, parsed_data, cmd_tag, memory_id, is_compressed, crc, check_size = (
+            cls._extract_data(data)
+        )
         cmd_tag_enum = EnumCmdTag.from_tag(cmd_tag)
         if cmd_tag_enum != cls.CMD_TAG:
             raise SPSDKError(f"Invalid cmd_tag found: {cmd_tag_enum}")
 
-        return cls(address=address, data=data, memory_id=memory_id, compress=is_compressed)
+        # Create instance with decompressed data, don't re-compress
+        instance = cls(address=address, data=parsed_data, memory_id=memory_id, compress=False)
+
+        # Restore compression metadata if it was compressed
+        if is_compressed:
+            instance.compressed = True
+            instance.crc = crc
+            instance.check_size = check_size
+            instance.original_data = parsed_data  # The decompressed data is the original
+
+        return instance
 
     # pylint: disable=redundant-returns-doc
     @classmethod
@@ -615,7 +638,9 @@ def load_cmd_data_from_cfg(config: Config) -> bytes:
 
     # Try to load from file
     try:
-        return load_binary(find_file(data, search_paths=config.search_paths))
+        return BinaryImage.load_binary_image(
+            path=find_file(data, search_paths=config.search_paths)
+        ).export()
     except SPSDKError as exc:
         raise SPSDKError(f"Cannot load the data for LOAD SBx.x command from {data}") from exc
 
@@ -1495,11 +1520,21 @@ class CmdLoadKeyBlob(BaseCmd):
             family information, plainInput format, and input file path.
         :return: List containing single command object loaded from configuration.
         :raises SPSDKValueError: When plainInput field is not a string type.
+        :raises SPSDKKeyError: When wrappingKeyId is invalid.
         """
         offset = config.get_int("offset", 0)
         key_wrap_name = config["wrappingKeyId"]
         family = FamilyRevision.load_from_config(config)
-        key_wrap_id = cls.get_key_id(family, cls.KeyTypes[key_wrap_name])
+        # Validate wrappingKeyId before using it
+        try:
+            key_type = cls.KeyTypes[key_wrap_name]
+        except KeyError as exc:
+            valid_keys = ", ".join([kt.name for kt in cls.KeyTypes])
+            raise SPSDKKeyError(
+                f"Invalid wrappingKeyId '{key_wrap_name}'. " f"Valid values are: {valid_keys}"
+            ) from exc
+
+        key_wrap_id = cls.get_key_id(family, key_type)
 
         plain_input = config.get("plainInput", "bin")
         # handle special case, when the user supplies plainInput as boolean

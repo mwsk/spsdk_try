@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright 2024-2025 NXP
+# Copyright 2024-2026 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -31,7 +31,6 @@ from spsdk.mboot.mcuboot import McuBoot, StatusCode, stringify_status_code
 from spsdk.mboot.properties import PropertyTag
 from spsdk.mboot.protocol.base import MbootProtocolBase
 from spsdk.uboot.uboot import UbootFastboot, UbootSerial
-from spsdk.utils.config import Config
 from spsdk.utils.database import DatabaseManager
 from spsdk.utils.family import FamilyRevision, get_db, get_families
 from spsdk.utils.misc import write_file
@@ -174,6 +173,7 @@ class EL2GOInterfaceHandler:
         fb_size: Optional[int] = None,
         usb_path: Optional[str] = None,
         usb_serial: Optional[str] = None,
+        uboot_prompt: Optional[str] = None,
     ) -> "EL2GOInterfaceHandler":
         """Get EL2GO interface handler based on the configuration.
 
@@ -188,12 +188,12 @@ class EL2GOInterfaceHandler:
         :param fb_size: Custom size for Fastboot buffer, overrides database default.
         :param usb_path: USB device path filter for device identification.
         :param usb_serial: USB serial number filter for device identification.
+        :param uboot_prompt: Custom U-Boot prompt string for serial communication.
         :raises SPSDKError: If family or port is not provided when required by interface type.
         :raises SPSDKError: If unable to determine the default interface type.
         :return: Configured EL2GO interface handler instance for the specified interface type.
         """
         port = interface_params.get_scan_args().get("port")
-        timeout = interface_params.get_scan_args().get("timeout", 1)
 
         default_interface = None
         if not interface and not family:
@@ -210,15 +210,22 @@ class EL2GOInterfaceHandler:
         if default_interface is None:
             raise SPSDKError("Unable to determine default interface")
 
+        if isinstance(uboot_prompt, str):
+            UbootSerial.set_prompt(uboot_prompt)
+
         if default_interface == El2GoInterface.UBOOT_FASTBOOT:
             if not isinstance(family, FamilyRevision):
                 raise SPSDKError("Family must be provided for U-Boot Fastboot connection")
             db = get_db(family=family)
             fb_buff_addr = fb_addr or db.get_int(DatabaseManager.FASTBOOT, "address")
             fb_buff_size = fb_size or db.get_int(DatabaseManager.FASTBOOT, "size")
+            # Use UbootFastboot default (5000 ms) when timeout is not explicitly specified.
+            # A raw get("timeout", 1) default would produce 0-second UUU wait after integer
+            # division, preventing fastboot from being detected after SDPS boot.
+            fb_timeout = interface_params.get_scan_args().get("timeout", 5000)
 
             uboot_device = UbootFastboot(
-                timeout=timeout,
+                timeout=fb_timeout,
                 buffer_address=fb_buff_addr,
                 buffer_size=fb_buff_size,
                 serial_port=port,
@@ -232,7 +239,8 @@ class EL2GOInterfaceHandler:
                 raise SPSDKError("Family must be provided for U-Boot Serial connection")
             if not port:
                 raise SPSDKError("Port must be specified")
-            uboot_serial = UbootSerial(port, timeout)
+            serial_timeout = interface_params.get_scan_args().get("timeout", 1)
+            uboot_serial = UbootSerial(port, serial_timeout)
             return El2GoInterfaceHandlerUboot(uboot_serial, family)
 
         interface_cls = MbootProtocolBase.get_interface_class(interface_params.IDENTIFIER)
@@ -565,7 +573,7 @@ class El2GoInterfaceHandlerMboot(EL2GOInterfaceHandler):
                 logger.error("Family and DB must be provided for CMPA cleanup method")
                 return
             cmpa = CMPA(family=client.family)
-            cmpa.set_config(Config())
+            cmpa.force_update()
             cmpa_data = cmpa.export(draw=False)
             cmpa_address = client.db.get_int(DatabaseManager.PFR, ["cmpa", "address"])
 

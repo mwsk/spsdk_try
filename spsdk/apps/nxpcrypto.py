@@ -35,8 +35,10 @@ from spsdk.apps.utils.common_cli_options import (
 from spsdk.apps.utils.utils import INT, SPSDKAppError, catch_spsdk_error
 from spsdk.crypto.certificate import Certificate, generate_extensions, generate_name
 from spsdk.crypto.crypto_types import SPSDKEncoding
+from spsdk.crypto.dilithium import IS_DILITHIUM_SUPPORTED
 from spsdk.crypto.hash import EnumHashAlgorithm
 from spsdk.crypto.keys import (
+    IS_LMS_SUPPORTED,
     PrivateKey,
     PrivateKeyEcc,
     PrivateKeyRsa,
@@ -69,6 +71,10 @@ from spsdk.utils.misc import (
     load_text,
     write_file,
 )
+
+if IS_LMS_SUPPORTED:
+    # pylint: disable=import-error
+    from spsdk.crypto.keys import LMSParams
 
 logger = logging.getLogger(__name__)
 
@@ -248,7 +254,9 @@ def parse_rot(family: FamilyRevision, binary: str, output: str, encoding: str) -
     "-h",
     "--hash-algorithm",
     required=False,
-    type=click.Choice(list(EnumHashAlgorithm.labels()), case_sensitive=False),
+    type=click.Choice(
+        [label for label in EnumHashAlgorithm.labels() if label != "none"], case_sensitive=False
+    ),
     help="Name of a hash algorithm to use.",
     callback=lambda ctx, param, value: (
         EnumHashAlgorithm.from_label(value.lower()) if value is not None else None
@@ -493,7 +501,31 @@ def key_group() -> None:
     type=click.Choice(list(SPSDKEncoding.all()), case_sensitive=False),
     default="PEM",
 )
-def key_generate(key_type: str, output: str, password: str, encoding: str) -> None:
+@optgroup.group("LMS key generation parameters")
+@optgroup.option(
+    "--lms-hash-size",
+    type=click.Choice(["32", "24"], case_sensitive=False),
+    help="Length of hash for LMS signature.",
+)
+@optgroup.option(
+    "--lms-tree-height",
+    type=click.Choice(["5", "10", "15", "20", "25"], case_sensitive=False),
+    help="Height of Leighton-Micali Signature (LMS) Merkle tree. Defines number of possible signatures (2^height).",
+)
+@optgroup.option(
+    "--lms-winternitz",
+    type=click.Choice(["1", "2", "4", "8"], case_sensitive=False),
+    help="Winternitz parameter for LMS key generation.",
+)
+def key_generate(
+    key_type: str,
+    output: str,
+    password: str,
+    encoding: str,
+    lms_hash_size: str,
+    lms_tree_height: str,
+    lms_winternitz: str,
+) -> None:
     """NXP Key Generator Tool."""
     key_param = key_type.lower().strip()
     encoding_param = encoding.upper().strip()
@@ -506,8 +538,18 @@ def key_generate(key_type: str, output: str, password: str, encoding: str) -> No
 
     generators = get_supported_keys_generators()
     func, params = generators[key_param]
-
-    private_key = func(**params)
+    if key_param == "lms":
+        if lms_hash_size is None or lms_tree_height is None or lms_winternitz is None:
+            raise SPSDKAppError("For LMS key generation, all LMS parameters must be specified")
+        # pylint: disable=possibly-used-before-assignment  # not really sure what's PyLint's concern here
+        lms_params = LMSParams(
+            hash_length=int(lms_hash_size),  # type: ignore[arg-type]
+            height=int(lms_tree_height),  # type: ignore[arg-type]
+            w=int(lms_winternitz),  # type: ignore[arg-type]
+        )
+        private_key = func(lms_params)
+    else:
+        private_key = func(**params)
     public_key = private_key.get_public_key()
 
     private_key.save(output, password if password else None, encoding=encoding_enum)
@@ -680,7 +722,9 @@ def cut_off_data_regions(data: bytes, regions: list[str]) -> bytes:
 @click.option(
     "-a",
     "--algorithm",
-    type=click.Choice(EnumHashAlgorithm.labels(), case_sensitive=False),
+    type=click.Choice(
+        [label for label in EnumHashAlgorithm.labels() if label != "none"], case_sensitive=False
+    ),
     help="Hash algorithm used when signing the message.",
 )
 @click.option(
@@ -769,7 +813,9 @@ def signature_create(
 @click.option(
     "-a",
     "--algorithm",
-    type=click.Choice(EnumHashAlgorithm.labels(), case_sensitive=False),
+    type=click.Choice(
+        [label for label in EnumHashAlgorithm.labels() if label != "none"], case_sensitive=False
+    ),
     help="Hash algorithm used when signing the message. If not set, default algorithm will be used.",
 )
 @click.option(
@@ -1038,6 +1084,126 @@ def ahab_tree_extend(
     """
     click.echo("Generating PKI Tree for AHAB")
     ahab_extend_tree_command(tree_path, password, encoding, keys_number, duration, serial)
+
+
+@pki_group.command(name="ahab-pqc", no_args_is_help=True)
+@click.option(
+    "-k",
+    "--key-type",
+    type=click.Choice(["dil3", "dil5", "mldsa65", "mldsa87"], case_sensitive=False),
+    required=True,
+    metavar="KEY-TYPE",
+    help="""\b
+        Post-quantum key types:
+        dil3, dil5, mldsa65, mldsa87.
+        """,
+)
+@click.option(
+    "-p",
+    "--password",
+    "password",
+    metavar="PASSWORD",
+    help="Password with which the keys will be encrypted. "
+    "If not provided, the keys will be unencrypted.",
+)
+@spsdk_output_option(force=True, directory=True)
+@click.option(
+    "-e",
+    "--encoding",
+    type=click.Choice(list(SPSDKEncoding.cryptography_encodings()), case_sensitive=False),
+    default="PEM",
+)
+@click.option(
+    "-n",
+    "--keys-number",
+    type=click.IntRange(1, 4),
+    default=4,
+    help="Number of keys that will be created (default 4)",
+)
+def ahab_pqc_tree_generate(
+    key_type: str,
+    output: str,
+    password: str,
+    encoding: str,
+    keys_number: int,
+) -> None:
+    """Generate post-quantum keys for AHAB (ML-DSA and Dilithium).
+
+    This command generates the specified number of post-quantum cryptographic key pairs
+    for use with AHAB. Supported algorithms include Dilithium (dil2, dil3, dil5) and
+    ML-DSA (mldsa44, mldsa65, mldsa87).
+
+    The generated keys are stored in the output directory with the following structure:
+    - keys/: Contains private keys
+    - keys/: Contains public keys (with .pub extension)
+
+    No certificates are generated for post-quantum keys.
+    """
+    click.echo("Generating Post-Quantum Keys for AHAB")
+    ahab_pqc_tree_generate_command(key_type, output, password, encoding, keys_number)
+
+
+def ahab_pqc_tree_generate_command(
+    key_type: str,
+    output: str,
+    password: str,
+    encoding: str,
+    keys_number: int,
+) -> None:
+    """Generate post-quantum keys for AHAB.
+
+    :param key_type: Post-quantum key type (dil2, dil3, dil5, mldsa44, mldsa65, mldsa87)
+    :param output: Output directory for generated keys
+    :param password: Password for key protection
+    :param encoding: Encoding format (PEM or DER)
+    :param keys_number: Number of key pairs to generate (1-4)
+    :raises SPSDKAppError: If Dilithium support is not available
+    """
+    if not IS_DILITHIUM_SUPPORTED:
+        raise SPSDKAppError(
+            "Post-quantum cryptography (Dilithium/ML-DSA) is not supported. "
+            "Please install the required dependencies: pip install spsdk[pqc]"
+        )
+
+    encoding_param = encoding.upper().strip()
+    encoding_enum = SPSDKEncoding.all()[encoding_param]
+
+    keys_path = os.path.join(output, "keys")
+    os.makedirs(keys_path, exist_ok=True)
+
+    # Get the key generator function and parameters
+    generators = get_supported_keys_generators()
+    if key_type.lower() not in generators:
+        raise SPSDKAppError(f"Unsupported key type: {key_type}")
+
+    generator_func, generator_params = generators[key_type.lower()]
+
+    # Generate the specified number of key pairs
+    for idx in range(keys_number):
+        click.echo(f"Generating key pair {idx}...")
+
+        # Generate private key
+        private_key = generator_func(**generator_params)
+
+        # Generate public key from private key
+        public_key = private_key.get_public_key()
+
+        # Construct file names
+        key_name = f"SRK{idx}_{key_type.lower()}_key"
+        pub_key_name = f"SRK{idx}_{key_type.lower()}_key.pub"
+
+        private_key_path = os.path.join(keys_path, f"{key_name}.{encoding.lower()}")
+        public_key_path = os.path.join(keys_path, f"{pub_key_name}.{encoding.lower()}")
+
+        # Save private key
+        private_key.save(private_key_path, password=password, encoding=encoding_enum)
+        click.echo(f"Private key saved: {private_key_path}")
+
+        # Save public key
+        public_key.save(public_key_path, encoding=encoding_enum)
+        click.echo(f"Public key saved: {public_key_path}")
+
+    click.echo(f"\nSuccessfully generated {keys_number} post-quantum key pair(s) in: {output}")
 
 
 @pki_group.command(name="hab", no_args_is_help=True)

@@ -1,4 +1,4 @@
-# Copyright 2023-2025 NXP
+# Copyright 2023-2026 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -167,6 +167,9 @@ features:
   # ======== AHAB section ========
   ahab:
     container_types: [1] # Supported container types
+    fuses_0:
+      _name: "AHAB SRKH"
+      srkh: "__srk_hash" # SRK hash fuse
     core_ids:
       CORTEX_M33: [1, "cortex-m33", "Cortex M33"]
       CORTEX_M7: [2, "cortex-m7", "Cortex M7"]
@@ -182,6 +185,18 @@ features:
 
     image_types_mapping:
       ele: [6]
+
+    signature_algorithms:
+      RSA: [0x21, "RSA", "RSA signature algorithm"]
+      RSA_PSS: [0x22, "RSA_PSS", "RSA PSS signature algorithm"]
+      ECDSA: [0x27, "ECDSA", "ECDSA signature algorithm"]
+      SM2: [0x28, "SM2", "SM2 signature algorithm"]
+
+    hash_algorithms:
+      SHA256: [0x00, "SHA256", "SHA-256 hash algorithm"]
+      SHA384: [0x01, "SHA384", "SHA-384 hash algorithm"]
+      SHA512: [0x02, "SHA512", "SHA-512 hash algorithm"]
+      SM3: [0x03, "SM3", "SM3 hash algorithm"]
 
     allow_empty_hash: True
 
@@ -267,6 +282,7 @@ features:
           fcb: 0x0400
           xmcd: 0x0800
           ahab_container: 0x1000
+        image_pattern: ones
       flexspi_nand:
         segments:
           xmcd: 0x00

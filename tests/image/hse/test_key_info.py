@@ -122,11 +122,11 @@ def test_key_info_specific_data_ecc(family: FamilyRevision) -> None:
         key_type=KeyType.ECC_PAIR,
         smr_flags=HseSmrFlags.SMR_0,
         key_bit_len=HseKeyBits.KEY256_BITS,
-        specific_data={"eccCurveId": HseEccCurveId.SEC_SECP256R1},
+        specific_data={"eccCurveId": HseEccCurveId.SECP256R1},
     )
 
     # Check specific data encoding
-    assert key_info.specific == bytes([HseEccCurveId.SEC_SECP256R1])
+    assert key_info.specific == bytes([HseEccCurveId.SECP256R1])
 
     # Export and parse
     exported_data = key_info.export()
@@ -134,7 +134,7 @@ def test_key_info_specific_data_ecc(family: FamilyRevision) -> None:
 
     # Verify specific data was preserved
     assert "eccCurveId" in imported_key_info.specific_data
-    assert imported_key_info.specific_data["eccCurveId"] == HseEccCurveId.SEC_SECP256R1
+    assert imported_key_info.specific_data["eccCurveId"] == HseEccCurveId.SECP256R1
 
 
 def test_key_info_specific_data_rsa(family: FamilyRevision) -> None:
@@ -184,10 +184,9 @@ def test_key_info_flags_methods(family: FamilyRevision) -> None:
     assert HseKeyFlags.ACCESS_WRITE_PROT not in access_flags
 
     # Test SMR flags
-    smr_flags = key_info.get_smr_flags()
-    assert HseSmrFlags.SMR_0 in smr_flags
-    assert HseSmrFlags.SMR_1 in smr_flags
-    assert HseSmrFlags.SMR_2 not in smr_flags
+    assert HseSmrFlags.SMR_0 in key_info.smr_flags
+    assert HseSmrFlags.SMR_1 in key_info.smr_flags
+    assert HseSmrFlags.SMR_2 not in key_info.smr_flags
 
 
 def test_key_info_string_representation(family: FamilyRevision) -> None:
@@ -340,9 +339,9 @@ def test_key_info_template(family: FamilyRevision, tmp_path: str) -> None:
     config.check(schemas)
 
 
-def test_key_handle_init() -> None:
+def test_key_handle_from_attributes() -> None:
     """Test initialization of KeyHandle."""
-    key_handle = KeyHandle(KeyCatalogId.RAM, 1, 2)
+    key_handle = KeyHandle.from_attributes(KeyCatalogId.RAM, 1, 2)
 
     assert key_handle.catalog_id == KeyCatalogId.RAM
     assert key_handle.group_idx == 1
@@ -352,7 +351,7 @@ def test_key_handle_init() -> None:
 
 def test_key_handle_from_handle() -> None:
     """Test creating KeyHandle from raw handle value."""
-    key_handle = KeyHandle.from_handle(0x00010203)  # NVM(1) << 16 | 2 << 8 | 3
+    key_handle = KeyHandle(0x00010203)  # NVM(1) << 16 | 2 << 8 | 3
 
     assert key_handle.catalog_id == KeyCatalogId.NVM
     assert key_handle.group_idx == 2
@@ -376,7 +375,7 @@ def test_key_handle_parse_invalid() -> None:
 
 def test_key_handle_export() -> None:
     """Test exporting KeyHandle to bytes."""
-    key_handle = KeyHandle(KeyCatalogId.NVM, 5, 6)
+    key_handle = KeyHandle.from_attributes(KeyCatalogId.NVM, 5, 6)
     exported = key_handle.export()
 
     assert exported == b"\x06\x05\x01\x00"  # Little-endian: 0x00010506
@@ -385,32 +384,32 @@ def test_key_handle_export() -> None:
 def test_key_handle_is_valid() -> None:
     """Test is_valid method of KeyHandle."""
     # Valid key handle
-    key_handle = KeyHandle(KeyCatalogId.RAM, 1, 2)
+    key_handle = KeyHandle.from_attributes(KeyCatalogId.RAM, 1, 2)
     assert key_handle.is_valid() is True
 
     # Invalid key handle (invalid group index)
-    key_handle = KeyHandle(KeyCatalogId.RAM, KeyHandle.INVALID_GROUP_IDX, 2)
+    key_handle = KeyHandle.from_attributes(KeyCatalogId.RAM, KeyHandle.INVALID_GROUP_IDX, 2)
     assert key_handle.is_valid() is False
 
     # Invalid key handle (invalid slot index)
-    key_handle = KeyHandle(KeyCatalogId.RAM, 1, KeyHandle.INVALID_SLOT_IDX)
+    key_handle = KeyHandle.from_attributes(KeyCatalogId.RAM, 1, KeyHandle.INVALID_SLOT_IDX)
     assert key_handle.is_valid() is False
 
 
 def test_key_handle_is_rom_key() -> None:
     """Test is_rom_key property of KeyHandle."""
     # ROM key
-    key_handle = KeyHandle(KeyCatalogId.ROM, 1, 2)
+    key_handle = KeyHandle.from_attributes(KeyCatalogId.ROM, 1, 2)
     assert key_handle.is_rom_key is True
 
     # Non-ROM key
-    key_handle = KeyHandle(KeyCatalogId.RAM, 1, 2)
+    key_handle = KeyHandle.from_attributes(KeyCatalogId.RAM, 1, 2)
     assert key_handle.is_rom_key is False
 
 
 def test_key_handle_string_representation() -> None:
     """Test string representation of KeyHandle."""
-    key_handle = KeyHandle(KeyCatalogId.NVM, 3, 4)
+    key_handle = KeyHandle.from_attributes(KeyCatalogId.NVM, 3, 4)
     str_repr = str(key_handle)
 
     assert "Key Handle: 0x00010304" in str_repr
@@ -422,13 +421,91 @@ def test_key_handle_string_representation() -> None:
 def test_key_handle_predefined_constants() -> None:
     """Test predefined key handle constants."""
     # ROM_KEY_AES256_KEY0
-    key_handle = KeyHandle.from_handle(KeyHandle.ROM_KEY_AES256_KEY0)
+    key_handle = KeyHandle(KeyHandle.ROM_KEY_AES256_KEY0)
     assert key_handle.catalog_id == KeyCatalogId.ROM
     assert key_handle.group_idx == 0
     assert key_handle.slot_idx == 0
 
     # ROM_KEY_RSA3072_PUB_KEY0
-    key_handle = KeyHandle.from_handle(KeyHandle.ROM_KEY_RSA3072_PUB_KEY0)
+    key_handle = KeyHandle(KeyHandle.ROM_KEY_RSA3072_PUB_KEY0)
     assert key_handle.catalog_id == KeyCatalogId.ROM
     assert key_handle.group_idx == 1
     assert key_handle.slot_idx == 0
+
+
+def test_unsupported_key_types_not_in_schema_for_hse_b() -> None:
+    """Test that DH, SIPHASH and *_PUB_EXT key types are rejected for HSE-B devices.
+
+    HSE-B firmware does not support DH, SIPHASH or application-memory (*_PUB_EXT)
+    key services. These must be excluded from the schema for HSE-B families
+    (e.g. mcxe315, mcxe31b).
+    """
+    from spsdk.exceptions import SPSDKError
+    from spsdk.utils.schema_validator import check_config
+
+    family = FamilyRevision("mcxe315")
+    schemas = KeyInfo.get_validation_schemas(family)
+
+    base_config = {
+        "family": family.name,
+        "revision": "a0",
+        "output": "k.bin",
+        "keyBitLen": 256,
+    }
+
+    # All of these must be rejected for HSE-B
+    for key_type in ("DH_PAIR", "DH_PUB", "SIPHASH", "ECC_PUB_EXT", "RSA_PUB_EXT"):
+        with pytest.raises(SPSDKError, match="keyType must be one of"):
+            check_config({**base_config, "keyType": key_type}, schemas)
+
+    # AES must still be accepted
+    check_config({**base_config, "keyType": "AES"}, schemas)
+
+
+def test_rsa_pub_exponent_size_max_hseb() -> None:
+    """Test that pubExponentSize is limited to 8 bytes for HSE-B devices (e.g. mcxe31b).
+
+    HSE-B supports max 8 bytes for RSA public exponent size, while HSE-H/M support 16 bytes.
+    Values exceeding the limit must be rejected by schema validation and load_from_config.
+    """
+    from spsdk.exceptions import SPSDKError, SPSDKValueError
+    from spsdk.utils.schema_validator import check_config
+
+    family = FamilyRevision("mcxe31b")
+
+    base_config = {
+        "family": "mcxe31b",
+        "revision": "a0",
+        "output": "k.bin",
+        "keyType": "RSA_PAIR",
+        "keyBitLen": 2048,
+        "specificData": {"pubExponentSize": 3},
+    }
+
+    # Valid: 3 bytes (common value for F4 exponent)
+    check_config(base_config, KeyInfo.get_validation_schemas(family))
+
+    # Valid: exactly at the limit (8 bytes)
+    check_config(
+        {**base_config, "specificData": {"pubExponentSize": 8}},
+        KeyInfo.get_validation_schemas(family),
+    )
+
+    # Invalid: 9 bytes exceeds HSE-B max of 8
+    with pytest.raises(SPSDKError):
+        check_config(
+            {**base_config, "specificData": {"pubExponentSize": 9}},
+            KeyInfo.get_validation_schemas(family),
+        )
+
+    # Invalid: 16 bytes (HSE-H/M max) should be rejected for HSE-B
+    with pytest.raises(SPSDKError):
+        check_config(
+            {**base_config, "specificData": {"pubExponentSize": 16}},
+            KeyInfo.get_validation_schemas(family),
+        )
+
+    # load_from_config must also raise for oversized exponent
+    cfg = Config({**base_config, "specificData": {"pubExponentSize": 16}})
+    with pytest.raises(SPSDKValueError, match="pubExponentSize"):
+        KeyInfo.load_from_config(cfg)

@@ -68,7 +68,7 @@
         {
           "id": "fuse1",
           "name": "CMPA_CRC",
-          "description": "CRC32 of CMPA fields. \n- Used by non-secure part during boot.",
+          "description": "CRC32 of CMPA fields.",
           "index_int": "0x0001"
         }
       ]
@@ -82,25 +82,25 @@
         {
           "id": "fuse2",
           "name": "MFG_DATA0",
-          "description": "CMPA MFG data value word 0.",
+          "description": "Customer Manufacturing-time programmed words. \n",
           "index_int": "0x0002"
         },
         {
           "id": "fuse3",
           "name": "MFG_DATA1",
-          "description": "CMPA MFG data value word 1.",
+          "description": "CMPA word1[15:0]",
           "index_int": "0x0003"
         },
         {
           "id": "fuse4",
           "name": "MFG_DATA2",
-          "description": "CMPA MFG data value word 2.",
+          "description": "CMPA word2[15:0]",
           "index_int": "0x0004"
         },
         {
           "id": "fuse5",
           "name": "MFG_DATA3",
-          "description": "CMPA MFG data value word 3.",
+          "description": "CMPA word0[15:0]",
           "index_int": "0x0005"
         }
       ]
@@ -129,20 +129,20 @@
         {
           "id": "fuse7",
           "name": "CUSTOMER_WORD0",
-          "description": "Customer use word 0.",
+          "description": "Customer use word 0 (32 bits)",
           "index_int": "0x0007"
         },
         {
           "id": "fuse8",
           "name": "CUSTOMER_WORD1",
-          "description": "Customer use word 1, only the lowest 8 bits are valid.",
+          "description": "Customer use word 1 (8 bits)",
           "index_int": "0x0008",
           "bitfields": [
             {
               "width": 8,
               "id": "fuse8-bits-0-7",
               "name": "CUSTOMER_WORD1",
-              "description": "Customer use word 1."
+              "description": "Customer word1[7:0]"
             },
             {
               "width": 24
@@ -152,14 +152,14 @@
         {
           "id": "fuse9",
           "name": "CUSTOMER_WORD2",
-          "description": "Customer use word 2, only the lowest 8 bits are valid.",
+          "description": "Customer use word 2 (8 bits)",
           "index_int": "0x0009",
           "bitfields": [
             {
               "width": 8,
               "id": "fuse9-bits-0-7",
               "name": "CUSTOMER_WORD2",
-              "description": "Customer use word 2."
+              "description": "Customer word2[7:0]"
             },
             {
               "width": 24

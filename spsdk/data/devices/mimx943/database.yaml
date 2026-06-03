@@ -200,14 +200,18 @@ features:
     ele_cnt_version: 2 # DAT container is based on New AHAB container version 2
     dac_version_is_swapped: True
     auth_beacon_length: 4 # The length in bytes of authentication beacon
+    clear_iee_config_on_ele: True # Flag to enable configuration for clear IEE configuration with ELE
     sub_features: ["ele_pqc"]
     test_address: 0x2048_0000
     dmbox_ap_ix: 0
     dac_rot_type: not_available # The Dac packet doesn't contains the ROT hash
 
   # ======== FCB section ========
-  # fcb:
-  #   mem_types: {}
+  fcb:
+    mem_types:
+      flexspi_nor:
+        reg_spec: ../mimx9596/fcb_flexspi_nor.json
+        reg_spec_modification: ../../common/fcb_flexspi_nor_modification.yaml
 
   # ======== AHAB section ========
   ahab:
@@ -218,6 +222,8 @@ features:
     fuses_1:
       _name: "AHAB SRKH PQC"
       pqc_srkh: "__srk_hash1" # SRK PQC hash fuse
+    signature_algorithms:
+      DILITHIUM: [0xD1, "DILITHIUM", "Dilithium PQC algorithm"]
     containers_max_cnt: 3
     valid_offset_minimal_alignment: 0x400
     container_types: [2] # Supported container types
@@ -346,6 +352,9 @@ features:
         kernel,
         dtb,
       ]
+
+    metadata: sm # uses IAE metadata for SM
+
   # ======== EdgeLock Enclave section ========
   ele: {}
 
@@ -363,6 +372,7 @@ features:
           #not_used: 0xC00
           primary_image_container_set: 0x1_000
           secondary_image_container_set: -1 # Just behind previous segment
+        image_pattern: ones
       emmc:
         segments:
           primary_image_container_set: 0x8_000

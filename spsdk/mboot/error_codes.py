@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 #
 # Copyright 2016-2018 Martin Olejar
-# Copyright 2019-2025 NXP
+# Copyright 2019-2026 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -104,6 +104,7 @@ class StatusCode(SpsdkEnum):
     OTFAD_INVALID_KEY_BLOB      = (503, "OtfadInvalidKeyBlob", "OTFAD Driver: Invalid Key Blob")
 
     # Sending errors.
+    SDMMC_CARD_COMMUNICATION_ERROR    = (1801, "SDMMCTransferFailed", "Communication Error with the SDMMC Memory Card")
     SENDING_OPERATION_CONDITION_ERROR = (1812, "SendOperationConditionError", "Send Operation Condition failed")
 
     # SDMMC driver errors.
@@ -146,6 +147,7 @@ class StatusCode(SpsdkEnum):
     ROMLDR_UNEXPECTED_COMMAND           = (10117,  "RomLdrUnexpectedCommand", "ROM Loader: Unexpected Command")
     ROMLDR_BAD_SBKEK                    = (10118,  "RomLdrBadSBKEK", "ROM Loader: Bad SBKEK Detected")
     ROMLDR_PENDING_JUMP_COMMAND         = (10119,  "RomLdrPendingJumpCommand", "ROM Loader: Pending Jump Command")
+    ROMLDR_PENDING_RESET_COMMAND        = (10120,  "RomLdrPendingResetCommand", "ROM Loader: Pending Reset Command")
 
     # Memory interface errors.
     MEMORY_RANGE_INVALID                    = (10200, "MemoryRangeInvalid", "Memory Range Invalid")
@@ -158,7 +160,7 @@ class StatusCode(SpsdkEnum):
     MEMORY_VERIFY_FAILED                    = (10207, "MemoryVerifyFailed", "Memory Verify Failed")
     MEMORY_WRITE_PROTECTED                  = (10208, "MemoryWriteProtected", "Memory Write Protected")
     MEMORY_ADDRESS_ERROR                    = (10209, "MemoryAddressError", "Memory Address Error")
-    MEMORY_BLANK_CHECK_FAILED               = (10210, "MemoryBlankCheckFailed", "Memory Black Check Failed")
+    MEMORY_BLANK_CHECK_FAILED               = (10210, "MemoryBlankCheckFailed", "Memory Blank Check Failed")
     MEMORY_BLANK_PAGE_READ_DISALLOWED       = (10211, "MemoryBlankPageReadDisallowed", "Memory Blank Page Read Disallowed")
     MEMORY_PROTECTED_PAGE_READ_DISALLOWED   = (10212, "MemoryProtectedPageReadDisallowed", "Memory Protected Page Read Disallowed")
     MEMORY_PFR_SPEC_REGION_WRITE_BROKEN     = (10213, "MemoryPfrSpecRegionWriteBroken", "Memory PFR Spec Region Write Broken")

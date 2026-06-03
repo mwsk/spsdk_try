@@ -362,33 +362,25 @@
           "id": "fuse1",
           "name": "LOT_NO_ENC1",
           "description": "NXP-wide unique, encoded LOT ID STD II/SJC CHALLENGE/ Unique ID",
+          "offset_int": "0x0410",
           "deprecated_names": [
             "LOT_NO_ENC[42:11]"
           ],
-          "offset_int": "0x0410",
           "index_int": "0x0001",
           "lock": {
             "register_id": "fuse0",
             "write_lock_int": "0x0001",
             "operation_lock_int": "0x0002"
-          },
-          "bitfields": [
-            {
-              "width": 32,
-              "id": "fuse1-bits-0-31",
-              "name": "LOT_NO_ENC[42:11]",
-              "description": "NXP-wide unique, encoded LOT ID STD II/SJC CHALLENGE/ Unique ID"
-            }
-          ]
+          }
         },
         {
           "id": "fuse2",
           "name": "LOT_NO_ENC0_WAFER_COORD",
           "description": "NXP-wide unique, encoded LOT ID STD II/SJC CHALLENGE/ Unique ID",
+          "offset_int": "0x0420",
           "deprecated_names": [
             "LOT_NO_ENC[10:0]"
           ],
-          "offset_int": "0x0420",
           "index_int": "0x0002",
           "lock": {
             "register_id": "fuse0",
@@ -425,11 +417,12 @@
         {
           "id": "fuse3",
           "name": "SI_REV",
-          "description": "Fuse SI_REV",
-          "deprecated_names": [
-            "SI_REV[3:0]"
-          ],
+          "description": "Fuse SI_REV[3:0]",
           "offset_int": "0x0430",
+          "deprecated_names": [
+            "SI_REV[3:0]",
+            "Fuse SI_REV[3:0]"
+          ],
           "index_int": "0x0003",
           "lock": {
             "register_id": "fuse0",
@@ -886,10 +879,10 @@
               "width": 4,
               "id": "fuse6-bits-8-11",
               "name": "SDRAM_CONFIG",
-              "description": "TBD  (SDRAM config options)",
               "deprecated_names": [
                 "SDRAM_CONFIG[7:0]"
-              ]
+              ],
+              "description": "TBD (SDRAM config options)"
             },
             {
               "width": 1,
@@ -934,7 +927,7 @@
               "width": 1,
               "id": "fuse6-bit-16",
               "name": "FORCE_INTERNAL_BOOT",
-              "description": "Once been blown, the external BT_MODE[1:0] pins will be ignored, BootROM will take Boot Mode as “internal boot”.",
+              "description": "Once been blown, the external BT_MODE[1:0] pins will be ignored, BootROM will take Boot Mode as \"internal boot\".",
               "values": [
                 {
                   "name": "0",
@@ -1089,7 +1082,7 @@
               "width": 1,
               "id": "fuse6-bit-27",
               "name": "JTAG_HEO",
-              "description": "JTAG HAB Enable Override. Disallows HAB JTAG enabling. The HAB may normally enable JTAG debugging by means of the HAB_JDE-bit in the OCOTP  SCS register. The JTAG_HEO-bit can override this behavior",
+              "description": "JTAG HAB Enable Override. Disallows HAB JTAG enabling. The HAB may normally enable JTAG debugging by means of the HAB_JDE-bit in the OCOTP SCS register. The JTAG_HEO-bit can override this behavior",
               "values": [
                 {
                   "name": "0",
@@ -1490,19 +1483,19 @@
               "width": 16,
               "id": "fuse15-bits-0-15",
               "name": "USB_VID",
-              "description": "USB VID",
               "deprecated_names": [
                 "USB_VID[31:0]"
-              ]
+              ],
+              "description": "USB VID"
             },
             {
               "width": 16,
               "id": "fuse15-bits-16-31",
               "name": "USB_PID",
-              "description": "USB PID",
               "deprecated_names": [
                 "USB_PID[31:0]"
-              ]
+              ],
+              "description": "USB PID"
             }
           ]
         }
@@ -1881,7 +1874,12 @@
           "description": "Reserved for future use. Modification may result in unpredictable system behavior. Software should not rely on the value.",
           "offset_int": "0x0650",
           "index_int": "0x0025",
-          "is_reserved": true
+          "is_reserved": true,
+          "bitfields": [
+            {
+              "width": 32
+            }
+          ]
         },
         {
           "id": "fuse38",
@@ -2045,7 +2043,7 @@
               "width": 4,
               "id": "fuse45-bits-8-11",
               "name": "READ_RETRY_SEQ_ID",
-              "description": "Choose Read Retry Sequence ",
+              "description": "Choose Read Retry Sequence",
               "values": [
                 {
                   "name": "0000",
@@ -2232,25 +2230,25 @@
               "width": 8,
               "id": "fuse46-bits-0-7",
               "name": "BOOT_CONFIG_MISC0",
-              "description": "boot configuration misc "
+              "description": "boot configuration misc"
             },
             {
               "width": 8,
               "id": "fuse46-bits-8-15",
               "name": "BOOT_CONFIG_MISC1",
-              "description": "boot configuration misc "
+              "description": "boot configuration misc"
             },
             {
               "width": 8,
               "id": "fuse46-bits-16-23",
               "name": "BOOT_CONFIG_MISC2",
-              "description": "boot configuration misc "
+              "description": "boot configuration misc"
             },
             {
               "width": 8,
               "id": "fuse46-bits-24-31",
               "name": "BOOT_CONFIG_MISC3",
-              "description": "boot configuration misc "
+              "description": "boot configuration misc"
             }
           ]
         },

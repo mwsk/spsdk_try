@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2021-2025 NXP
+# Copyright 2021-2026 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
+
 """SPSDK AHAB container certificate management utilities.
 
 This module provides functionality for handling AHAB (Advanced High Assurance Boot)
@@ -21,16 +22,14 @@ from typing_extensions import Self
 from spsdk.crypto.hash import EnumHashAlgorithm
 from spsdk.crypto.signature_provider import SignatureProvider, get_signature_provider
 from spsdk.crypto.utils import extract_public_key
-from spsdk.exceptions import SPSDKParsingError, SPSDKValueError
+from spsdk.exceptions import SPSDKError, SPSDKParsingError, SPSDKValueError
 from spsdk.image.ahab.ahab_abstract_interfaces import HeaderContainer, HeaderContainerData
 from spsdk.image.ahab.ahab_data import (
     RESERVED,
-    UINT8,
-    UINT16,
-    UINT32,
-    AHABSignHashAlgorithmV2,
+    AHABSignHashAlgorithm,
     AHABTags,
     FlagsSrkSet,
+    create_chip_config,
 )
 from spsdk.image.ahab.ahab_signature import ContainerSignature
 from spsdk.image.ahab.ahab_srk import SRKData, SRKRecordV2, SRKTableArray
@@ -39,6 +38,9 @@ from spsdk.utils.config import Config
 from spsdk.utils.database import DatabaseManager
 from spsdk.utils.family import FamilyRevision, get_db, update_validation_schema_family
 from spsdk.utils.misc import (
+    UINT8,
+    UINT16,
+    UINT32,
     bytes_to_print,
     extend_block,
     load_hex_string,
@@ -87,9 +89,9 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
         |0x04 | Permissions  | Perm (invert)|      Signature offset           |
         +-----+--------------+--------------+---------------------------------+
         |0x08 |                Permission data - 96bits                       |
-        +-----+----------------------------------------------+----------------+
-        |0x14 |                   Reserved                   | Fuse version   |
-        +-----+----------------------------------------------+----------------+
+        +-----+-----------------------------+----------------+----------------+
+        |0x14 |           Reserved          |  Perm dat ext  | Fuse version   |
+        +-----+-----------------------------+----------------+----------------+
         |0x18 |                      UUID - 128bits                           |
         +-----+---------------------------------------------------------------+
         |...  |                        SRK Record 0                           |
@@ -131,6 +133,7 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
     PERM_BIT_SIZE = 8
     FUSE_VERSION_BIT_SIZE = 8
     PERMISSION_DATA_SIZE = 12
+    PERMISSION_DATA_EXT_BIT_SIZE = 8
     UUID_SIZE = 16
 
     DIFF_ATTRIBUTES_VALUES = [
@@ -144,11 +147,14 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
         "signature_1",
     ]
 
+    USED_PERM_DATA_EXT = True
+
     def __init__(
         self,
         family: FamilyRevision,
         permissions: int = 0,
         permissions_data: bytes = b"",
+        permission_data_ext: int = 0,
         fuse_version: int = 0,
         uuid: Optional[bytes] = None,
         public_key_0: Optional[SRKRecordV2] = None,
@@ -164,6 +170,7 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
         :param family: Target chip family and revision.
         :param permissions: Certificate usage permissions flags, defaults to 0.
         :param permissions_data: Additional data for debug authentication features.
+        :param permission_data_ext: Extended permissions data field<0-255>, defaults to 0.
         :param fuse_version: Certificate version number, defaults to 0.
         :param uuid: 128-bit unique identifier, auto-generated if not provided.
         :param public_key_0: Primary SRK record entry describing the public key.
@@ -175,6 +182,9 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
         self.family = family
         self._permissions = permissions
         self.permission_data = permissions_data
+        self.permission_data_ext = permission_data_ext & (
+            (1 << self.PERMISSION_DATA_EXT_BIT_SIZE) - 1
+        )
         self.fuse_version = fuse_version
         self.signature_offset = -1
         self._uuid = uuid
@@ -203,6 +213,7 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
                 super().__eq__(other)  # pylint: disable=too-many-boolean-expressions
                 and self._permissions == other._permissions
                 and self.permission_data == other.permission_data
+                and self.permission_data_ext == other.permission_data_ext
                 and self.signature_offset == other.signature_offset
                 and self._uuid == other._uuid
                 and self.public_key_0 == other.public_key_0
@@ -233,6 +244,7 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
             "AHAB Certificate:\n"
             f"  Permission:         {hex(self._permissions)}\n"
             f"  Permission data:    {self.permission_data.hex()}\n"
+            f"  Permission data ext:{self.permission_data_ext}\n"
             f"  Fuse version:       {self.fuse_version}\n"
             f"  UUID:               {self._uuid.hex() if self._uuid else 'Not Available'}\n"
             f"  Public Key 0:       {str(self.public_key_0) if self.public_key_0 else 'Not available'}\n"
@@ -258,7 +270,7 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
             + UINT8  # permissions
             + f"{cls.PERMISSION_DATA_SIZE}s"  # permission data
             + UINT8  # fuse_version
-            + UINT8  # reserved
+            + UINT8  # permission_data_ext
             + UINT16  # reserved
             + f"{cls.UUID_SIZE}s"  # UUID
         )
@@ -358,7 +370,7 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
             self._permissions,
             extend_block(self.permission_data, self.PERMISSION_DATA_SIZE, padding=RESERVED),
             self.fuse_version,
-            RESERVED,
+            self.permission_data_ext,
             RESERVED,
             extend_block(self._uuid or b"", self.UUID_SIZE, padding=RESERVED),
         )
@@ -450,6 +462,10 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
         ret.add_record_bytes(
             "Permission Data", self.permission_data, max_length=self.PERMISSION_DATA_SIZE
         )
+        if self.USED_PERM_DATA_EXT:
+            ret.add_record_bit_range(
+                "Permission data ext", self.permission_data_ext, self.PERMISSION_DATA_EXT_BIT_SIZE
+            )
         ret.add_record_bit_range("Fuse version", self.fuse_version, self.FUSE_VERSION_BIT_SIZE)
 
         if self._uuid:
@@ -630,7 +646,7 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
         return ret
 
     @classmethod
-    def _parse_header(cls, data: bytes) -> tuple[int, int, int, int, bytes, int, bytes]:
+    def _parse_header(cls, data: bytes) -> tuple[int, int, int, int, bytes, int, int, bytes]:
         """Parse the header of the certificate from binary data.
 
         Extracts and returns key certificate header fields from the binary data using the
@@ -641,8 +657,8 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
             permissions, permission_data, fuse_version, uuid) where container_length is the
             total certificate container length, signature_offset is offset to signature data,
             inverted_permissions and permissions are permission bytes, permission_data contains
-            permission data bytes, fuse_version is the fuse version value, and uuid contains
-            UUID bytes.
+            permission data bytes, fuse_version is the fuse version value, permission_data_ext
+            and uuid contains UUID bytes.
         """
         (
             _,  # version
@@ -653,7 +669,7 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
             permissions,
             permission_data,
             fuse_version,
-            _,  # RESERVED,
+            permission_data_ext,
             _,  # RESERVED,
             uuid,
         ) = unpack(cls.format(), data)
@@ -664,6 +680,7 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
             permissions,
             permission_data,
             fuse_version,
+            permission_data_ext,
             uuid,
         )
 
@@ -692,6 +709,7 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
             permissions,
             permission_data,
             fuse_version,
+            permission_data_ext,
             uuid,
         ) = cls._parse_header(data[:certificate_data_offset])
 
@@ -727,6 +745,7 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
             family=family,
             permissions=permissions,
             permissions_data=permission_data,
+            permission_data_ext=permission_data_ext,
             fuse_version=fuse_version,
             uuid=uuid,
             public_key_0=public_key_0,
@@ -763,6 +782,8 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
         ret_cfg["permissions"] = self.create_config_permissions(srk_set)
         if self.permission_data:
             ret_cfg["permission_data"] = self.permission_data.hex()
+        if self.permission_data_ext:
+            ret_cfg["permission_data_ext"] = hex(self.permission_data_ext)
         if self._uuid:
             ret_cfg["uuid"] = self._uuid.hex()
         ret_cfg["fuse_version"] = self.fuse_version
@@ -818,13 +839,18 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
         cert_permission_data = (
             value_to_bytes(cert_permission_data_raw) if cert_permission_data_raw else None
         )
+        if cls.USED_PERM_DATA_EXT:
+            permission_data_ext = config.get_int("permission_data_ext", 0)
+        else:
+            permission_data_ext = 0
+
         cert_fuse_version = config.get_int("fuse_version", 0)
 
         cert_hash0_str: str = config.get("hash_algorithm_0", "default")
         cert_hash0 = (
             None
             if cert_hash0_str == "default"
-            else AHABSignHashAlgorithmV2.from_label(cert_hash0_str.upper())
+            else AHABSignHashAlgorithm.from_label(cert_hash0_str.upper())
         )
         cert_public_key0 = SRKRecordV2.create_from_key(
             extract_public_key(config.get_input_file_name("public_key_0")),
@@ -841,7 +867,7 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
             cert_hash1 = (
                 None
                 if cert_hash1_str == "default"
-                else AHABSignHashAlgorithmV2.from_label(cert_hash1_str.upper())
+                else AHABSignHashAlgorithm.from_label(cert_hash1_str.upper())
             )
             cert_public_key1_path = config.get_input_file_name("public_key_1")
             cert_public_key1 = SRKRecordV2.create_from_key(
@@ -857,6 +883,7 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
             permissions=cls.create_permissions(cert_permissions_list),
             permissions_data=cert_permission_data or b"",
             fuse_version=cert_fuse_version,
+            permission_data_ext=permission_data_ext,
             uuid=cert_uuid,
             public_key_0=cert_public_key0,
             signature_provider_0=cert_signature_provider0,
@@ -871,7 +898,8 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
         This method retrieves and configures validation schemas from the database manager,
         including AHAB, certificate block, and general family schemas. It removes required
         fields from the certificate block output schema and updates the family schema
-        with supported families.
+        with supported families. The hash algorithm enums are filtered to only include
+        algorithms supported by the given chip family.
 
         :param family: Family revision for which the validation schema should be generated.
         :return: List of validation schemas containing family, certificate block output,
@@ -884,7 +912,25 @@ class AhabCertificate(FeatureBaseClass, HeaderContainer):
         update_validation_schema_family(
             sch_family["properties"], cls.get_supported_families(), family
         )
-        return [sch_family, sch_cfg["cert_block_output"], sch["ahab_certificate"]]
+
+        # Filter hash algorithm enums to only those supported by this chip family
+        sch_cert = sch["ahab_certificate"]
+        try:
+            chip_config = create_chip_config(family)
+            hash_algo_labels = ["default"] + [
+                algo.label.lower() for algo in chip_config.hash_algorithms
+            ]
+            for field in ("hash_algorithm_0", "hash_algorithm_1"):
+                if field in sch_cert.get("properties", {}):
+                    sch_cert["properties"][field]["enum"] = hash_algo_labels
+                    sch_cert["properties"][field]["template_value"] = "default"
+        except SPSDKError:
+            pass  # Fall back to the full list defined in the schema
+
+        ret = [sch_family, sch_cfg["cert_block_output"], sch_cert]
+        if cls.USED_PERM_DATA_EXT:
+            ret.append(sch["ahab_certificate_permission_data_ext"])
+        return ret
 
 
 class AhabCertificateMcuPqc(AhabCertificate):
@@ -929,6 +975,7 @@ class AhabCertificateMcuPqc(AhabCertificate):
     """
 
     FUSE_VERSION_BIT_SIZE = 32  # 32-bit width for Fuse Version in MCU PQC variant
+    USED_PERM_DATA_EXT = False  # MCU PQC does not use extended permission data
 
     def __repr__(self) -> str:
         """Return string representation of AHAB Certificate.
@@ -981,7 +1028,7 @@ class AhabCertificateMcuPqc(AhabCertificate):
         )
 
     @classmethod
-    def _parse_header(cls, data: bytes) -> tuple[int, int, int, int, bytes, int, bytes]:
+    def _parse_header(cls, data: bytes) -> tuple[int, int, int, int, bytes, int, int, bytes]:
         """Parse the header of the certificate from binary data.
 
         Extracts and returns key certificate header fields from the provided binary data using
@@ -995,6 +1042,7 @@ class AhabCertificateMcuPqc(AhabCertificate):
             - permissions: Permissions byte
             - permission_data: Permission data bytes
             - fuse_version: Fuse version value
+            - perm_data_ext: Permission data extension (0 for MCU PQC variant)
             - uuid: UUID bytes
         """
         (
@@ -1015,6 +1063,7 @@ class AhabCertificateMcuPqc(AhabCertificate):
             permissions,
             permission_data,
             fuse_version,
+            0,  # permission_data_ext are not used in MCU PQC variant
             uuid,
         )
 

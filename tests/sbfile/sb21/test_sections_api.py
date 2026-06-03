@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2019-2025 NXP
+# Copyright 2019-2026 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -21,7 +21,7 @@ from spsdk.crypto.certificate import Certificate
 from spsdk.crypto.rng import random_bytes
 from spsdk.crypto.symmetric import Counter
 from spsdk.exceptions import SPSDKError
-from spsdk.image.cert_block.cert_blocks import CertBlockV1
+from spsdk.image.cert_block.cert_block_v1 import CertBlockV1
 from spsdk.sbfile.sb2.commands import CmdErase, CmdLoad, CmdReset
 from spsdk.sbfile.sb2.sections import BootSectionV2, CertSectionV2
 from spsdk.utils.family import FamilyRevision
@@ -225,10 +225,10 @@ def test_invalid_header_hmac(data_dir: str) -> None:
     nonce = random_bytes(16)
     valid_data = cs.export(dek, mac, Counter(nonce))
     invalid_data = valid_data
-    invalid_data = bytearray(invalid_data)
-    invalid_data[0:32] = bytearray(32)
+    invalid_data_mutable = bytearray(invalid_data)
+    invalid_data_mutable[0:32] = bytearray(32)
     with pytest.raises(SPSDKError, match="HMAC"):
-        CertSectionV2.parse(invalid_data, 0, dek, mac, Counter(nonce))  # type: ignore
+        CertSectionV2.parse(invalid_data_mutable, 0, dek, mac, Counter(nonce))  # type: ignore
 
 
 def test_invalid_header_tag(data_dir: str) -> None:

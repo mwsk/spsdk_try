@@ -17,7 +17,8 @@ AHABContainerV2 for different container versions and configurations.
 
 import logging
 from struct import pack, unpack
-from typing import Optional, Union
+from types import SimpleNamespace
+from typing import Optional, Union, cast
 
 from typing_extensions import Self
 
@@ -27,11 +28,7 @@ from spsdk.fuses.fuses import FuseScript
 from spsdk.image.ahab.ahab_abstract_interfaces import HeaderContainer, HeaderContainerData
 from spsdk.image.ahab.ahab_data import (
     CONTAINER_ALIGNMENT,
-    LITTLE_ENDIAN,
     RESERVED,
-    UINT8,
-    UINT16,
-    UINT32,
     AhabChipConfig,
     AhabChipContainerConfig,
     AHABTags,
@@ -43,7 +40,19 @@ from spsdk.image.ahab.ahab_srk import SRKTableArray
 from spsdk.utils.binary_image import BinaryImage
 from spsdk.utils.config import Config
 from spsdk.utils.database import DatabaseManager
-from spsdk.utils.misc import align, extend_block, get_abs_path, write_file
+from spsdk.utils.family import get_db
+from spsdk.utils.misc import (
+    LITTLE_ENDIAN,
+    UINT8,
+    UINT16,
+    UINT32,
+    Endianness,
+    align,
+    extend_block,
+    get_abs_path,
+    write_file,
+)
+from spsdk.utils.registers import Registers
 from spsdk.utils.spsdk_enum import SpsdkEnum
 from spsdk.utils.verifier import Verifier, VerifierResult
 
@@ -182,7 +191,16 @@ class AHABContainerBase(HeaderContainer):
         :return: SRK Set flag enumeration value.
         """
         srk_set = (self.flags >> self.FLAGS_SRK_SET_OFFSET) & ((1 << self.FLAGS_SRK_SET_SIZE) - 1)
-        return FlagsSrkSet.from_tag(srk_set)
+
+        # Try to use chip config enumeration first
+        if hasattr(self, "chip_config") and self.chip_config and hasattr(self.chip_config, "base"):
+            try:
+                return cast(FlagsSrkSet, self.chip_config.base.srk_sets.from_tag(srk_set))
+            except Exception:
+                pass
+
+        # Fallback to default FlagsSrkSet
+        return cast(FlagsSrkSet, FlagsSrkSet.from_tag(srk_set))
 
     @property
     def flag_used_srk_id(self) -> int:
@@ -531,28 +549,41 @@ class AHABContainerBase(HeaderContainer):
 
         The method extracts and sets the SRK (Super Root Key) related flags including
         SRK set identifier, used SRK ID, and SRK revoke mask from the provided
-        configuration object.
+        configuration object. Fields absent from the configuration retain their
+        current values rather than being overwritten with hardcoded defaults.
 
         :param config: Configuration object containing AHAB container settings.
         """
-        self.set_flags(
-            srk_set=config.get_str("srk_set", "none"),
-            used_srk_id=config.get_int("used_srk_id", 0),
-            srk_revoke_mask=config.get_int("srk_revoke_mask", 0),
+        srk_mask = (
+            ((1 << self.FLAGS_SRK_SET_SIZE) - 1) << self.FLAGS_SRK_SET_OFFSET
+            | ((1 << self.FLAGS_USED_SRK_ID_SIZE) - 1) << self.FLAGS_USED_SRK_ID_OFFSET
+            | ((1 << self.FLAGS_SRK_REVOKE_MASK_SIZE) - 1) << self.FLAGS_SRK_REVOKE_MASK_OFFSET
         )
+        # Preserve bits outside the SRK fields; set_flags() overwrites the entire flags word
+        preserved_non_srk_flags = self.flags & ~srk_mask
+        self.set_flags(
+            srk_set=config.get_str("srk_set", self.flag_srk_set.label),
+            used_srk_id=config.get_int("used_srk_id", self.flag_used_srk_id),
+            srk_revoke_mask=config.get_int("srk_revoke_mask", self.flag_srk_revoke_keys),
+        )
+        self.flags |= preserved_non_srk_flags
 
     def load_from_config_generic(self, config: Config) -> None:
         """Load container configuration into AHAB image object.
 
         Converts the configuration options into an AHAB image object by setting
         fuse version, software version, chip configuration parameters, and
-        signature block from the provided configuration.
+        signature block from the provided configuration. Fields absent from the
+        configuration retain their current values rather than being overwritten
+        with hardcoded defaults.
 
         :param config: Configuration object containing AHAB container settings.
         """
         self._load_from_config_flags(config)
-        self.fuse_version = config.get_int("fuse_version", 0)
-        self.sw_version = config.get_int("sw_version", 0)
+        if "fuse_version" in config:
+            self.fuse_version = config.get_int("fuse_version", 0)
+        if "sw_version" in config:
+            self.sw_version = config.get_int("sw_version", 0)
         self.chip_config.used_srk_id = self.flag_used_srk_id
         self.chip_config.srk_set = self.flag_srk_set
         self.chip_config.srk_revoke_keys = self.flag_srk_revoke_keys
@@ -864,7 +895,22 @@ class AHABContainer(AHABContainerBase):
         container_header = bytearray(align(self.header_length(), CONTAINER_ALIGNMENT))
         container_header_only = super()._export()
 
-        for image_array_entry in self.image_array:
+        # Emit IAE table entries sorted by iae_header_position when any entry has it set.
+        # This allows the data-offset order (list order) to differ from the header-table order.
+        # Entries without iae_header_position (None) fall back to their natural list index.
+        header_order: list[Union[ImageArrayEntry, ImageArrayEntryV2]]
+        if any(e.iae_header_position is not None for e in self.image_array):
+            header_order = sorted(
+                self.image_array,
+                key=lambda e: (
+                    e.iae_header_position
+                    if e.iae_header_position is not None
+                    else self.image_array.index(e)
+                ),
+            )
+        else:
+            header_order = list(self.image_array)
+        for image_array_entry in header_order:
             container_header_only += image_array_entry.export()
 
         container_header[: self._signature_block_offset] = container_header_only
@@ -876,7 +922,7 @@ class AHABContainer(AHABContainerBase):
                 + align(len(signature_block), CONTAINER_ALIGNMENT)
             ] = signature_block
 
-        return container_header
+        return bytes(container_header)
 
     def post_export(self, output_path: str, cnt_ix: Optional[int] = None) -> list[str]:
         """Post-export processing and optional file writing.
@@ -996,13 +1042,13 @@ class AHABContainer(AHABContainerBase):
                                         "Decrypted data HASH doesn't match IV vector.",
                                     )
                         else:
-                            if self.flag_srk_set in (FlagsSrkSet.NXP, FlagsSrkSet.DEVHSM):
+                            if self.flag_srk_set.label in ("nxp", "devhsm"):
                                 ver_enc.add_record(
                                     "Decrypted data",
                                     VerifierResult.WARNING,
                                     "The NXP image can't be verified",
                                 )
-                            elif self.flag_srk_set not in FlagsSrkSet:
+                            elif self.flag_srk_set.label not in ("oem", "none"):
                                 ver_enc.add_record(
                                     "Decrypted data",
                                     VerifierResult.WARNING,
@@ -1040,6 +1086,7 @@ class AHABContainer(AHABContainerBase):
         if self.flag_srk_set == FlagsSrkSet.OEM:
             description += "\n\nThis is signed container, check that the SRK hash fuses has following values:\n"
             description += self.create_srk_hash_fuses_script()
+            description += self.create_pfr_hash_info()
         ret = self._verify(
             name=f"Container {self.chip_config.container_offset // self.CONTAINER_SIZE}",
             description=description,
@@ -1055,7 +1102,7 @@ class AHABContainer(AHABContainerBase):
         return ret
 
     @classmethod
-    def parse(cls, data: bytes, chip_config: AhabChipConfig, offset: int) -> Self:  # type: ignore # pylint: disable=arguments-differ
+    def parse(cls, data: bytes, chip_config: AhabChipConfig, offset: int, container_offset: int) -> Self:  # type: ignore # pylint: disable=arguments-differ
         """Parse input binary chunk to the container object.
 
         This method reconstructs an AHAB container from binary data by parsing the container
@@ -1064,8 +1111,11 @@ class AHABContainer(AHABContainerBase):
         :param data: Binary data with Container block to parse.
         :param chip_config: Ahab image chip configuration.
         :param offset: AHAB container offset in the binary data.
+        :param container_offset: Container offset within the AHAB image.
+        :raises SPSDKError: If the container data is invalid or parsing fails.
         :return: Object recreated from the binary data.
         """
+        cnt_offset = offset + container_offset
         (
             container_length,
             flags,
@@ -1073,41 +1123,39 @@ class AHABContainer(AHABContainerBase):
             fuse_version,
             number_of_images,
             signature_block_offset,
-        ) = cls._parse(data[offset:])
+        ) = cls._parse(data[cnt_offset:])
 
         parsed_container = cls(
             chip_config=chip_config,
             flags=flags,
             fuse_version=fuse_version,
             sw_version=sw_version,
-            container_offset=offset,
+            container_offset=container_offset,
         )
+
         # Lock the parsed container to any updates of offsets
         parsed_container.length = container_length
         parsed_container.chip_config.locked = True
-
+        parsed_container.chip_config.base.signature_algorithms = chip_config.signature_algorithms
+        parsed_container.chip_config.base.hash_algorithms = chip_config.hash_algorithms
         parsed_container.signature_block = cls.SIGNATURE_BLOCK.parse(
-            data[offset + signature_block_offset :], parsed_container.chip_config
+            data[cnt_offset + signature_block_offset :], parsed_container.chip_config
         )
 
         for i in range(number_of_images):
             image_array_entry_binary_start = (
-                offset + cls.fixed_length() + i * cls.IAE_TYPE.fixed_length()
+                cnt_offset + cls.fixed_length() + i * cls.IAE_TYPE.fixed_length()
             )
             image_array_entry = cls.IAE_TYPE.parse(
                 data[image_array_entry_binary_start:], parsed_container.chip_config
             )
-            binary_image_start = offset + image_array_entry._image_offset
+            binary_image_start = offset + image_array_entry.image_offset
 
-            image_size = int.from_bytes(
-                data[image_array_entry_binary_start + 4 : image_array_entry_binary_start + 8],
-                "little",
-            )
-            binary_image_end = min(binary_image_start + image_size, len(data))
+            binary_image_end = min(binary_image_start + image_array_entry.image_size, len(data))
             image_array_entry.image = data[binary_image_start:binary_image_end]
 
             parsed_container.image_array.append(image_array_entry)  # type: ignore
-        parsed_container._parsed_header = HeaderContainerData.parse(binary=data[offset:])
+        parsed_container._parsed_header = HeaderContainerData.parse(binary=data[cnt_offset:])
         return parsed_container
 
     @property
@@ -1164,14 +1212,19 @@ class AHABContainer(AHABContainerBase):
 
         This method processes the configuration to extract and set container flags,
         including the GDET (Global Device Error Trap) runtime behavior setting.
+        When ``gdet_runtime_behavior`` is absent from the configuration the existing
+        GDET flag bits are preserved unchanged.
 
         :param config: Configuration dictionary containing AHAB container settings.
         """
         super()._load_from_config_flags(config)
-        self.flags |= (
-            self.FlagsGdetBehavior.from_attr(config.get("gdet_runtime_behavior", "disabled")).tag
-            << self.FLAGS_GDET_ENABLE_OFFSET
-        )
+        if "gdet_runtime_behavior" in config:
+            gdet_mask = ((1 << self.FLAGS_GDET_ENABLE_SIZE) - 1) << self.FLAGS_GDET_ENABLE_OFFSET
+            gdet_value = (
+                self.FlagsGdetBehavior.from_attr(config.get("gdet_runtime_behavior")).tag
+                << self.FLAGS_GDET_ENABLE_OFFSET
+            )
+            self.flags = (self.flags & ~gdet_mask) | gdet_value
 
     @classmethod
     def load_from_config(
@@ -1232,6 +1285,16 @@ class AHABContainer(AHABContainerBase):
         except SPSDKError as exc:
             return f"The Super Root Keys Hash fuses are not available, yet: {exc.description}"
         return fuse_script.generate_script(self, True)
+
+    def create_pfr_hash_info(self) -> str:
+        """Create PFR/CMPA hash info for SRK hashes stored in PFR registers.
+
+        Base implementation for V1 containers. Returns empty string.
+        Overridden in AHABContainerV2 for devices with PFR hash support.
+
+        :return: Empty string (V1 containers don't support PFR hash output).
+        """
+        return ""
 
     @classmethod
     def get_container_offset(cls, ix: int) -> int:
@@ -1432,21 +1495,48 @@ class AHABContainerV2(AHABContainer):
 
         This method processes the configuration to set container-specific flags including
         check_all_signatures and fast_boot options, combining them with flags from the parent class.
+        When a field is absent from the configuration the existing flag bits are preserved unchanged.
 
         :param config: Configuration dictionary containing AHAB container settings.
         :raises SPSDKValueError: Invalid flag attribute values in configuration.
         """
         super()._load_from_config_flags(config)
-        self.flags |= (
-            self.FlagsCheckAllSignatures.from_attr(
-                config.get("check_all_signatures", "default")
-            ).tag
-            << self.FLAGS_CHECK_ALL_SIGNATURES_OFFSET
-        )
-        self.flags |= (
-            self.FlagsFastBoot.from_attr(config.get("fast_boot", "disabled")).tag
-            << self.FLAGS_FAST_BOOT_OFFSET
-        )
+        if "check_all_signatures" in config:
+            cas_mask = (
+                (1 << self.FLAGS_CHECK_ALL_SIGNATURES_SIZE) - 1
+            ) << self.FLAGS_CHECK_ALL_SIGNATURES_OFFSET
+            cas_value = (
+                self.FlagsCheckAllSignatures.from_attr(config.get("check_all_signatures")).tag
+                << self.FLAGS_CHECK_ALL_SIGNATURES_OFFSET
+            )
+            self.flags = (self.flags & ~cas_mask) | cas_value
+        if "fast_boot" in config:
+            fb_mask = ((1 << self.FLAGS_FAST_BOOT_SIZE) - 1) << self.FLAGS_FAST_BOOT_OFFSET
+            fb_value = (
+                self.FlagsFastBoot.from_attr(config.get("fast_boot")).tag
+                << self.FLAGS_FAST_BOOT_OFFSET
+            )
+            self.flags = (self.flags & ~fb_mask) | fb_value
+
+    def _get_srk_hash_for_fuses(self, fuse_script: FuseScript, srk_id: int) -> bytes:
+        """Get SRK hash truncated to the width of the target fuse register.
+
+        The fuse register width (defined in device database) is the source of truth
+        for how many bytes of the SRK hash are stored in fuses. For devices with
+        384-bit ROTKH fuse registers, the SHA-512 hash is truncated to 48 bytes.
+
+        :param fuse_script: FuseScript object with loaded fuse register definitions.
+        :param srk_id: SRK table index.
+        :return: SRK hash bytes truncated to the fuse register width.
+        """
+        srk_hash = self.get_srk_hash(srk_id)
+        for key in fuse_script.fuses_db:
+            if not key.startswith("_"):
+                max_hash_len = fuse_script.fuses.get_reg(key).width // 8
+                if len(srk_hash) > max_hash_len:
+                    srk_hash = srk_hash[:max_hash_len]
+                break
+        return srk_hash
 
     def create_srk_hash_fuses_script(self) -> str:
         """Create fuses script for Super Root Key (SRK) hash.
@@ -1468,11 +1558,66 @@ class AHABContainerV2(AHABContainer):
                         DatabaseManager.AHAB,
                         index=ix,
                     )
-                except SPSDKError as exc:
-                    return (
-                        f"The Super Root Keys Hash fuses are not available, yet: {exc.description}"
-                    )
-                ret += fuse_script.generate_script(self, True) + "\n"
+                except SPSDKError:
+                    continue
+                srk_hash = self._get_srk_hash_for_fuses(fuse_script, ix)
+                fuse_attrs = SimpleNamespace(**{f"srk_hash{ix}": srk_hash})
+                ret += fuse_script.generate_script(fuse_attrs, True) + "\n"
+        return ret
+
+    def create_pfr_hash_info(self) -> str:
+        """Create PFR/CMPA hash info for SRK hashes stored in PFR registers.
+
+        Some devices store SRK hashes (e.g. PQC ROTKH) in PFR/CMPA registers
+        instead of OTP fuses. This method reads indexed 'pfr_hash_N' configuration
+        from the device database (where N is the SRK table index) and generates
+        informational output showing the expected register values.
+
+        :return: Formatted string with PFR register values, or empty string if not configured.
+        """
+        if not self.signature_block or not self.signature_block.srk_assets:
+            return ""
+
+        assert isinstance(self.signature_block.srk_assets, SRKTableArray)
+        db = get_db(self.chip_config.base.family)
+        ret = ""
+        for ix in range(len(self.signature_block.srk_assets._srk_tables)):
+            try:
+                pfr_hash_cfg = db.get_dict(DatabaseManager.AHAB, f"pfr_hash_{ix}")
+            except SPSDKError:
+                continue
+
+            sub_feature = pfr_hash_cfg["sub_feature"]
+            reg_uid = pfr_hash_cfg["grouped_register"]
+            name = pfr_hash_cfg.get("_name", reg_uid)
+
+            srk_hash = self.get_srk_hash(ix)
+            if not srk_hash:
+                continue
+
+            try:
+                pfr_regs = Registers(
+                    family=self.chip_config.base.family,
+                    feature=DatabaseManager.PFR,
+                    base_key=sub_feature,
+                    base_endianness=Endianness.LITTLE,
+                )
+                reg = pfr_regs.get_reg(reg_uid)
+            except SPSDKError:
+                continue
+
+            # Truncate hash to register width
+            max_len = reg.width // 8
+            if len(srk_hash) > max_len:
+                srk_hash = srk_hash[:max_len]
+
+            reg.set_value(srk_hash)
+
+            ret += f"\nPFR {sub_feature.upper()} {name} values (SRK table #{ix}):\n"
+            ret += f" --== Grouped register name: {reg.name} ==-- \n"
+            for sub_reg in reg.sub_regs:
+                ret += f"Offset: {sub_reg.name}, Value: 0x{sub_reg.get_value():08X}\n"
+
         return ret
 
     def post_export(self, output_path: str, cnt_ix: Optional[int] = None) -> list[str]:
@@ -1509,11 +1654,13 @@ class AHABContainerV2(AHABContainer):
                         fuse_script = FuseScript(
                             self.chip_config.base.family, DatabaseManager.AHAB, srk_id
                         )
+                        srk_hash_fuses = self._get_srk_hash_for_fuses(fuse_script, srk_id)
+                        fuse_attrs = SimpleNamespace(**{f"srk_hash{srk_id}": srk_hash_fuses})
                         logger.info(
-                            f"\nFuses info:\n{fuse_script.generate_script(self, info_only=True)}"
+                            f"\nFuses info:\n{fuse_script.generate_script(fuse_attrs, info_only=True)}"
                         )
                         fuse_script_path = fuse_script.write_script(
-                            file_name, output_path, self, overwrite=False
+                            file_name, output_path, fuse_attrs, overwrite=False
                         )
                         generated_files.append(fuse_script_path)
                         logger.info(
