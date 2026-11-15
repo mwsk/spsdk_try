@@ -13,11 +13,11 @@ Breaking changes between major versions are described in the
 
 - placeholder: unreleased changes are not part of this test
 
-## 3.14.0 - Unreleased
+## [3.14.0] - 2026-11-15
 
 ### Added
 
-- placeholder: test of the GitHub release workflow for a section still marked Unreleased
+- placeholder: test of the GitHub release workflow after the release date was filled in
 
 ## [3.13.0] - 2026-11-03
 
