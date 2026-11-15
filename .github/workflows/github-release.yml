@@ -1,0 +1,50 @@
+# This workflow creates or updates the GitHub Release of a pushed version tag and fills its
+# release notes with the matching section of CHANGELOG.md
+
+name: Publish GitHub Release
+
+on:
+  push:
+    tags:
+      - 'v*' # Publish release notes when a tag with version is pushed
+
+permissions:
+  contents: read
+
+jobs:
+  github-release:
+    name: Publish Release Notes From CHANGELOG.md
+    if: ${{ github.repository == 'mwsk/spsdk_try' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to create and edit GitHub Releases
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Get Version From Tag
+        id: tag
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      # Fails when CHANGELOG.md has no section for the version
+      - name: Read Release Notes From CHANGELOG.md
+        id: changelog
+        uses: mindsers/changelog-reader-action@1faaf50aa09d5793d9a100819973df801febfb31 # v2.4.0
+        with:
+          path: ./CHANGELOG.md
+          version: ${{ steps.tag.outputs.version }}
+
+      - name: Check Release Date In CHANGELOG.md
+        if: ${{ steps.changelog.outputs.status != 'released' }}
+        env:
+          VERSION: ${{ steps.changelog.outputs.version }}
+          STATUS: ${{ steps.changelog.outputs.status }}
+        run: |
+          echo "::warning file=CHANGELOG.md::Section of version $VERSION is '$STATUS', expected heading '## [$VERSION] - YYYY-MM-DD'"
+
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
+        with:
+          name: SPSDK ${{ steps.changelog.outputs.version }}
+          body_path: ${{ steps.changelog.outputs.changes_file }}
